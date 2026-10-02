@@ -1,0 +1,327 @@
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --mute: #64748b;
+  --line: #e2e8f0;
+  --brand: #0f766e;
+  --brand-light: #f0fdfa;
+  --sh: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+  --pw: 380px; /* Độ rộng Panel phải */
+
+  /* Dải màu chuẩn AQI */
+  --aqi-good: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --aqi-moderate: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --aqi-sensitive: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --aqi-unhealthy: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --aqi-very-unhealthy: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  --aqi-hazardous: linear-gradient(135deg, #881337 0%, #4c0519 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== HEADER (NAVBAR) ===== */
+header {
+  height: 64px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  position: relative;
+  z-index: 2000;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { 
+  width: 36px; 
+  height: 36px; 
+  border-radius: 12px; 
+  background: conic-gradient(#00e400, #ffff00, #ff7e00, #ff0000, #8f3f97, #00e400); 
+  box-shadow: inset 0 0 0 5px #fff, 0 4px 12px rgba(0,0,0,0.15); 
+  transition: transform 0.3s ease;
+}
+.logo:hover { transform: rotate(15deg) scale(1.05); }
+
+h1 { font-size: 18px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; margin: 0; }
+h1 small { font-weight: 500; color: var(--mute); font-size: 13px; }
+
+.navbar { display: flex; gap: 10px; align-items: center; }
+.btn-icon { 
+  background: var(--card); 
+  border: 1px solid var(--line); 
+  border-radius: 10px; 
+  padding: 8px 14px; 
+  font: inherit; 
+  cursor: pointer; 
+  color: var(--ink); 
+  font-weight: 600; 
+  font-size: 13px; 
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  display: flex; 
+  gap: 6px; 
+  align-items: center; 
+}
+.btn-icon:hover { 
+  background: var(--brand-light); 
+  border-color: var(--brand); 
+  color: var(--brand); 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12);
+}
+
+/* ===== MAIN LAYOUT ===== */
+main { flex: 1; position: relative; display: block; }
+#map { position: absolute; inset: 0; z-index: 1; background: #e2e8f0; }
+
+/* Dynamic Floating Glass Panels */
+#panel, #bottom, .ctl, .legend {
+  position: absolute;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--sh);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+#panel { 
+  top: 16px; 
+  right: 16px; 
+  bottom: 16px; 
+  width: var(--pw); 
+  padding: 20px; 
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+}
+#bottom { 
+  left: 16px; 
+  right: calc(var(--pw) + 32px); 
+  bottom: 16px; 
+  height: 240px; 
+  padding: 16px 20px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+.ctl { 
+  top: 16px; 
+  right: calc(var(--pw) + 32px); 
+  padding: 14px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  font-size: 13px; 
+  font-weight: 600;
+}
+.ctl label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.ctl input[type="checkbox"] { accent-color: var(--brand); width: 16px; height: 16px; cursor: pointer; }
+
+.legend { 
+  left: 16px; 
+  bottom: 272px; 
+  padding: 14px; 
+  font-size: 12.5px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px;
+}
+.legend div { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.legend i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+/* Custom Search Box */
+.search-box { 
+  position: absolute; 
+  top: 16px; 
+  left: 60px; 
+  z-index: 1000; 
+  display: flex; 
+  background: rgba(255,255,255,0.95); 
+  backdrop-filter: blur(12px);
+  border-radius: 12px; 
+  box-shadow: var(--sh); 
+  overflow: hidden; 
+  border: 1px solid rgba(255,255,255,0.8); 
+}
+.search-box input { border: none; padding: 12px 16px; width: 260px; font: inherit; outline: none; background: transparent; font-size: 13.5px; }
+.search-box button { background: transparent; border: none; border-left: 1px solid var(--line); padding: 0 16px; cursor: pointer; transition: 0.2s; color: var(--brand); }
+.search-box button:hover { background: var(--brand-light); }
+
+/* Map Location Button */
+/* Tìm và thay thế class này trong style.css */
+.locate-btn { 
+  position: absolute; 
+  top: 160px; /* Đã đẩy xuống dưới để không đè lên nút chọn BaseMap */
+  left: 10px; 
+  z-index: 1000; 
+  background: var(--card); 
+  border: 1px solid var(--line); 
+  border-radius: 10px; 
+  cursor: pointer; 
+  width: 38px; 
+  height: 38px; 
+  display: grid; 
+  place-items: center; 
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.locate-btn:hover { background: var(--brand-light); border-color: var(--brand); transform: scale(1.05); }
+.locate-btn svg { width: 20px; height: 20px; fill: var(--brand); }
+
+/* ===== CARD MÀU MÈ THEO MỨC ĐỘ AQI ===== */
+.card { 
+  border-radius: 16px; 
+  padding: 20px; 
+  color: #fff; 
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); 
+  position: relative;
+  overflow: hidden;
+  transition: background 0.5s ease, transform 0.2s;
+}
+.card:hover { transform: translateY(-2px); }
+
+/* Dải class màu riêng cho AQI */
+.card-good { background: var(--aqi-good); }
+.card-moderate { background: var(--aqi-moderate); }
+.card-sensitive { background: var(--aqi-sensitive); }
+.card-unhealthy { background: var(--aqi-unhealthy); }
+.card-very-unhealthy { background: var(--aqi-very-unhealthy); }
+.card-hazardous { background: var(--aqi-hazardous); }
+
+.scope { font-size: 13px; opacity: 0.92; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.card .lv { font-weight: 800; font-size: 22px; margin-top: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+.card .num { display: flex; align-items: baseline; gap: 8px; margin: 8px 0; }
+.card .num span { font-size: 68px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+.card .num small { font-size: 14px; opacity: 0.9; font-weight: 600; }
+
+.scale { position: relative; height: 8px; border-radius: 4px; margin: 16px 0; background: linear-gradient(90deg, #00e400, #ffff00, #ff7e00, #ff0000, #8f3f97, #7e0023); box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); }
+.scale i { position: absolute; top: -4px; width: 6px; height: 16px; background: #fff; border-radius: 3px; box-shadow: 0 0 6px rgba(0,0,0,0.6); transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Buttons & Chips */
+select { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font: inherit; background: var(--card); color: var(--ink); font-weight: 600; outline: none; cursor: pointer; transition: all 0.2s; }
+select:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(15,118,110,0.15); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { border: 1px solid var(--line); background: var(--card); border-radius: 20px; padding: 8px 16px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--mute); transition: all 0.2s; }
+.chips button:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+.chips button.on { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(15,118,110,0.25); }
+
+.advice { padding: 16px; border-left: 4px solid var(--brand); background: var(--brand-light); border-radius: 0 12px 12px 0; font-size: 13.5px; line-height: 1.6; color: #134e4a; font-weight: 500; }
+
+.btn { border: 0; border-radius: 12px; background: var(--brand); color: #fff; padding: 12px 20px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(15,118,110,0.2); }
+.btn:hover { background: #0d645d; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,0.3); }
+.btn.ghost { background: transparent; color: var(--brand); border: 1px solid var(--brand); box-shadow: none; }
+.btn.ghost:hover { background: var(--brand-light); }
+.btn-full { width: 100%; }
+
+/* ===== ADMIN TOP KPI DASHBOARD CARDS ===== */
+.admin-kpi-grid {
+  position: absolute;
+  top: 16px;
+  left: 60px;
+  right: calc(var(--pw) + 32px);
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.kpi-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+}
+.kpi-title { font-size: 11.5px; color: var(--mute); font-weight: 600; text-transform: uppercase; }
+.kpi-value { font-size: 20px; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+/* ===== TABLE & BADGES ===== */
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.admin-table th, .admin-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--line); }
+.admin-table th { color: var(--mute); font-weight: 700; text-transform: uppercase; font-size: 11px; }
+.admin-table tr:hover { background: rgba(15, 118, 110, 0.04); }
+
+.badge { border-radius: 20px; padding: 4px 10px; font-weight: 700; font-size: 12px; color: #fff; display: inline-block; }
+.badge-good { background: #10b981; }
+.badge-moderate { background: #f59e0b; }
+.badge-sensitive { background: #f97316; }
+.badge-unhealthy { background: #ef4444; }
+
+/* Custom Scrollbar */
+#panel::-webkit-scrollbar { width: 6px; }
+#panel::-webkit-scrollbar-track { background: transparent; }
+#panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+#panel::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Animations */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.pulse-dot { border-radius: 50%; animation: pulseGlow 2s infinite; }
+/* =======================================================
+   FIX LỖI GIAO DIỆN: BỔ SUNG CÁC CLASS CẤU TRÚC BỊ THIẾU
+   ======================================================= */
+
+/* 1. Ẩn Modal & Overlay (Sửa lỗi các bảng thông báo bị tràn xuống đáy trang) */
+.overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 3000; backdrop-filter: blur(4px); transition: opacity 0.3s; }
+.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card); padding: 30px; border-radius: 16px; z-index: 3001; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); transition: all 0.3s; }
+.modal h3 { margin: 0 0 16px; font-size: 20px; color: var(--ink); }
+.modal p { font-size: 14px; color: var(--mute); line-height: 1.6; margin-bottom: 20px; }
+.hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, -45%); }
+
+/* 2. Sửa lỗi Layout Biểu đồ và Nút Play ở thanh dưới cùng */
+.tl { display: flex; align-items: center; gap: 16px; font-size: 14px; font-weight: 600; }
+.tl b { min-width: 100px; color: var(--brand); }
+.tl input[type="range"] { flex: 1; accent-color: var(--brand); cursor: pointer; }
+.chart { flex: 1; min-height: 0; position: relative; margin-top: 10px; }
+.btn-play { background: #ef4444; color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(239,68,68,0.3); font-size: 14px; flex-shrink: 0; }
+.btn-play:hover { background: #dc2626; transform: scale(1.1); }
+
+/* 3. Sửa Form Input và Thanh Loading */
+.input-full { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; outline: none; margin-bottom: 12px; background: var(--bg); transition: 0.2s; }
+.input-full:focus { border-color: var(--brand); }
+#loading { position: fixed; top: 64px; left: 0; right: 0; height: 3px; background: var(--brand); z-index: 9999; transform-origin: left; animation: loadAnim 1s infinite alternate; display: none; }
+#loading.active { display: block; }
+@keyframes loadAnim { 0% { transform: scaleX(0); opacity: 0.5; } 100% { transform: scaleX(1); opacity: 1; } }
+
+/* 4. Định dạng lại vùng Nguồn Dữ liệu (Bảng điều khiển phải) */
+.meta-info { font-size: 12px; color: var(--mute); text-align: center; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px dashed var(--line); padding-bottom: 16px; margin-bottom: 16px; margin-top: 16px; }
+#last-updated { font-weight: 700; color: var(--brand); }
+
+/* 5. Khôi phục CSS cho Thanh tiến trình ETL (Dành cho trang Admin) */
+.progress-container { width: 100%; background: var(--line); border-radius: 6px; height: 8px; margin-top: 12px; overflow: hidden; display: none; }
+.progress-bar { height: 100%; background: var(--brand); width: 0%; transition: width 0.4s ease; }
+.etl-log { font-size: 12px; color: var(--mute); margin-top: 6px; font-family: monospace; display: none; }
+
+/* 6. Fix lỗi vỡ giao diện Popup khi bấm vào Marker trên bản đồ */
+.stn span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); font-weight: 700; font-size: 13px; font-family: "Be Vietnam Pro"; }
+.leaflet-popup-content-wrapper { border-radius: 16px; box-shadow: var(--sh); }
+.pop-h { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;}
+.pop-h b { font-size: 16px; color: var(--ink); }
+.pop-h small { color: var(--mute); display: block; font-size: 12px; }
+.pop-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;}
+.pop-g div { background: var(--bg); border-radius: 10px; padding: 10px; }
+.pop-g span { display: block; font-size: 11px; color: var(--mute); margin-bottom: 4px;}
+.pop-g b { font-size: 18px; display: block; color: var(--ink); }
