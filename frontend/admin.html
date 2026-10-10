@@ -17,7 +17,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link ref="image" href="assets/img/Logo AirHCM.png">
     <link rel="stylesheet" href="assets/css/style.css">
-
+    <style>
+        /* Chống rớt dòng chữ HOẠT ĐỘNG và căn giữa thẻ trạng thái */
+        #adm-station-table td {
+            vertical-align: middle;
+        }
+        #adm-station-table td:nth-child(5) {
+            text-align: center !important;
+            white-space: nowrap !important;
+        }
+        #adm-station-table td:nth-child(5) span {
+            white-space: nowrap !important;
+            display: inline-block !important;
+            padding: 4px 10px !important;
+            border-radius: 6px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.5px !important;
+        }
+    </style>
 </head>
 
 <body class="admin-body"
@@ -169,8 +186,8 @@
                                     <th>Tên Trạm Quan Trắc</th>
                                     <th>Đơn vị Quản lý</th>
                                     <th>Tọa độ (Lat, Lng)</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
+                                    <th style="min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                                    <th style="min-width: 150px; text-align: center; white-space: nowrap;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="adm-station-table">

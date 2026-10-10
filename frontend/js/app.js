@@ -18,7 +18,7 @@ let forecastChartInstance = null;
 let allWardsData = [];
 
 let playbackTimer = null;
-let currentHourSimulated = 8;
+let currentHourSimulated = new Date().getHours();
 let latestBasePM25 = 35.0;
 
 // Hệ số biến thiên PM2.5 theo 24 giờ tại TP.HCM (Cao điểm sáng 7-8h, chiều 17-18h)
@@ -145,6 +145,29 @@ function extractWardDetails(properties) {
         ward: ward || (properties.id !== undefined ? `Phường ${properties.id}` : "Phường/Xã"),
         district: district || ""
     };
+}
+// TỰ ĐỘNG NẠP ĐẦY ĐỦ 166 PHƯỜNG/XÃ TP.HCM TỪ FILE GEOJSON VÀO FORM ĐĂNG KÝ
+function populateWardDropdown(geojsonData) {
+    const wardSelect = document.getElementById("sub-ward");
+    if (!wardSelect || !geojsonData || !geojsonData.features) return;
+
+    const wardList = [];
+    geojsonData.features.forEach(f => {
+        const info = extractWardDetails(f.properties);
+        const fullName = info.district ? `${info.ward} (${info.district})` : info.ward;
+        if (fullName && !wardList.includes(fullName)) {
+            wardList.push(fullName);
+        }
+    });
+
+    // Sắp xếp thứ tự bảng chữ cái A - Z chuẩn tiếng Việt
+    wardList.sort((a, b) => a.localeCompare(b, 'vi'));
+
+    // Xuất ra thẻ select
+    wardSelect.innerHTML = `<option value="ALL">⭐ Tất cả khu vực TP.HCM</option>`;
+    wardList.forEach(w => {
+        wardSelect.innerHTML += `<option value="${w}">${w}</option>`;
+    });
 }
 
 // THUẬT TOÁN TÍNH TOÁN PM2.5 & AQI ĐỒNG BỘ CHUẨN THỰC TẾ IQAIR
@@ -305,7 +328,7 @@ function fetchCurrentAQI() {
     fetch(`${API_BASE}/aqi/current`)
         .then(res => res.json())
         .then(data => {
-            latestBasePM25 = parseFloat(data.pm2_5) || 35.0;
+            latestBasePM25 = parseFloat(data.pm2_5) || 18.5;
 
             setSafeText("realtime-clock", getCurrentFormattedTime());
             setSafeText("current-aqi", data.us_aqi);
@@ -346,6 +369,7 @@ function fetchCurrentAQI() {
                 setSafeText("dss-sensitive", data.advisory.sensitive_groups);
                 setSafeText("dss-action", data.advisory.action_plan);
             }
+            applyTimeStep(currentHourSimulated);
         })
         .catch(err => {
             setSafeText("realtime-clock", getCurrentFormattedTime());
@@ -414,6 +438,9 @@ function fetchWardsGeoJSON() {
             return res.json();
         })
         .then(geojson => {
+            // NẠP ĐẦY ĐỦ PHƯỜNG/XÃ VÀO DROPDOWN ĐĂNG KÝ TẠI ĐÂY
+            populateWardDropdown(geojson);
+
             if (wardsLayer) map.removeLayer(wardsLayer);
 
             wardsLayer = L.geoJSON(geojson, {
@@ -710,6 +737,11 @@ function initPlaybackFeature() {
     const playIcon = document.getElementById("play-icon");
 
     if (!slider || !btnPlay) return;
+
+    // TỰ ĐỘNG ĐỒNG BỘ THANH TRƯỢT VỀ ĐÚNG GIỜ HIỆN TẠI KHI MỞ TRANG WEB
+    const currentActualHour = new Date().getHours();
+    slider.value = currentActualHour;
+    applyTimeStep(currentActualHour);
 
     slider.addEventListener("input", e => applyTimeStep(parseInt(e.target.value)));
 

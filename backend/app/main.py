@@ -49,7 +49,7 @@ def load_subscribers_from_disk():
         try:
             with open(SUBSCRIBERS_STORAGE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if isinstance(data, list) and len(data) > 0:
+                if isinstance(data, list) and len(data) > 0: 
                     return data
         except Exception as e:
             print(f"-> [Cảnh báo đọc file subscribers.json]: {e}")
@@ -447,7 +447,15 @@ class SubscriptionRequest(BaseModel):
 @app.post("/api/v1/subscribe", tags=["Đăng ký Cảnh báo"])
 def subscribe_aqi_alert(sub: SubscriptionRequest):
     """API tiếp nhận đăng ký từ End-User và LƯU VĨNH VIỄN vào ổ đĩa"""
-    ward_display = WARD_MAP.get(str(sub.ward_code), f"Phường {sub.ward_code}")
+    # Xử lý chuỗi tên phường linh hoạt: nếu người dùng gửi tên có dấu đầy đủ thì giữ nguyên
+    ward_val = str(sub.ward_code).strip()
+    if ward_val in WARD_MAP:
+        ward_display = WARD_MAP[ward_val]
+    elif ward_val.startswith("Phường") or ward_val.startswith("Xã") or "Tất cả" in ward_val:
+        ward_display = ward_val
+    else:
+        ward_display = f"Phường {ward_val}"
+
     new_id = (max([s["id"] for s in subscribers_db], default=0)) + 1
     today_str = datetime.now().strftime("%Y-%m-%d")
 
@@ -464,7 +472,7 @@ def subscribe_aqi_alert(sub: SubscriptionRequest):
     subscribers_db.insert(0, new_subscriber)
     save_subscribers_to_disk(subscribers_db)
 
-    print(f"-> [ĐÃ LƯU VĨNH VIỄN] ID #{new_id} - {new_subscriber['fullname']} ({new_subscriber['email']}) - Khu vực: {ward_display}")
+    print(f"-> [ĐÃ LƯU VĨNH VIỄN] ID #{new_id} - {new_subscriber['fullname']} - Khu vực: {ward_display}")
 
     return {
         "status": "success",

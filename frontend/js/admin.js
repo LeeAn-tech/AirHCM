@@ -148,7 +148,11 @@ function renderStationTableAndMap(stations) {
                     <td>${st.ten_tram}</td>
                     <td>${st.don_vi_quan_ly}</td>
                     <td>${st.lat.toFixed(4)}, ${st.lng.toFixed(4)}</td>
-                    <td><span style="background:rgba(74,222,128,0.2); color:#4ade80; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">${st.status || 'HOẠT ĐỘNG'}</span></td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <span style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block; letter-spacing: 0.5px;">
+                            ${st.status || 'HOẠT ĐỘNG'}
+                        </span>
+                    </td>
                     <td>
                         <div style="display: flex; gap: 6px;">
                             <button onclick="zoomToStation(${st.lat}, ${st.lng})" class="btn" style="background:#0284c7; color:#fff; border:none; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;" title="Xem vị trí">
@@ -186,7 +190,7 @@ function renderStationTableAndMap(stations) {
         }
     });
 }
-window.zoomToStation = function(lat, lng) {
+window.zoomToStation = function (lat, lng) {
     document.querySelector('[data-adm-tab="adm-tab-map"]').click();
     setTimeout(() => {
         if (adminMap) adminMap.flyTo([lat, lng], 14, { duration: 1.0 });
@@ -197,7 +201,7 @@ window.zoomToStation = function(lat, lng) {
 window.openAddStationModal = () => document.getElementById("modal-add-station").classList.add("active");
 window.closeAddStationModal = () => document.getElementById("modal-add-station").classList.remove("active");
 
-window.submitNewStation = function(e) {
+window.submitNewStation = function (e) {
     e.preventDefault();
     const btnSubmit = e.target.querySelector('button[type="submit"]');
     const originalText = btnSubmit.innerHTML;
@@ -218,31 +222,31 @@ window.submitNewStation = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSt)
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Không thể kết nối đến máy chủ PostGIS");
-        return res.json();
-    })
-    .then(data => {
-        // Tải lại trực tiếp danh sách từ Backend để đảm bảo đồng bộ 100%
-        fetchAdminStations();
-        closeAddStationModal();
-        document.getElementById("form-add-station").reset();
-        showAdminToast(`✅ Đã thêm trạm "${newSt.ten_tram}" và đồng bộ PostGIS thành công!`);
-    })
-    .catch(err => {
-        alert("Lỗi khi thêm trạm: " + err.message);
-    })
-    .finally(() => {
-        btnSubmit.innerHTML = originalText;
-        btnSubmit.disabled = false;
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Không thể kết nối đến máy chủ PostGIS");
+            return res.json();
+        })
+        .then(data => {
+            // Tải lại trực tiếp danh sách từ Backend để đảm bảo đồng bộ 100%
+            fetchAdminStations();
+            closeAddStationModal();
+            document.getElementById("form-add-station").reset();
+            showAdminToast(`✅ Đã thêm trạm "${newSt.ten_tram}" và đồng bộ PostGIS thành công!`);
+        })
+        .catch(err => {
+            alert("Lỗi khi thêm trạm: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = originalText;
+            btnSubmit.disabled = false;
+        });
 };
 // ==============================================================================
 // XỬ LÝ CHỈNH SỬA VÀ XÓA TRẠM QUAN TRẮC POSTGIS
 // ==============================================================================
 
 // Mở Modal Chỉnh sửa và nạp thông tin trạm hiện tại vào Form
-window.openEditStationModal = function(ma_tram) {
+window.openEditStationModal = function (ma_tram) {
     const st = adminStationList.find(s => s.ma_tram === ma_tram);
     if (!st) {
         alert("Không tìm thấy thông tin trạm!");
@@ -260,12 +264,12 @@ window.openEditStationModal = function(ma_tram) {
 };
 
 // Đóng Modal Chỉnh sửa
-window.closeEditStationModal = function() {
+window.closeEditStationModal = function () {
     document.getElementById("modal-edit-station").classList.remove("active");
 };
 
 // Gửi dữ liệu cập nhật trạm lên Backend
-window.submitEditStation = function(e) {
+window.submitEditStation = function (e) {
     e.preventDefault();
     const ma_tram = document.getElementById("edit-st-id").value;
     const btnSubmit = e.target.querySelector('button[type="submit"]');
@@ -287,26 +291,26 @@ window.submitEditStation = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Cập nhật trạm thất bại");
-        return res.json();
-    })
-    .then(data => {
-        fetchAdminStations(); // Tải lại danh sách trạm từ Backend
-        closeEditStationModal();
-        showAdminToast(`✅ ${data.message}`);
-    })
-    .catch(err => {
-        alert("Lỗi: " + err.message);
-    })
-    .finally(() => {
-        btnSubmit.innerHTML = oldText;
-        btnSubmit.disabled = false;
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Cập nhật trạm thất bại");
+            return res.json();
+        })
+        .then(data => {
+            fetchAdminStations(); // Tải lại danh sách trạm từ Backend
+            closeEditStationModal();
+            showAdminToast(`✅ ${data.message}`);
+        })
+        .catch(err => {
+            alert("Lỗi: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = oldText;
+            btnSubmit.disabled = false;
+        });
 };
 
 // Xử lý Xóa trạm quan trắc
-window.deleteStation = function(ma_tram) {
+window.deleteStation = function (ma_tram) {
     if (!confirm(`⚠️ XÁC NHẬN: Bạn có chắc chắn muốn xóa trạm quan trắc "${ma_tram}" khỏi CSDL PostGIS? Hành động này không thể hoàn tác!`)) {
         return;
     }
@@ -314,17 +318,17 @@ window.deleteStation = function(ma_tram) {
     fetch(`${API_BASE}/gis/stations/${ma_tram}`, {
         method: "DELETE"
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Xóa trạm thất bại");
-        return res.json();
-    })
-    .then(data => {
-        fetchAdminStations(); // Làm mới lại bảng và bản đồ trạm ngay lập tức
-        showAdminToast(`🗑️ ${data.message}`);
-    })
-    .catch(err => {
-        alert("Lỗi khi xóa trạm: " + err.message);
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Xóa trạm thất bại");
+            return res.json();
+        })
+        .then(data => {
+            fetchAdminStations(); // Làm mới lại bảng và bản đồ trạm ngay lập tức
+            showAdminToast(`🗑️ ${data.message}`);
+        })
+        .catch(err => {
+            alert("Lỗi khi xóa trạm: " + err.message);
+        });
 };
 // ==============================================================================
 // 4. QUẢN LÝ ĐĂNG KÝ CẢNH BÁO END-USERS
@@ -388,7 +392,7 @@ function renderSubscribersTable(subs) {
     });
 }
 
-window.filterSubscribers = function() {
+window.filterSubscribers = function () {
     const term = document.getElementById("search-sub").value.toLowerCase();
     const filtered = subscribersList.filter(s =>
         s.fullname.toLowerCase().includes(term) || s.email.toLowerCase().includes(term) || s.ward_code.toLowerCase().includes(term)
@@ -400,7 +404,7 @@ window.filterSubscribers = function() {
 window.openAddSubscriberModal = () => document.getElementById("modal-add-sub").classList.add("active");
 window.closeAddSubscriberModal = () => document.getElementById("modal-add-sub").classList.remove("active");
 
-window.submitNewSubscriber = function(e) {
+window.submitNewSubscriber = function (e) {
     e.preventDefault();
     const newSub = {
         fullname: document.getElementById("adm-sub-name").value.trim(),
@@ -416,17 +420,17 @@ window.submitNewSubscriber = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSub)
     })
-    .then(res => res.json())
-    .then(() => {
-        fetchSubscribers();
-        closeAddSubscriberModal();
-        document.getElementById("form-add-sub").reset();
-        showAdminToast(`✅ Đã thêm người nhận cảnh báo "${newSub.fullname}"!`);
-    })
-    .catch(err => console.error("Lỗi thêm subscriber:", err));
+        .then(res => res.json())
+        .then(() => {
+            fetchSubscribers();
+            closeAddSubscriberModal();
+            document.getElementById("form-add-sub").reset();
+            showAdminToast(`✅ Đã thêm người nhận cảnh báo "${newSub.fullname}"!`);
+        })
+        .catch(err => console.error("Lỗi thêm subscriber:", err));
 };
 
-window.deleteSubscriber = function(subId) {
+window.deleteSubscriber = function (subId) {
     if (confirm("Bạn có chắc chắn muốn xóa đăng ký nhận cảnh báo này?")) {
         fetch(`${API_BASE}/admin/subscriptions/${subId}`, { method: "DELETE" })
             .then(() => {
@@ -440,7 +444,7 @@ window.deleteSubscriber = function(subId) {
 // MODAL GỬI CẢNH BÁO TRỰC TIẾP TỚI END-USER
 let currentAlertEmail = "";
 
-window.openSendAlertModal = function(name, email) {
+window.openSendAlertModal = function (name, email) {
     currentAlertEmail = email;
     document.getElementById("alert-recipient").value = `${name} (${email})`;
     document.getElementById("modal-send-alert").classList.add("active");
@@ -448,7 +452,7 @@ window.openSendAlertModal = function(name, email) {
 
 window.closeSendAlertModal = () => document.getElementById("modal-send-alert").classList.remove("active");
 
-window.submitSendAlert = function(e) {
+window.submitSendAlert = function (e) {
     e.preventDefault();
     const btnSubmit = e.target.querySelector('button[type="submit"]');
     const oldText = btnSubmit.innerHTML;
@@ -468,22 +472,22 @@ window.submitSendAlert = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(async res => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Lỗi khi gửi email");
-        return data;
-    })
-    .then(data => {
-        closeSendAlertModal();
-        showAdminToast(`📢 Đã gửi cảnh báo thành công tới hòm thư ${currentAlertEmail}!`);
-    })
-    .catch(err => {
-        alert("Lỗi gửi mail: " + err.message);
-    })
-    .finally(() => {
-        btnSubmit.innerHTML = oldText;
-        btnSubmit.disabled = false;
-    });
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || "Lỗi khi gửi email");
+            return data;
+        })
+        .then(data => {
+            closeSendAlertModal();
+            showAdminToast(`📢 Đã gửi cảnh báo thành công tới hòm thư ${currentAlertEmail}!`);
+        })
+        .catch(err => {
+            alert("Lỗi gửi mail: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = oldText;
+            btnSubmit.disabled = false;
+        });
 };
 
 // 5. TOP ĐIỂM NÓNG & SỰ KIỆN ETL
@@ -532,7 +536,7 @@ function initETLEvent() {
             .then(data => {
                 // Tải lại các số liệu trên màn hình Admin ngay lập tức
                 fetchAdminMetrics();
-                
+
                 if (msg) {
                     msg.style.display = "block";
                     msg.innerText = `✅ ${data.message}`;
@@ -557,7 +561,7 @@ function showAdminToast(msg) {
     setTimeout(() => { toast.style.display = "none"; }, 4000);
 }
 // HÀM PHÁT CẢNH BÁO KHẨN CẤP ĐỒNG LOẠT CHO TẤT CẢ USER
-window.broadcastAlertToAll = function() {
+window.broadcastAlertToAll = function () {
     const total = subscribersList.length;
     if (total === 0) {
         alert("Hiện tại chưa có người dân nào đăng ký nhận cảnh báo!");
@@ -581,11 +585,11 @@ window.broadcastAlertToAll = function() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => res.json())
-    .then(data => {
-        showAdminToast(`📢 ${data.message}`);
-    })
-    .catch(err => {
-        alert("Lỗi khi phát cảnh báo: " + err.message);
-    });
+        .then(res => res.json())
+        .then(data => {
+            showAdminToast(`📢 ${data.message}`);
+        })
+        .catch(err => {
+            alert("Lỗi khi phát cảnh báo: " + err.message);
+        });
 };
