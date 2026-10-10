@@ -1,0 +1,38 @@
+[
+  {
+    "id": 4,
+    "fullname": "Lê Ngọc Ánh Dương",
+    "email": "lehoangan200504@gmail.com",
+    "phone": "0789446824",
+    "ward_code": "Tất cả khu vực TP.HCM",
+    "threshold_aqi": 100,
+    "created_at": "2026-10-10"
+  },
+  {
+    "id": 1,
+    "fullname": "Lê Hoàng Ân",
+    "email": "hoanglean1005@gmail.com",
+    "phone": "0901250331",
+    "ward_code": "Phường Bình Đông (Q.8)",
+    "threshold_aqi": 150,
+    "created_at": "2026-10-09"
+  },
+  {
+    "id": 2,
+    "fullname": "Nguyễn Văn An",
+    "email": "an.nguyen@gmail.com",
+    "phone": "0908123456",
+    "ward_code": "Phường Bình Đông (Q.8)",
+    "threshold_aqi": 100,
+    "created_at": "2026-10-05"
+  },
+  {
+    "id": 3,
+    "fullname": "Trần Thị Bình",
+    "email": "binh.tran@yahoo.com",
+    "phone": "0912987654",
+    "ward_code": "Phường Tân Tạo (Bình Tân)",
+    "threshold_aqi": 150,
+    "created_at": "2026-10-06"
+  }
+]

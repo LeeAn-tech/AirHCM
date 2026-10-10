@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirHCM — Trung tâm Điều hành & Quản trị Hệ thống DSS</title>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link ref="image" href="assets/img/Logo AirHCM.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+
+</head>
+
+<body class="admin-body"
+    style="display: flex; flex-direction: column; width: 100%; min-height: 100vh; background: #060b18; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0;">
+
+    <!-- 1. THANH HEADER ADMIN ĐIỀU HÀNH FULL BỀ NGANG 100% (KÉO DÀI RA TOÀN MÀN HÌNH) -->
+    <header class="admin-topbar"
+        style="width: 100%; box-sizing: border-box; background: #0b1329; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <!-- Logo & Thông tin đơn vị -->
+        <div class="admin-brand" style="display: flex; align-items: center; gap: 16px;">
+            <div class="admin-logo-icon"
+                style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h2 style="font-size: 19px; font-weight: 800; color: #f8fafc; margin: 0; letter-spacing: 0.5px;">
+                    AirHCM — TRUNG TÂM ĐIỀU HÀNH & QUẢN TRỊ DSS
+                </h2>
+                <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0;">
+                    Khoa CNTT - Trường ĐH Tài nguyên & Môi trường TP.HCM | Bộ Nông nghiệp & Môi trường
+                </p>
+            </div>
+        </div>
+
+        <!-- Các nút tác vụ điều hướng bên phải -->
+        <div class="admin-actions" style="display: flex; align-items: center; gap: 12px;">
+            <a href="index.html" class="btn-admin-nav"
+                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">
+                <i class="fa-solid fa-desktop"></i> Giao diện Người dùng
+            </a>
+            <button onclick="alert('Đã đăng xuất hệ thống Admin!')" class="btn-admin-logout"
+                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. KHÔNG GIAN LÀM VIỆC CỦA ADMIN -->
+    <div class="admin-workspace"
+        style="width: 100%; box-sizing: border-box; padding: 24px 32px; display: flex; flex-direction: column; flex: 1;">
+
+        <!-- 5 THẺ SỐ LIỆU ĐƯỢC ĐẨY XUỐNG DƯỚI RỘNG RÃI & THOÁNG MẮT -->
+        <section class="admin-kpi-row"
+            style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; width: 100%; margin-bottom: 24px;">
+            <div class="panel admin-kpi-box"
+                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
+                        class="fa-solid fa-tower-cell"></i> Mạng lưới Trạm</span>
+                <b style="font-size: 24px; color: #38bdf8; display: block;" id="adm-total-stations">10 Trạm</b>
+                <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Đã kết nối
+                    PostGIS</small>
+            </div>
+            <div class="panel admin-kpi-box"
+                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
+                        class="fa-solid fa-smog"></i> PM2.5 Hiện tại</span>
+                <b style="font-size: 24px; color: #f59e0b; display: block;" id="adm-pm25">-- µg/m³</b>
+                <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Trạm Trung tâm
+                    TP.HCM</small>
+            </div>
+            <div class="panel admin-kpi-box"
+                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
+                        class="fa-solid fa-chart-pie"></i> US AQI Hiện tại</span>
+                <b style="font-size: 22px; color: #ef4444; display: block;" id="adm-aqi">--</b>
+                <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Mức độ ô nhiễm</small>
+            </div>
+            <div class="panel admin-kpi-box"
+                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
+                        class="fa-solid fa-map-location-dot"></i> Phạm vi Giám sát</span>
+                <b style="font-size: 24px; color: #4ade80; display: block;">166 Phường/Xã</b>
+                <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Nội suy không gian
+                    IDW</small>
+            </div>
+            <div class="panel admin-kpi-box"
+                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
+                        class="fa-solid fa-bell"></i> Đăng ký Cảnh báo</span>
+                <b style="font-size: 24px; color: #a855f7; display: block;" id="adm-subscribers">28 Người dân</b>
+                <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">Nhận mail/sms tự
+                    động</small>
+            </div>
+        </section>
+
+        <!-- THANH ĐIỀU HƯỚNG PHÂN HỆ TABS QUẢN TRỊ -->
+        <nav class="admin-tab-nav">
+            <button class="adm-tab-btn active" data-adm-tab="adm-tab-map">
+                <i class="fa-solid fa-map-location-dot"></i> Bản đồ Giám sát GIS
+            </button>
+            <button class="adm-tab-btn" data-adm-tab="adm-tab-stations-ai">
+                <i class="fa-solid fa-server"></i> Quản lý Trạm PostGIS & Mô hình AI
+            </button>
+            <button class="adm-tab-btn" data-adm-tab="adm-tab-subscriptions">
+                <i class="fa-solid fa-bell-concierge"></i> Quản lý Cảnh báo AQI (End-Users)
+            </button>
+        </nav>
+
+        <!-- ============================================================================== -->
+        <!-- TAB 1: BẢN ĐỒ GIÁM SÁT GIS VÀ TỈ LỆ THÔNG SỐ -->
+        <!-- ============================================================================== -->
+        <section id="adm-tab-map" class="adm-tab-content active">
+            <div class="admin-map-layout">
+                <div class="panel admin-map-panel">
+                    <div class="admin-map-header">
+                        <h4><i class="fa-solid fa-earth-asia"></i> Bản đồ Giám sát Mạng lưới Trạm Không gian TP.HCM</h4>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="adm-select-basemap" class="basemap-select" style="width: 200px;">
+                                <option value="dark">Nền tối Esri Dark Gray</option>
+                                <option value="osm">Tiêu chuẩn OpenStreetMap</option>
+                                <option value="satellite">Ảnh vệ tinh Esri Satellite</option>
+                            </select>
+                            <button class="btn-admin-small" id="btn-adm-reset">
+                                <i class="fa-solid fa-location-crosshairs"></i> Về TP.HCM
+                            </button>
+                        </div>
+                    </div>
+                    <div id="admin-map-wrapper">
+                        <div id="admin-map"></div>
+                        <div class="map-coords-badge" id="adm-coords">Tọa độ: 10.8231 N, 106.6297 E | Zoom: 11</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================================== -->
+        <!-- TAB 2: QUẢN LÝ TRẠM POSTGIS & TRẠNG THÁI MÔ HÌNH AI & ĐIỂM NÓNG -->
+        <!-- ============================================================================== -->
+        <section id="adm-tab-stations-ai" class="adm-tab-content">
+            <div class="admin-main-grid">
+
+                <!-- Cột Trái: Bảng Quản lý Trạm -->
+                <div class="panel card-full" style="padding: 20px;">
+                    <div class="panel-header">
+                        <div>
+                            <h4><i class="fa-solid fa-list-check"></i> Quản lý Mạng lưới Trạm Quan trắc PostGIS</h4>
+                            <p style="font-size: 11px; color: #94a3b8;">Danh sách các trạm đo kết nối cơ sở dữ liệu
+                                không gian</p>
+                        </div>
+                        <button class="btn-add-station" onclick="openAddStationModal()">
+                            <i class="fa-solid fa-plus-circle"></i> Thêm Trạm mới
+                        </button>
+                    </div>
+                    <div class="table-container" style="max-height: 420px;">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Trạm</th>
+                                    <th>Tên Trạm Quan Trắc</th>
+                                    <th>Đơn vị Quản lý</th>
+                                    <th>Tọa độ (Lat, Lng)</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adm-station-table">
+                                <tr>
+                                    <td colspan="6" style="text-align:center;">Đang nạp danh sách trạm...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cột Phải: AI Status & Top Điểm nóng -->
+                <div class="admin-right-col">
+                    <div class="panel card-full" style="padding: 20px;">
+                        <h4 style="margin-bottom: 12px; color: #38bdf8;"><i class="fa-solid fa-microchip"></i> Trạng
+                            thái CSDL & Mô hình AI</h4>
+                        <div class="ai-status-list">
+                            <div class="ai-status-item"><span>CSDL Chuỗi thời gian:</span><b>34.985 bản ghi (Theo
+                                    Giờ)</b></div>
+                            <div class="ai-status-item"><span>Mô hình Dự báo:</span><b>Random Forest Regressor</b></div>
+                            <div class="ai-status-item"><span>Độ chính xác ($R^2$):</span><b
+                                    style="color:#4ade80;">0.879 (Rất tốt)</b></div>
+                            <div class="ai-status-item"><span>Sai số RMSE / MAE:</span><b>5.71 / 4.36</b></div>
+                        </div>
+
+                        <button id="btn-trigger-etl" class="btn-etl-trigger">
+                            <i class="fa-solid fa-rotate"></i> Chạy cập nhật ETL & Retrain AI
+                        </button>
+                        <div id="etl-msg" class="etl-msg-toast"></div>
+                    </div>
+
+                    <div class="panel card-full" style="padding: 20px;">
+                        <h4 style="margin-bottom: 12px; color: #f59e0b;"><i class="fa-solid fa-fire-flame-curved"></i>
+                            Top Điểm nóng Ô nhiễm nhất</h4>
+                        <div class="table-container" style="max-height: 220px;">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Hạng</th>
+                                        <th>Phường/Xã</th>
+                                        <th>PM2.5</th>
+                                        <th>AQI</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adm-hotspots-table">
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;">Đang nạp điểm nóng...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================================================== -->
+        <!-- TAB 3: QUẢN LÝ ĐĂNG KÝ CẢNH BÁO AQI END-USERS (MỚI BỔ SUNG CHO BỘ TN&MT) -->
+        <!-- ============================================================================== -->
+        <section id="adm-tab-subscriptions" class="adm-tab-content">
+            <div class="panel card-full" style="padding: 24px;">
+                <div class="panel-header">
+                    <div>
+                        <h3><i class="fa-solid fa-bell-concierge" style="color: #a855f7;"></i> Quản lý Danh sách Đăng ký
+                            Cảnh báo AQI (End-Users)</h3>
+                        <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Công cụ dành cho Nhà quản lý Bộ
+                            Nông nghiệp & Môi trường kiểm tra, thêm, xóa, sửa và phát cảnh báo trực tiếp</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="search-sub" class="custom-box" placeholder="Tìm theo Tên/Email..." onkeyup="filterSubscribers()">
+                        <button class="btn-add-station" onclick="openAddSubscriberModal()" style="background: #8b5cf6;">
+                            <i class="fa-solid fa-user-plus"></i> Thêm Người nhận mới
+                        </button>
+                        <!-- BỔ SUNG NÚT PHÁT CẢNH BÁO TOÀN BỘ NÀY -->
+                        <button class="btn-add-station" onclick="broadcastAlertToAll()" style="background: #ef4444; border: 1px solid #f87171;">
+                            <i class="fa-solid fa-bullhorn"></i> Phát Cảnh Báo Khẩn (Toàn bộ)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container" style="max-height: 440px; margin-top: 16px;">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Họ và Tên</th>
+                                <th>Email nhận cảnh báo</th>
+                                <th>Số điện thoại (Zalo)</th>
+                                <th>Khu vực theo dõi</th>
+                                <th>Ngưỡng kích hoạt</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Thao tác Quản trị</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adm-subscribers-table">
+                            <tr>
+                                <td colspan="8" style="text-align:center;">Đang nạp danh sách đăng ký...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- MODAL 1: FORM THÊM TRẠM MỚI -->
+    <div id="modal-add-station" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-circle" style="color: #38bdf8;"></i> Thêm Trạm Quan Trắc WebGIS Mới</h3>
+                <button class="btn-modal-close" onclick="closeAddStationModal()">&times;</button>
+            </div>
+            <form id="form-add-station" onsubmit="submitNewStation(event)">
+                <div class="modal-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Mã trạm (PostGIS ID) <span style="color: #ef4444;">*</span></label>
+                            <input type="text" id="new-st-id" class="custom-input" placeholder="VD: HCM_Q2_01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái hoạt động</label>
+                            <select id="new-st-status" class="custom-input">
+                                <option value="HOẠT ĐỘNG" selected>HOẠT ĐỘNG</option>
+                                <option value="BẢO TRÌ">BẢO TRÌ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Tên Trạm Quan Trắc <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="new-st-name" class="custom-input"
+                            placeholder="VD: Trạm Quan trắc Thảo Điền - Q.2" required>
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Đơn vị Quản lý / Vận hành <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="new-st-owner" class="custom-input"
+                            placeholder="VD: Chi cục Bảo vệ Môi trường TP.HCM" required>
+                    </div>
+                    <div class="form-grid-2" style="margin-top: 14px;">
+                        <div class="form-group">
+                            <label>Vĩ độ (Latitude) <span style="color: #ef4444;">*</span></label>
+                            <input type="number" step="0.0001" id="new-st-lat" class="custom-input"
+                                placeholder="VD: 10.8012" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kinh độ (Longitude) <span style="color: #ef4444;">*</span></label>
+                            <input type="number" step="0.0001" id="new-st-lng" class="custom-input"
+                                placeholder="VD: 106.7321" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAddStationModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn-modal-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu & Đồng bộ
+                        Bản đồ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- MODAL CHỈNH SỬA TRẠM QUAN TRẮC POSTGIS -->
+    <div id="modal-edit-station" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square" style="color: #f59e0b;"></i> Chỉnh Sửa Trạm Quan Trắc</h3>
+                <button class="btn-modal-close" onclick="closeEditStationModal()">&times;</button>
+            </div>
+            <form id="form-edit-station" onsubmit="submitEditStation(event)">
+                <div class="modal-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Mã trạm (Mã định danh không đổi)</label>
+                            <input type="text" id="edit-st-id" class="custom-input" readonly style="background: rgba(255,255,255,0.05); color: #38bdf8; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái hoạt động</label>
+                            <select id="edit-st-status" class="custom-input">
+                                <option value="HOẠT ĐỘNG">HOẠT ĐỘNG</option>
+                                <option value="BẢO TRÌ">BẢO TRÌ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Tên Trạm Quan Trắc <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="edit-st-name" class="custom-input" placeholder="VD: Trạm Quan Trắc Sơn Kỳ - Quận Tân Phú" required>
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Đơn vị Quản lý / Vận hành <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="edit-st-owner" class="custom-input" placeholder="VD: Chi cục Bảo vệ Môi Trường Tân Phú" required>
+                    </div>
+                    <div class="form-grid-2" style="margin-top: 14px;">
+                        <div class="form-group">
+                            <label>Vĩ độ (Latitude) <span style="color: #ef4444;">*</span></label>
+                            <input type="number" step="0.0001" id="edit-st-lat" class="custom-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kinh độ (Longitude) <span style="color: #ef4444;">*</span></label>
+                            <input type="number" step="0.0001" id="edit-st-lng" class="custom-input" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeEditStationModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn-modal-submit" style="background: #f59e0b;">
+                        <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: FORM THÊM NGƯỜI NHẬN CẢNH BÁO MỚI (DÀNH CHO ADMIN) -->
+    <div id="modal-add-sub" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus" style="color: #a855f7;"></i> Thêm Người Dùng Nhận Cảnh Báo AQI</h3>
+                <button class="btn-modal-close" onclick="closeAddSubscriberModal()">&times;</button>
+            </div>
+            <form id="form-add-sub" onsubmit="submitNewSubscriber(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Họ và tên người nhận <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="adm-sub-name" class="custom-input" placeholder="Nhập họ và tên..."
+                            required>
+                    </div>
+                    <div class="form-grid-2" style="margin-top: 14px;">
+                        <div class="form-group">
+                            <label>Email <span style="color: #ef4444;">*</span></label>
+                            <input type="email" id="adm-sub-email" class="custom-input" placeholder="name@example.com"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại (Zalo)</label>
+                            <input type="tel" id="adm-sub-phone" class="custom-input" placeholder="0901234567">
+                        </div>
+                    </div>
+                    <div class="form-grid-2" style="margin-top: 14px;">
+                        <div class="form-group">
+                            <label>Khu vực theo dõi</label>
+                            <select id="adm-sub-ward" class="custom-input">
+                                <option value="Phường Bình Đông (Q.8)">Phường Bình Đông (Quận 8)</option>
+                                <option value="Phường Gò Vấp">Phường Gò Vấp</option>
+                                <option value="Phường Tân Tạo (Bình Tân)">Phường Tân Tạo (Bình Tân)</option>
+                                <option value="Tất cả TP.HCM">Tất cả TP.HCM</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngưỡng kích hoạt</label>
+                            <select id="adm-sub-threshold" class="custom-input">
+                                <option value="100">AQI > 100 (Kém)</option>
+                                <option value="150" selected>AQI > 150 (Xấu)</option>
+                                <option value="200">AQI > 200 (Rất xấu)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAddSubscriberModal()">Hủy bỏ</button>
+                    <button type="submit" class="btn-modal-submit" style="background: #8b5cf6;"><i
+                            class="fa-solid fa-check"></i> Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: FORM GỬI CẢNH BÁO TRỰC TIẾP TỚI END-USER -->
+    <div id="modal-send-alert" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-paper-plane" style="color: #ef4444;"></i> Phát Cảnh Báo Ô Nhiễm Khẩn Cấp</h3>
+                <button class="btn-modal-close" onclick="closeSendAlertModal()">&times;</button>
+            </div>
+            <form id="form-send-alert" onsubmit="submitSendAlert(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Người nhận thông báo</label>
+                        <input type="text" id="alert-recipient" class="custom-input" readonly
+                            style="background: rgba(255,255,255,0.03); color: #38bdf8;">
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Tiêu đề cảnh báo</label>
+                        <input type="text" id="alert-title" class="custom-input"
+                            value="⚠️ BÁO ĐỘNG BỤI MỊN PM2.5 VƯỢT NGƯỠNG TẠI KHU VỰC CỦA BẠN" required>
+                    </div>
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Nội dung cảnh báo chi tiết</label>
+                        <textarea id="alert-message" class="custom-input" rows="4" style="resize: none;"
+                            required>Hệ thống WebGIS AirHCM ghi nhận chỉ số US AQI tại khu vực của bạn hiện vượt mức 150 (Mức Xấu). Bộ Nông nghiệp & Môi trường khuyến cáo người dân hạn chế ra ngoài đường và đeo khẩu trang N95 chống bụi mịn.</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" onclick="closeSendAlertModal()">Hủy</button>
+                    <button type="submit" class="btn-modal-submit" style="background: #ef4444;"><i
+                            class="fa-solid fa-bullhorn"></i> Gửi Cảnh báo Ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-admin-notification" class="admin-toast"></div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống WebGIS Dự báo AQI & Cảnh báo Sức khỏe TP.HCM - HCMUNRE</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <link ref="image" href="assets/img/Logo AirHCM.png">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-wind"></i>
+        </div>
+        <ul class="nav-links">
+            <li class="nav-item active" data-tab="tab-map">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span class="tooltip">Bản đồ WebGIS</span>
+            </li>
+            <li class="nav-item" data-tab="tab-forecast">
+                <i class="fa-solid fa-chart-line"></i>
+                <span class="tooltip">Dự báo AI</span>
+            </li>
+            <li class="nav-item" data-tab="tab-dss">
+                <i class="fa-solid fa-notes-medical"></i>
+                <span class="tooltip">Khuyến nghị Y tế</span>
+            </li>
+            <li class="nav-item" data-tab="tab-hotspots">
+                <i class="fa-solid fa-fire-flame-curved"></i>
+                <span class="tooltip">Điểm nóng Ô nhiễm</span>
+            </li>
+            <li class="nav-item" data-tab="tab-subscribe">
+                <i class="fa-solid fa-bell"></i>
+                <span class="tooltip">Đăng ký Cảnh báo</span>
+            </li>
+            <li class="nav-item" data-tab="tab-about">
+                <i class="fa-solid fa-circle-info"></i>
+                <span class="tooltip">Giới thiệu Hệ thống</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <i class="fa-solid fa-graduation-cap" title="Đồ án chuyên ngành HCMUNRE"></i>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="main-container">
+
+        <!-- Top Header Bar -->
+        <header class="topbar">
+            <div class="header-title">
+                <h2>HỆ THỐNG WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ (PM2.5/AQI) & CẢNH BÁO SỨC KHỎE</h2>
+                <p>Khoa CNTT - Trường ĐH Tài nguyên & Môi trường TP.HCM | SVTH: LÊ HOÀNG ÂN | GVHD: TS. Dương Thị Thúy Nga</p>
+            </div>
+            <div class="header-status">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>Hệ thống trực tuyến (Real-time)</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- VIEW 1: BẢN ĐỒ WEBGIS THỜI GIAN THỰC -->
+        <section id="tab-map" class="tab-content active">
+            <div id="map"></div>
+
+            <div id="panel-station" class="panel floating-top-left">
+                <div class="panel-header">
+                    <h4><i class="fa-solid fa-tower-broadcast"></i> Trạm Trung tâm TP.HCM</h4>
+                    <span id="realtime-clock" class="badge-time">Đang nạp...</span>
+                </div>
+                <div class="aqi-main-display">
+                    <div class="aqi-circle" id="aqi-indicator-circle">
+                        <span id="current-aqi">--</span>
+                        <small>US AQI</small>
+                    </div>
+                    <div class="aqi-desc">
+                        <span class="aqi-tag" id="current-aqi-level">Đang đồng bộ...</span>
+                        <p id="qcvn-tag" class="qcvn-info">QCVN 05:2023/BTNMT</p>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span>PM2.5</span>
+                        <b id="current-pm25">-- µg/m³</b>
+                    </div>
+                    <div class="metric-item">
+                        <span>PM10</span>
+                        <b id="current-pm10">-- µg/m³</b>
+                    </div>
+                    <div class="metric-item">
+                        <span>Nhiệt độ (ERA5)</span>
+                        <b id="current-temp">-- °C</b>
+                    </div>
+                    <div class="metric-item">
+                        <span>Khí dung (S5P)</span>
+                        <b id="current-aerosol">0.75 AAI</b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Playback 24h -->
+            <div id="panel-playback" class="panel floating-playback">
+                <div class="playback-header">
+                    <button id="btn-play-pause" class="btn-circle-play" type="button" title="Phát/Tạm dừng mô phỏng 24h">
+                        <i id="play-icon" class="fa-solid fa-play"></i>
+                    </button>
+                    <div class="time-display">
+                        <div class="time-main">
+                            <span id="playback-time-label">08:00</span>
+                            <span id="playback-badge" class="badge-period">Sáng</span>
+                        </div>
+                        <small id="playback-period-desc">Giờ cao điểm sáng - Ùn tắc giao thông</small>
+                    </div>
+                </div>
+                <div class="slider-wrapper">
+                    <input type="range" id="time-slider" min="0" max="23" value="8" step="1" class="time-range-slider">
+                    <div class="slider-marks">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>23:00</span>
+                    </div>
+                </div>
+            </div>
+
+           <!-- Cụm Điều khiển Hợp nhất Góc trên Phải -->
+            <div id="panel-controls" class="floating-top-right-controls">
+                <!-- Hàng điều khiển ngang: Nút GPS và Cụm Zoom nằm cạnh nhau -->
+                <div class="top-action-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <button id="btn-locate" class="btn-gps" type="button" title="Xác định vị trí GPS của bạn" style="margin-bottom: 0;">
+                        <i class="fa-solid fa-crosshairs"></i> Vị trí của tôi
+                    </button>
+                    <!-- Khung gắn cụm nút Zoom (+ / -) của Leaflet -->
+                    <div id="custom-zoom-slot"></div>
+                </div>
+
+                <div class="panel map-layer-control">
+                    <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
+                    <label class="layer-item">
+                        <span><i class="fa-solid fa-tower-broadcast"></i> Trạm quan trắc</span>
+                        <input type="checkbox" id="chk-stations" checked>
+                    </label>
+                    <label class="layer-item">
+                        <span><i class="fa-solid fa-fire-flame-curved"></i> Bản đồ nhiệt (Heatmap)</span>
+                        <input type="checkbox" id="chk-heatmap" checked>
+                    </label>
+                    <label class="layer-item">
+                        <span><i class="fa-solid fa-map"></i> Ranh giới phường/xã</span>
+                        <input type="checkbox" id="chk-wards" checked>
+                    </label>
+
+                    <div class="layer-group-title" style="margin-top: 10px;"><i class="fa-solid fa-map-location"></i> Bản đồ nền (Basemap)</div>
+                    <select id="select-basemap" class="basemap-select">
+                        <option value="dark">Nền tối Esri Dark Gray</option>
+                        <option value="osm">Tiêu chuẩn OpenStreetMap</option>
+                        <option value="satellite">Ảnh vệ tinh Esri Satellite</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="panel-legend" class="panel floating-bottom-right">
+                <h5 style="margin-bottom: 6px; color: #94a3b8; font-size: 11px; text-transform: uppercase;">Mức độ AQI (US EPA)</h5>
+                <div class="legend-scale">
+                    <div><span style="background: #00E400;"></span> 0-50: Tốt</div>
+                    <div><span style="background: #FFFF00;"></span> 51-100: Trung bình</div>
+                    <div><span style="background: #FF7E00;"></span> 101-150: Kém</div>
+                    <div><span style="background: #FF0000;"></span> 151-200: Xấu</div>
+                    <div><span style="background: #8F3F97;"></span> 201-300: Rất xấu</div>
+                    <div><span style="background: #7E0023;"></span> >300: Nguy hại</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: DỰ BÁO CHUỖI THỜI GIAN AI -->
+        <section id="tab-forecast" class="tab-content">
+            <div class="content-wrapper">
+                <div class="panel card-full" style="min-height: 420px; margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fa-solid fa-brain"></i> Dự báo Biến thiên Chuỗi thời gian PM2.5 & AQI</h3>
+                            <p>Mô hình Học máy Random Forest kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
+                        </div>
+                        <div class="forecast-controls">
+                            <button class="btn btn-forecast active" onclick="loadForecast(24, event)">24 Giờ tới</button>
+                            <button class="btn btn-forecast" onclick="loadForecast(72, event)">72 Giờ (3 Ngày)</button>
+                            <button class="btn btn-forecast" onclick="loadForecast(168, event)">7 Ngày tới</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 320px;">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Thẻ KPI Dự báo -->
+                <div class="forecast-kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                    <div class="panel kpi-card">
+                        <span><i class="fa-solid fa-mountain-city"></i> Đỉnh PM2.5 cao nhất</span>
+                        <b id="kpi-peak-pm25" style="color: #38bdf8;">-- µg/m³</b>
+                        <small id="kpi-peak-time">Đang tính toán...</small>
+                    </div>
+                    <div class="panel kpi-card">
+                        <span><i class="fa-solid fa-chart-line-up"></i> AQI Đỉnh điểm</span>
+                        <b id="kpi-peak-aqi" style="color: #f59e0b;">--</b>
+                        <small>Chuẩn US EPA</small>
+                    </div>
+                    <div class="panel kpi-card">
+                        <span><i class="fa-solid fa-arrows-spin"></i> Xu hướng Biến thiên</span>
+                        <b id="kpi-trend" style="color: #4ade80;">Giảm dần về trưa</b>
+                        <small>Xáo trộn lớp biên khí quyển</small>
+                    </div>
+                    <div class="panel kpi-card">
+                        <span><i class="fa-solid fa-microchip"></i> Độ chính xác AI ($R^2$)</span>
+                        <b style="color: #a855f7;">0.879 (87.9%)</b>
+                        <small>Random Forest Regressor</small>
+                    </div>
+                </div>
+
+                <!-- Bảng Chi tiết Chuỗi Số liệu Dự báo -->
+                <div class="panel card-full">
+                    <div class="panel-header">
+                        <h4><i class="fa-solid fa-table-list"></i> Bảng Chi tiết Chuỗi Số liệu Dự báo Cuốn chiếu Theo Giờ</h4>
+                    </div>
+                    <div class="table-container" style="max-height: 280px;">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Mốc thời gian</th>
+                                    <th>PM2.5 Dự báo</th>
+                                    <th>PM10 Ước tính</th>
+                                    <th>US AQI</th>
+                                    <th>Phân loại Môi trường</th>
+                                    <th>QCVN 05:2023</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forecast-table-body">
+                                <tr><td colspan="6" style="text-align: center;">Đang nạp dữ liệu từ AI Engine...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: HỖ TRỢ RA QUYẾT ĐỊNH (DSS) -->
+        <section id="tab-dss" class="tab-content">
+            <div class="content-wrapper">
+                <div class="dss-grid" style="margin-bottom: 24px;">
+                    <div class="panel dss-card">
+                        <div class="dss-icon" style="color: #38bdf8;"><i class="fa-solid fa-users"></i></div>
+                        <h4>Cộng đồng Dân cư</h4>
+                        <div class="dss-badge" id="dss-status-badge">Đang tải...</div>
+                        <p id="dss-general">Hệ thống đang trích xuất bộ quy tắc cảnh báo...</p>
+                    </div>
+                    <div class="panel dss-card">
+                        <div class="dss-icon" style="color: #f59e0b;"><i class="fa-solid fa-person-breastfeeding"></i></div>
+                        <h4>Nhóm Người Nhạy cảm</h4>
+                        <small style="color: var(--text-sub);">Trẻ em, người cao tuổi, bệnh nhân hô hấp</small>
+                        <p id="dss-sensitive" style="margin-top: 15px;">Hệ thống đang tính toán khuyến cáo cá thể hóa...</p>
+                    </div>
+                    <div class="panel dss-card">
+                        <div class="dss-icon" style="color: #ef4444;"><i class="fa-solid fa-city"></i></div>
+                        <h4>Cơ quan Quản lý Đô thị</h4>
+                        <small style="color: var(--text-sub);">Kịch bản điều hành ứng phó môi trường</small>
+                        <p id="dss-action" style="margin-top: 15px;">Hệ thống đang tham chiếu kịch bản phân luồng...</p>
+                    </div>
+                </div>
+
+                <!-- Bộ Tra cứu Tương tác AQI Slider -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="panel">
+                        <h4><i class="fa-solid fa-sliders"></i> Bộ Mô phỏng Tra cứu Kịch bản DSS Tương tác</h4>
+                        <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 16px 0;">Kéo thanh trượt để thử nghiệm kịch bản ứng phó cho các mức AQI khác nhau</p>
+
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+                            <input type="range" id="eval-aqi-slider" min="0" max="300" value="105" class="time-range-slider" style="flex:1;">
+                            <b id="eval-aqi-val" style="font-size: 22px; color: #ff7e00; width: 60px;">105</b>
+                        </div>
+
+                        <div id="eval-result-box" style="padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 4px solid #ff7e00; font-size: 13px; line-height: 1.5;">
+                            <b>Khuyến cáo mức Kém (101-150):</b> Người dân nên đeo khẩu trang N95 khi di chuyển ngoài đường vào giờ cao điểm. Các trường học hạn chế hoạt động thể dục ngoài trời cho học sinh.
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h4><i class="fa-solid fa-scale-balanced"></i> So sánh Ngưỡng Giới hạn PM2.5 (24h Trung bình)</h4>
+                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div>
+                                    <b style="color: #38bdf8;">QCVN 05:2023/BTNMT</b>
+                                    <small style="display:block; color:#94a3b8;">Quy chuẩn kỹ thuật Quốc gia Việt Nam</small>
+                                </div>
+                                <b style="font-size: 18px;">50 µg/m³</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                                <div>
+                                    <b style="color: #4ade80;">Khuyến nghị WHO (2021)</b>
+                                    <small style="display:block; color:#94a3b8;">Tổ chức Y tế Thế giới</small>
+                                </div>
+                                <b style="font-size: 18px;">15 µg/m³</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: BẢNG ĐIỂM NÓNG 166 PHƯỜNG/XÃ -->
+        <section id="tab-hotspots" class="tab-content">
+            <div class="content-wrapper">
+                <div class="panel card-full">
+                    <div class="panel-header">
+                        <div>
+                            <h3><i class="fa-solid fa-chart-column"></i> Phân tích Điểm nóng Ô nhiễm (Hotspots)</h3>
+                            <p>Xếp hạng mức độ ô nhiễm không khí tại 166 Phường/Xã TP.Hồ Chí Minh</p>
+                        </div>
+                        <input type="text" id="search-ward" class="search-box" placeholder="Tìm kiếm Phường/Xã..." onkeyup="filterWards()">
+                    </div>
+                    <div class="table-container">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Mã Phường/Xã</th>
+                                    <th>Tên Phường/Xã</th>
+                                    <th>Diện tích (km²)</th>
+                                    <th>Trạm lân cận</th>
+                                    <th>PM2.5 Trung bình</th>
+                                    <th>US AQI</th>
+                                    <th>Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotspots-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Đang nạp dữ liệu từ PostGIS...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: ĐĂNG KÝ NHẬN CẢNH BÁO TỰ ĐỘNG -->
+        <section id="tab-subscribe" class="tab-content">
+            <div class="content-wrapper" style="display: flex; justify-content: center; align-items: center;">
+                <div class="panel" style="width: 560px; padding: 32px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 42px; color: #38bdf8; margin-bottom: 10px;"><i class="fa-solid fa-bell-concierge"></i></div>
+                        <h3 style="font-size: 20px;">Đăng ký Nhận Cảnh báo AQI Tự động</h3>
+                        <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Hệ thống sẽ tự động gửi thông báo khi chỉ số ô nhiễm tại khu vực của bạn vượt ngưỡng an toàn</p>
+                    </div>
+
+                    <form id="form-subscribe">
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Họ và tên người nhận</label>
+                            <input type="text" id="sub-name" class="custom-input" placeholder="Nhập họ và tên..." required>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Địa chỉ Email</label>
+                                <input type="email" id="sub-email" class="custom-input" placeholder="name@example.com" required>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Số điện thoại (Zalo)</label>
+                                <input type="tel" id="sub-phone" class="custom-input" placeholder="0901234567">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                            <div>
+                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Khu vực/Phường Xã theo dõi</label>
+                                <select id="sub-ward" class="custom-input">
+                                    <option value="27424">Phường Bình Đông (Quận 8)</option>
+                                    <option value="26884">Phường Gò Vấp</option>
+                                    <option value="26782">Phường Tân Thới Hiệp (Q.12)</option>
+                                    <option value="ALL">Tất cả khu vực TP.HCM</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Ngưỡng kích hoạt cảnh báo</label>
+                                <select id="sub-threshold" class="custom-input">
+                                    <option value="100">AQI > 100 (Mức Kém)</option>
+                                    <option value="150" selected>AQI > 150 (Mức Xấu)</option>
+                                    <option value="200">AQI > 200 (Mức Rất xấu)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #0284c7; color: #fff; font-size: 14px; border-radius: 10px;">
+                            <i class="fa-solid fa-paper-plane"></i> Đăng ký Nhận Cảnh báo
+                        </button>
+                    </form>
+
+                    <div id="sub-toast" style="display: none; margin-top: 16px; padding: 12px; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; color: #4ade80; border-radius: 8px; font-size: 13px; text-align: center;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 6: GIỚI THIỆU HỆ THỐNG WEBGIS -->
+        <section id="tab-about" class="tab-content">
+            <div class="content-wrapper">
+                <div class="panel card-full" style="padding: 32px;">
+                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 24px;">
+                        <h2 style="font-size: 22px; color: #38bdf8;"><i class="fa-solid fa-earth-asia"></i> HỆ THỐNG WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ AIRHCM</h2>
+                        <p style="font-size: 13px; color: #94a3b8; margin-top: 6px;">Đồ án Chuyên ngành Công nghệ Thông tin - Chuyên ngành IT Môi trường | Trường Đại học Tài nguyên và Môi trường TP.HCM (HCMUNRE)</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <h4 style="color: #f59e0b; margin-bottom: 12px;"><i class="fa-solid fa-user-graduate"></i> Thông tin Thực hiện</h4>
+                            <ul style="list-style: none; font-size: 13px; line-height: 2; color: #cbd5e1;">
+                                <li><b>Sinh viên thực hiện:</b> LÊ HOÀNG ÂN</li>
+                                <li><b>Mã số sinh viên:</b> 1250080001 </li>
+                                <li><b>Chuyên ngành:</b> Tin Học Môi Trường </li>
+                                <li><b>Giảng viên hướng dẫn:</b> TS. Dương Thị Thúy Nga</li>
+                                <li><b>Đơn vị đào tạo:</b> Trường Đại Học Tài Nguyên & Môi Trường TP. Hồ Chí Minh</li>
+                            </ul>
+
+                            <h4 style="color: #38bdf8; margin: 20px 0 12px 0;"><i class="fa-solid fa-bullseye"></i> Mục tiêu Đồ án</h4>
+                            <p style="font-size: 13px; line-height: 1.6; color: #94a3b8; text-align: justify;">
+                                Xây dựng giải pháp WebGIS tích hợp trí tuệ nhân tạo (Mô hình Học máy Random Forest) và động cơ hỗ trợ ra quyết định (DSS Engine) nhằm giám sát, dự báo chuỗi thời gian nồng độ bụi mịn PM2.5 và chỉ số US AQI theo thời gian thực cho 166 Phường/Xã trên địa bàn TP.Hồ Chí Minh.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 style="color: #4ade80; margin-bottom: 12px;"><i class="fa-solid fa-layer-group"></i> Sơ đồ Kiến trúc Hệ thống 3 Lớp (3-Tier Architecture)</h4>
+                            <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); font-size: 12px; line-height: 1.8;">
+                                <p><b style="color: #38bdf8;">1. Lớp Dữ liệu (Data Layer):</b> PostgreSQL 16 + PostGIS Extension, Chuỗi thời gian Open-Meteo, Ảnh vệ tinh Sentinel-5P (AAI) & Khí tượng ERA5-Land.</p>
+                                <p><b style="color: #f59e0b;">2. Lớp Dịch vụ & AI (Service Layer):</b> FastAPI Python, Mô hình Random Forest Regressor ($R^2 = 0.88$), Động cơ DSS tham chiếu QCVN 05:2023/BTNMT & US EPA.</p>
+                                <p><b style="color: #4ade80;">3. Lớp Giao diện (Presentation Layer):</b> Bản đồ số Leaflet.js, Biểu đồ Chart.js, Thiết kế Glassmorphism Dashboard Responsive.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

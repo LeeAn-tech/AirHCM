@@ -1,0 +1,9 @@
+# Thư viện & node
+node_modules/
+.DS_Store
+Thumbs.db
+
+# File môi trường chứa cấu hình nhạy cảm
+.env
+.env.local
+*.log

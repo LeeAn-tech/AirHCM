@@ -1,0 +1,1110 @@
+:root {
+    --bg-dark: #0a0f1d;
+    --panel-bg: rgba(15, 23, 42, 0.88);
+    --panel-border: rgba(255, 255, 255, 0.12);
+    --primary: #38bdf8;
+    --primary-hover: #0284c7;
+    --text-white: #ffffff;
+    --text-sub: #94a3b8;
+    --border-radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    width: 80px;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+    border-right: 1px solid var(--panel-border);
+    z-index: 10000;
+}
+
+.sidebar .logo {
+    font-size: 28px;
+    color: var(--primary);
+    margin-bottom: 35px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.nav-item {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-item:hover, .nav-item.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+}
+
+.tooltip {
+    position: absolute;
+    left: 75px !important;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.15);
+    z-index: 100000;
+}
+
+.nav-item:hover .tooltip {
+    opacity: 1 !important;
+}
+
+/* Main Container */
+.main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.topbar {
+    height: 70px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 9000;
+}
+
+.header-title h2 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.header-title p {
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 2px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 228, 0, 0.1);
+    border: 1px solid rgba(0, 228, 0, 0.3);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    color: #4ade80;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #4ade80;
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    position: relative;
+    height: calc(100vh - 70px);
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Glassmorphism Floating Panels Base */
+.panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+/* PANEL 1: GÓC TRÊN TRÁI */
+.floating-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 360px;
+}
+
+/* PANEL 2: GÓC DƯỚI TRÁI (PLAYBACK 24H) */
+.floating-playback {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 420px;
+    padding: 16px 20px;
+}
+
+/* PANEL 3: GÓC TRÊN PHẢI (CỤM ĐIỀU KHIỂN HỢP NHẤT - ZERO OVERLAP) */
+.floating-top-right-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.btn-gps {
+    background: #0284c7;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-gps:hover {
+    background: #0369a1;
+    transform: translateY(-2px);
+}
+
+.map-layer-control {
+    width: 240px;
+    padding: 14px 16px;
+}
+
+.layer-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    color: #e2e8f0;
+    cursor: pointer;
+}
+
+.layer-item input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.basemap-select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.basemap-select option {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+/* PANEL 4: GÓC DƯỚI PHẢI (CHÚ GIẢI) */
+.floating-bottom-right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 14px 18px;
+    font-size: 12px;
+}
+
+/* Sắp xếp vị trí cụm nút Zoom Leaflet không bị đè */
+.leaflet-top.leaflet-right {
+    top: 20px !important;
+    right: 275px !important; /* Đẩy cụm Zoom sang bên trái của bảng điều khiển */
+}
+
+/* Ẩn bộ chọn basemap cũ của Leaflet */
+.leaflet-control-layers {
+    display: none !important;
+}
+
+/* Nội dung bên trong Panel AQI & Playback */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.badge-time {
+    font-size: 11px;
+    color: var(--text-sub);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.aqi-main-display {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.aqi-circle {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 4px solid var(--primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.aqi-circle span {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.aqi-circle small {
+    font-size: 10px;
+    color: var(--text-sub);
+}
+
+.aqi-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #00E400;
+    color: #000;
+}
+
+.qcvn-info {
+    font-size: 11px;
+    color: var(--primary);
+    margin-top: 6px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metric-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.metric-item span {
+    font-size: 11px;
+    color: var(--text-sub);
+}
+
+.metric-item b {
+    display: block;
+    font-size: 15px;
+    margin-top: 2px;
+}
+
+/* Playback Styling */
+.playback-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.btn-circle-play {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #0f172a;
+    border: none;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4);
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.btn-circle-play:hover {
+    transform: scale(1.08);
+    background: #7dd3fc;
+}
+
+.btn-circle-play.playing {
+    background: #f59e0b;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+}
+
+.time-display {
+    flex: 1;
+}
+
+.time-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-main span {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.badge-period {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.time-display small {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.time-range-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.slider-marks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+.legend-scale div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.legend-scale span {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* CSS Cho Tabs khác & Tables */
+.content-wrapper { flex: 1; padding: 26px; overflow-y: auto; }
+.card-full { width: 100%; min-height: 500px; }
+.chart-container { height: 400px; margin-top: 15px; }
+.btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: rgba(255,255,255,0.06); color: #fff; margin-left: 8px; }
+.btn-primary.active, .btn-primary:hover { background: var(--primary); color: #000; }
+.dss-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.dss-card { text-align: center; padding: 30px 20px; }
+.dss-icon { font-size: 38px; margin-bottom: 16px; }
+.dss-badge { display: inline-block; padding: 5px 14px; border-radius: 20px; margin: 12px 0; font-weight: 700; background: #00e400; color: #000; }
+.dss-card p { font-size: 13px; line-height: 1.6; color: #cbd5e1; text-align: justify; }
+.search-box { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--panel-border); background: rgba(255,255,255,0.05); color: #fff; width: 240px; }
+.table-container { max-height: 440px; overflow-y: auto; margin-top: 15px; }
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table th, .custom-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+.custom-table th { background: rgba(255,255,255,0.02); color: var(--text-sub); }
+
+/* Radar Icon Trạm quan trắc */
+.station-radar-marker { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.station-radar-core { width: 14px; height: 14px; background: #38bdf8; border: 2px solid #ffffff; border-radius: 50%; z-index: 2; box-shadow: 0 0 10px #38bdf8; }
+.station-radar-wave { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); animation: radar-pulse 2s infinite ease-out; z-index: 1; }
+@keyframes radar-pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+
+/* Thẻ KPI Trang Dự báo AI */
+.kpi-card {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.kpi-card span {
+    font-size: 11px;
+    color: var(--text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kpi-card b {
+    font-size: 20px;
+    margin: 6px 0 2px 0;
+}
+
+.kpi-card small {
+    font-size: 10px;
+    color: #64748b;
+}
+
+/* Ô nhập liệu Form Đăng ký Cảnh báo */
+.custom-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.custom-input:focus {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.custom-input option {
+    background: #0f172a;
+    color: #ffffff;
+}
+/* Nút dự báo thời gian active */
+.btn-forecast {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: var(--transition);
+}
+
+.btn-forecast:hover, .btn-forecast.active {
+    background: var(--primary);
+    color: #0f172a;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
+/* ==========================================================================
+   DINH DANG MONG CHO DẠNG ADMIN DASHBOARD CHUYÊN NGHIỆP
+   ========================================================================== */
+.admin-body {
+    background-color: #060b17;
+    color: #f8fafc;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+.admin-topbar {
+    height: 68px;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.admin-logo-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.admin-brand h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.admin-brand p {
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 2px;
+}
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-admin-nav {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-admin-nav:hover {
+    background: var(--primary);
+    color: #0f172a;
+}
+
+.btn-admin-logout {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-admin-logout:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* Main Layout Grid */
+.admin-workspace {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.admin-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+.admin-kpi-box {
+    padding: 16px;
+}
+
+.admin-kpi-box span {
+    font-size: 11px;
+    color: var(--text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-kpi-box b {
+    font-size: 22px;
+    display: block;
+    margin: 6px 0 2px 0;
+}
+
+.admin-kpi-box small {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.admin-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+}
+
+.admin-left-col, .admin-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.admin-map-panel {
+    padding: 16px;
+}
+
+.admin-map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+#admin-map-wrapper {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#admin-map {
+    width: 100%;
+    height: 100%;
+}
+
+.map-coords-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--primary);
+    z-index: 1000;
+}
+
+.btn-admin-small {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-add-station {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-add-station:hover {
+    background: #0369a1;
+    transform: translateY(-1px);
+}
+
+.ai-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.ai-status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+}
+
+.btn-etl-trigger {
+    width: 100%;
+    margin-top: 16px;
+    padding: 11px;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.etl-msg-toast {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid #4ade80;
+    color: #4ade80;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   DINH DANG MODAL WINDOW FORM THÊM TRẠM MỚI (GLASSMORPHISM OVERLAY)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(3, 7, 18, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-card {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: 520px;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    animation: modal-fade-in 0.25s ease-out;
+}
+
+@keyframes modal-fade-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.btn-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-modal-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-modal-submit {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0284c7;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    display: none;
+    z-index: 100000;
+}
+/* ==========================================================================
+   DINH DANG TABS VA HEADER ADMIN DASHBOARD MỚI
+   ========================================================================== */
+.admin-tab-nav {
+    display: flex;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.adm-tab-btn {
+    background: transparent;
+    color: var(--text-sub);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.adm-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.adm-tab-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+}
+
+.adm-tab-content {
+    display: none;
+}
+
+.adm-tab-content.active {
+    display: block;
+}
+
+.admin-map-layout {
+    width: 100%;
+}
+
+.btn-action-sm {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.btn-act-alert { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+.btn-act-alert:hover { background: #ef4444; color: #fff; }
+
+.btn-act-delete { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+.btn-act-delete:hover { background: #64748b; color: #fff; }
+
+/* Xóa viền đen outline mặc định của trình duyệt khi click vào polygon ranh giới */
+path.leaflet-interactive:focus {
+    outline: none !important;
+}
+
+/* Tùy chỉnh popup thông tin phường cho đẹp và chuyên nghiệp */
+.ward-popup .leaflet-popup-content-wrapper {
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #38bdf8;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+.ward-popup .leaflet-popup-tip {
+    background: #0f172a;
+}
+/* ========================================================================== */
+/* TÙY CHỈNH NÚT ZOOM NẰM BÊN PHẢI NÚT VỊ TRÍ & TRIỆT TIÊU VIỀN ĐEN PHƯỜNG  */
+/* ========================================================================== */
+
+/* Canh chỉnh cụm nút Zoom Leaflet xếp nằm ngang cạnh nút Vị trí */
+#custom-zoom-slot .leaflet-control-zoom {
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a {
+    background-color: #0f172a !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    font-size: 15px !important;
+    transition: all 0.2s ease !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:first-child {
+    border-radius: 8px 0 0 8px !important;
+    border-right: none !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:last-child {
+    border-radius: 0 8px 8px 0 !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:hover {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+/* Xóa viền đen mặc định của trình duyệt khi click vào polygon */
+path.leaflet-interactive:focus {
+    outline: none !important;
+}
+
+/* Kiểu dáng popup chuyên nghiệp cho từng phường */
+.ward-popup .leaflet-popup-content-wrapper {
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #38bdf8;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.ward-popup .leaflet-popup-tip {
+    background: #0f172a;
+}
+/* ========================================================================== */
+/* BIỂU TƯỢNG TRẠM QUAN TRẮC CHUẨN PHONG CÁCH IQAIR                           */
+/* ========================================================================== */
+.iqair-station-wrapper {
+    background: transparent !important;
+    border: none !important;
+}
+
+.iqair-station-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.iqair-station-badge:hover {
+    transform: scale(1.22);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
+    z-index: 1000 !important;
+}
