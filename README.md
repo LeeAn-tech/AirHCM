@@ -15,7 +15,7 @@
 
 **AirHCM** là nền tảng WebGIS thông minh tích hợp Trí tuệ Nhân tạo (Machine Learning) và Động cơ Hỗ trợ Ra Quyết định (DSS Engine) nhằm giám sát, dự báo chất lượng không khí thời gian thực và tự động phát cảnh báo sức khỏe cộng đồng tại TP. Hồ Chí Minh. 
 
-Hệ thống giải quyết bài toán chuyển dịch từ **giám sát môi trường bị động** sang **dự báo chủ động và cảnh báo sớm đa kênh**, phục vụ song song cho cả **cộng đồng dân cư** và **cơ quan quản lý nhà nước (Bộ/Sở Tài nguyên & Môi trường)**.
+Hệ thống giải quyết bài toán chuyển dịch từ **giám sát môi trường bị động** sang **dự báo chủ động và cảnh báo sớm đa kênh**, phục vụ song song cho cả **cộng đồng dân cư** và **cơ quan quản lý nhà nước (Bộ/Sở Nông Nghiệp & Môi trường)**.
 
 ---
 
