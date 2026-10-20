@@ -1,13 +1,12 @@
 :root {
-    --bg-dark: #0a0f1d;
-    --panel-bg: rgba(15, 23, 42, 0.88);
-    --panel-border: rgba(255, 255, 255, 0.12);
-    --primary: #38bdf8;
-    --primary-hover: #0284c7;
-    --text-white: #ffffff;
-    --text-sub: #94a3b8;
-    --border-radius: 16px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --bg-main: #f8fafc;           /* Nền xám trắng trang nhã */
+    --bg-card: #ffffff;           /* Nền thẻ / card trắng tinh */
+    --bg-sub: #f1f5f9;            /* Nền bảng / mục phụ */
+    --text-primary: #0f172a;      /* Chữ chính đen đậm rõ nét */
+    --text-secondary: #64748b;    /* Chữ phụ xám trung tính */
+    --border-light: #e2e8f0;      /* Viền sáng tinh tế */
+    --primary-blue: #0284c7;      /* Xanh dương chủ đạo */
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -18,8 +17,8 @@
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-white);
+    background-color: var(--bg-main) !important;
+    color: var(--text-primary) !important;
     display: flex;
     height: 100vh;
     overflow: hidden;
@@ -1107,4 +1106,961 @@ path.leaflet-interactive:focus {
     transform: scale(1.22);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
     z-index: 1000 !important;
+}
+/* ============================================================================== */
+/* BỔ SUNG GIAO DIỆN SÁNG (LIGHT THEME) CHO TOÀN BỘ TRANG USER & ADMIN            */
+/* ============================================================================== */
+
+/* 1. Nền tổng thể và thanh Header Topbar */
+body, .admin-body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+}
+
+.topbar, .admin-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+.topbar h2, .admin-brand h2 {
+    color: #0f172a !important;
+}
+
+.topbar p, .admin-brand p {
+    color: #64748b !important;
+}
+
+/* 2. Thẻ Panel, KPI Card và Khung nổi trên bản đồ */
+.panel, 
+.admin-kpi-box, 
+.kpi-card, 
+.card-full, 
+.dss-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+
+.panel h3, .panel h4, .panel h5 {
+    color: #0f172a !important;
+}
+
+.panel small, .kpi-card small, .metric-item span {
+    color: #64748b !important;
+}
+
+/* 3. Các widget nổi trên bản đồ (Floating Panels) */
+.floating-top-left, 
+.floating-playback, 
+.floating-top-right-controls, 
+.floating-bottom-right {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+    color: #0f172a !important;
+}
+
+.time-main span {
+    color: #0f172a !important;
+}
+
+.metric-item {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.metric-item b {
+    color: #0284c7 !important;
+}
+
+/* 4. Bảng biểu dữ liệu (Tables) */
+.custom-table, 
+#adm-station-table, 
+#adm-subscribers-table, 
+#forecast-table-body, 
+#hotspots-table-body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+.custom-table thead tr, table thead tr {
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.custom-table th, table th {
+    color: #334155 !important;
+    font-weight: 700 !important;
+}
+
+.custom-table tbody tr, table tbody tr {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.custom-table tbody tr:hover, table tbody tr:hover {
+    background: #f8fafc !important;
+}
+
+.custom-table td, table td {
+    color: #1e293b !important;
+}
+
+/* 5. Ô nhập liệu, ô tìm kiếm và Dropdown */
+.custom-input, 
+.search-box, 
+.custom-box, 
+.basemap-select, 
+select, 
+input {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+.custom-input:focus, .search-box:focus, select:focus {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.basemap-select option, .custom-input option {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+/* 6. Hộp thoại Popup (Modals) */
+.modal-card {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.modal-header h3 {
+    color: #0f172a !important;
+}
+
+.modal-footer {
+    border-top: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+}
+
+.form-group label {
+    color: #334155 !important;
+    font-weight: 600 !important;
+}
+
+/* 7. Tab chuyển đổi của Admin */
+.admin-tab-nav {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.adm-tab-btn {
+    color: #64748b !important;
+}
+
+.adm-tab-btn:hover {
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+}
+
+.adm-tab-btn.active {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+/* 8. Item trạng thái AI của Admin */
+.ai-status-item {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+}
+/* ============================================================================== */
+/* CHUẨN HÓA SIDEBAR SÁNG & CỤM ĐIỀU KHIỂN GÓC TRÊN PHẢI (LIGHT THEME)            */
+/* ============================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* 1. THANH SIDEBAR BÊN TRÁI NỀN TRẮNG SÁNG, ICON RÕ NÉT                      */
+/* -------------------------------------------------------------------------- */
+.sidebar {
+    background: #ffffff !important;              /* Đổi nền sidebar sang trắng */
+    border-right: 1px solid #e2e8f0 !important;  /* Viền phải xám sáng thanh mảnh */
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+.sidebar .logo {
+    color: #0284c7 !important;                   /* Logo đổi sang màu xanh thương hiệu */
+}
+
+/* Các icon điều hướng chưa chọn: hiện màu xám đen đậm rõ ràng */
+.nav-item {
+    color: #475569 !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav-item i {
+    font-size: 20px !important;
+}
+
+/* Hiệu ứng khi rê chuột qua icon */
+.nav-item:hover {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+}
+
+/* Icon của tab đang được chọn (Active) */
+.nav-item.active {
+    background: rgba(2, 132, 199, 0.12) !important;
+    color: #0284c7 !important;
+    border-left: 3px solid #0284c7 !important;
+    border-radius: 4px 12px 12px 4px !important;
+}
+
+.sidebar-footer i {
+    color: #94a3b8 !important;
+}
+.sidebar-footer i:hover {
+    color: #0284c7 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. CỤM ĐIỀU KHIỂN GÓC TRÊN BÊN PHẢI (VỊ TRÍ, ZOOM & HỘP LỚP BẢN ĐỒ)        */
+/* -------------------------------------------------------------------------- */
+
+/* Nút "Vị trí của tôi" */
+.btn-gps {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border: 1px solid #0284c7 !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+    font-weight: 600 !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border-radius: 8px !important;
+}
+
+.btn-gps:hover {
+    background: #0369a1 !important;
+}
+
+/* Cụm nút Zoom (+ / -) chuyển sang nền trắng, chữ đen */
+#custom-zoom-slot .leaflet-control-zoom {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden !important;
+    height: 36px !important;
+    display: flex !important;
+    margin: 0 !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a {
+    background-color: #ffffff !important;        /* Nền trắng đồng bộ */
+    color: #0f172a !important;                   /* Dấu + và - màu đen đậm */
+    border: none !important;
+    border-right: 1px solid #e2e8f0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:last-child {
+    border-right: none !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:hover {
+    background-color: #f1f5f9 !important;
+    color: #0284c7 !important;
+}
+
+/* Hộp Lớp dữ liệu WebGIS */
+.map-layer-control {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 16px 18px !important;
+}
+
+/* Tiêu đề nhóm "LỚP DỮ LIỆU WEBGIS" và "BẢN ĐỒ NỀN" */
+.layer-group-title {
+    color: #0284c7 !important;                   /* Chuyển sang xanh đậm nổi bật */
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.6px !important;
+    margin-bottom: 8px !important;
+}
+
+/* Khắc phục chữ "Trạm quan trắc, Bản đồ nhiệt, Ranh giới" bị mờ */
+.layer-item {
+    color: #1e293b !important;                   /* Chữ đen đậm rõ nét 100% */
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 6px 0 !important;
+}
+
+.layer-item:hover {
+    color: #0284c7 !important;
+}
+
+.layer-item input[type="checkbox"] {
+    accent-color: #0284c7 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Dropdown chọn Basemap */
+.basemap-select {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+    margin-top: 6px !important;
+}
+
+.basemap-select option {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+/* ============================================================================== */
+/* KHẮC PHỤC MÀU CHỮ ĐỘ TƯƠNG PHẢN CAO CHO NGƯỜI CAO TUỔI & TRỢ NĂNG (WCAG AAA)  */
+/* ============================================================================== */
+
+/* 1. Trang Khuyến nghị Y tế (Tab DSS) */
+#tab-dss .dss-card p {
+    color: #1e293b !important;       /* Đen than đậm, nét chữ rõ ràng */
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    line-height: 1.6 !important;
+}
+
+#tab-dss .dss-card small {
+    color: #475569 !important;       /* Xám đậm dễ đọc */
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* Sửa chữ trong khung giờ nên ra ngoài / nên tránh */
+#best-hours-text {
+    color: #064e3b !important;       /* Xanh rêu đậm tương phản cao trên nền xanh nhạt */
+    font-weight: 600 !important;
+}
+
+#worst-hours-text {
+    color: #7f1d1d !important;       /* Đỏ thẫm đậm tương phản cao trên nền đỏ nhạt */
+    font-weight: 600 !important;
+}
+
+/* Sửa khung lời khuyên cá nhân hóa */
+#personal-advisory-box {
+    background: #f8fafc !important;
+    color: #0f172a !important;       /* Chữ đen rõ nét */
+    border: 1px solid #cbd5e1 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+/* Sửa số quy chuẩn 50 µg/m³ và 15 µg/m³ bị tàng hình */
+#tab-dss .panel b[style*="font-size: 18px"] {
+    color: #0f172a !important;       /* Chuyển từ màu trắng sang đen tuyền nổi bật */
+}
+
+/* 2. Trang Đăng ký Nhận Cảnh báo (Tab Subscribe) */
+#tab-subscribe p {
+    color: #334155 !important;
+}
+
+#tab-subscribe label {
+    color: #0f172a !important;       /* Nhãn form đen đậm, chữ dày rõ */
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
+
+#tab-subscribe input::placeholder {
+    color: #64748b !important;       /* Placeholder rõ nét không bị chìm */
+    font-weight: 400 !important;
+}
+
+#tab-subscribe .custom-input {
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+}
+
+/* 3. Trang Giới thiệu Hệ thống (Tab About) */
+#tab-about p {
+    color: #1e293b !important;       /* Toàn bộ đoạn văn chuyển sang chữ đen dễ đọc */
+    line-height: 1.7 !important;
+    font-size: 13.5px !important;
+}
+
+#tab-about ul li {
+    color: #0f172a !important;       /* Danh sách thông tin thực hiện đen rõ */
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+}
+
+#tab-about ul li b {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+#tab-about .custom-table td {
+    color: #0f172a !important;
+}
+
+#tab-about .custom-table td small {
+    color: #475569 !important;
+    font-weight: 600 !important;
+}
+
+/* Khung kiến trúc hệ thống 3 lớp */
+#tab-about div[style*="background: rgba(255, 255, 255, 0.03)"] {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+#tab-about div[style*="background: rgba(255, 255, 255, 0.03)"] p {
+    color: #0f172a !important;
+}
+/* ============================================================================== */
+/* KHẮC PHỤC KHUNG HIỂN THỊ TỌA ĐỘ BẢN ĐỒ ADMIN (LIGHT THEME)                     */
+/* ============================================================================== */
+.map-coords-badge,
+#adm-coords {
+    position: absolute !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    background: rgba(255, 255, 255, 0.92) !important; /* Nền trắng sáng mờ sang trọng */
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid #cbd5e1 !important;              /* Viền xám sáng tinh tế */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #0284c7 !important;                         /* Chữ màu xanh dương đậm nổi bật */
+    letter-spacing: 0.3px !important;
+    z-index: 1000 !important;
+    pointer-events: none;                              /* Không cản trở thao tác kéo thả bản đồ */
+}
+/* ============================================================================== */
+/* KẺ RÕ ĐƯỜNG CHIA CỘT / DÒNG VÀ TĂNG TƯƠNG PHẢN CHO BẢNG DỰ BÁO                */
+/* ============================================================================== */
+
+/* 1. Viền khung bao quanh bảng */
+.table-container {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 2. Đường kẻ phân cách từng cột và từng dòng */
+.custom-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+.custom-table th, 
+.custom-table td {
+    border: 1px solid #e2e8f0 !important;   /* Đường kẻ ô chia rõ từng cột và dòng */
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    vertical-align: middle !important;
+}
+
+/* 3. Tiêu đề bảng rõ nét */
+.custom-table thead th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    white-space: nowrap !important;
+}
+
+/* 4. Hàng so le (Zebra stripe) giúp mắt không bị nhầm dòng */
+.custom-table tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+}
+
+.custom-table tbody tr:hover {
+    background-color: #f0f9ff !important;   /* Đổi màu xanh sáng nhẹ khi rê chuột */
+}
+/* ============================================================================== */
+/* CHUẨN HÓA CÁC KHUNG SỐ LIỆU & TÁCH RỜI CỤM ĐIỀU KHIỂN GÓC TRÊN BẢN ĐỒ          */
+/* ============================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* 1. TÁCH RỜI HOÀN TOÀN CỤM ĐIỀU KHIỂN GÓC TRÊN PHẢI (CHỐNG LẤN KHUNG)       */
+/* -------------------------------------------------------------------------- */
+
+/* Biến container góc trên phải thành khung bao trong suốt, không viền, không nền */
+.floating-top-right-controls {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 12px !important;            /* Tạo khoảng cách thông thoáng giữa các cụm */
+    position: absolute !important;
+    top: 18px !important;
+    right: 18px !important;
+    z-index: 1000 !important;
+}
+
+/* Hàng chứa Nút GPS và Nút Zoom xếp ngang ngay ngắn */
+.top-action-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Nút "Vị trí của tôi" dạng viên thuốc (Pill Button) độc lập */
+.btn-gps {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border: 1px solid #0284c7 !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3) !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-gps:hover {
+    background: #0369a1 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Cụm nút Zoom (+ / -) độc lập, nền trắng viền sáng */
+#custom-zoom-slot .leaflet-control-zoom {
+    display: flex !important;
+    flex-direction: row !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    height: 38px !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a {
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    border-right: 1px solid #e2e8f0 !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:last-child {
+    border-right: none !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:hover {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+}
+
+/* Hộp Lớp dữ liệu WebGIS & Basemap là một thẻ card riêng biệt nằm bên dưới */
+.map-layer-control {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    width: 250px !important;
+    padding: 16px 18px !important;
+    margin-top: 0 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. TINH GỌN VÀ NÂNG CẤP KHUNG TRẠM TRUNG TÂM (GÓC TRÊN TRÁI)              */
+/* -------------------------------------------------------------------------- */
+.floating-top-left {
+    position: absolute !important;
+    top: 18px !important;
+    left: 18px !important;
+    width: 330px !important;          /* Thu gọn chiều ngang để bản đồ thoáng hơn */
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 18px !important;
+    z-index: 1000 !important;
+}
+
+.floating-top-left .panel-header h4 {
+    font-size: 14.5px !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+}
+
+.floating-top-left .badge-time {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+    border: 1px solid #e2e8f0 !important;
+    font-weight: 700 !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+}
+
+/* Vòng tròn hiển thị AQI trung tâm */
+.aqi-circle {
+    width: 76px !important;
+    height: 76px !important;
+    border-radius: 50% !important;
+    background: #f8fafc !important;
+    border: 4px solid #0284c7 !important;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+.aqi-circle span {
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+}
+
+.aqi-tag {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+}
+
+/* Lưới 4 ô chỉ số phụ (PM2.5, PM10, Nhiệt độ, Khí dung) */
+.metrics-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
+}
+
+.metric-item {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+}
+
+.metric-item span {
+    font-size: 11px !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+}
+
+.metric-item b {
+    font-size: 14px !important;
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+    margin-top: 2px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 3. TINH CHỈNH THANH PLAYBACK VÀ KHUNG CHÚ GIẢI                             */
+/* -------------------------------------------------------------------------- */
+.floating-playback {
+    position: absolute !important;
+    bottom: 18px !important;
+    left: 18px !important;
+    width: 400px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 14px 18px !important;
+}
+
+.floating-bottom-right {
+    position: absolute !important;
+    bottom: 18px !important;
+    right: 18px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    color: #0f172a !important;
+}
+
+.legend-scale div {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+}
+/* ============================================================================== */
+/* KHÔI PHỤC CHIẾC KHUNG PANEL HOÀN CHỈNH CHO CỤM ĐIỀU KHIỂN GÓC TRÊN BẢN ĐỒ      */
+/* ============================================================================== */
+
+/* 1. KHUNG PANEL CHÍNH BAO TOÀN BỘ CỤM ĐIỀU KHIỂN GÓC TRÊN PHẢI */
+.floating-top-right-controls {
+    position: absolute !important;
+    top: 18px !important;
+    right: 18px !important;
+    width: 270px !important;                                  /* Chiều rộng vừa vặn, gọn gàng */
+    background: rgba(255, 255, 255, 0.96) !important;         /* Nền trắng sang trọng, chắn vệt gió phía sau */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid #cbd5e1 !important;                     /* Viền bo sắc nét, rõ ràng */
+    border-radius: 14px !important;                           /* Bo tròn góc hiện đại */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
+    padding: 14px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    z-index: 1000 !important;
+}
+
+/* 2. HÀNG TRÊN: NÚT VỊ TRÍ & NÚT ZOOM NẰM NGAY NGẮN */
+.top-action-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+}
+
+/* Nút "Vị trí của tôi" */
+.btn-gps {
+    flex: 1 !important;
+    height: 36px !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border: 1px solid #0284c7 !important;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3) !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-gps:hover {
+    background: #0369a1 !important;
+}
+
+/* Cụm nút Zoom (+ / -) */
+#custom-zoom-slot .leaflet-control-zoom {
+    display: flex !important;
+    flex-direction: row !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    height: 36px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a {
+    width: 34px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border: none !important;
+    border-right: 1px solid #e2e8f0 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:last-child {
+    border-right: none !important;
+}
+
+#custom-zoom-slot .leaflet-control-zoom a:hover {
+    background: #e2e8f0 !important;
+    color: #0284c7 !important;
+}
+
+/* 3. PHẦN DƯỚI: LỚP DỮ LIỆU & BASEMAP (TRIỆT TIÊU LỖI LẤN KHUNG) */
+.map-layer-control {
+    background: transparent !important;                       /* Khử bỏ nền trùng lặp bên trong */
+    border: none !important;                                  /* Khử bỏ viền lồng nhau */
+    box-shadow: none !important;                              /* Khử bóng lồng nhau */
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    border-top: 1px solid #e2e8f0 !important;                 /* Đường gạch ngang phân cách tinh tế giữa nút và lớp */
+    padding-top: 12px !important;
+}
+
+/* Tiêu đề nhóm "LỚP DỮ LIỆU WEBGIS" */
+.layer-group-title {
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* Từng dòng tùy chọn (Trạm, Bản đồ nhiệt, Ranh giới, Gió) */
+.layer-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 5px 0 !important;
+    color: #0f172a !important;                               /* Chữ đen đậm rõ nét trên nền trắng */
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    cursor: pointer !important;
+}
+
+.layer-item:hover {
+    color: #0284c7 !important;
+}
+
+.layer-item input[type="checkbox"] {
+    accent-color: #0284c7 !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+}
+
+/* Dropdown chọn Basemap */
+.basemap-select {
+    width: 100% !important;
+    height: 36px !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    margin-top: 6px !important;
+    outline: none !important;
+    cursor: pointer !important;
+}
+
+.basemap-select:focus {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+/* ============================================================================== */
+/* ĐẨY BIỂU TƯỢNG NÓN TỐT NGHIỆP XUỐNG SÁT ĐÁY THANH SIDEBAR (TỐI ƯU THẨM MỸ)     */
+/* ============================================================================== */
+.sidebar-footer {
+    margin-top: auto !important;          /* Tự động chiếm toàn bộ khoảng trống để đẩy xuống đáy */
+    padding-bottom: 12px !important;       /* Cách mép dưới một khoảng thoáng đãng */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+.sidebar-footer i {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    background: #f1f5f9 !important;       /* Nền xám sáng đồng bộ giao diện mới */
+    border: 1px solid #e2e8f0 !important;
+    color: #64748b !important;            /* Màu xám trung tính tinh tế */
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+}
+
+/* Hiệu ứng khi rê chuột vào nón tốt nghiệp */
+.sidebar-footer i:hover {
+    background: rgba(2, 132, 199, 0.12) !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;            /* Đổi sang màu xanh chủ đạo của đồ án */
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2) !important;
+}
+/* ============================================================================== */
+/* KHÓA CỨNG HÌNH TRÒN US AQI 100% (TRIỆT TIÊU LỖI BỊ BÓP MÉO HÌNH BẦU DỤC)       */
+/* ============================================================================== */
+
+/* 1. Mở rộng khung chứa vừa vặn để chứa đủ nhãn chữ dài */
+.floating-top-left {
+    width: 350px !important;              /* Tăng nhẹ độ rộng để bố cục thoáng đãng */
+}
+
+/* 2. Khung ngang chứa vòng tròn và nhãn */
+.aqi-main-display {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+/* 3. Khóa cứng kích thước hình tròn tuyệt đối, chống co dẹp flexbox */
+.aqi-circle,
+#aqi-indicator-circle {
+    width: 78px !important;
+    height: 78px !important;
+    min-width: 78px !important;           /* Chặn tuyệt đối không cho chiều ngang bị co lại */
+    max-width: 78px !important;
+    min-height: 78px !important;
+    max-height: 78px !important;
+    flex-shrink: 0 !important;            /* Thuộc tính cốt lõi: triệt tiêu lực ép của flexbox */
+    aspect-ratio: 1 / 1 !important;       /* Cố định tỷ lệ 1:1 hình học chuẩn */
+    border-radius: 50% !important;        /* Bo tròn hoàn hảo */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 4. Khung nhãn chữ bên phải co giãn linh hoạt */
+.aqi-desc {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.aqi-tag {
+    display: inline-block !important;
+    line-height: 1.35 !important;
+    font-size: 11.5px !important;
+    padding: 5px 12px !important;
+    border-radius: 14px !important;
+    word-break: break-word !important;
 }

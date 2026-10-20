@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -17,6 +19,7 @@
 
     <link ref="image" href="assets/img/Logo AirHCM.png">
 </head>
+
 <body>
 
     <!-- Sidebar Navigation -->
@@ -62,9 +65,17 @@
         <header class="topbar">
             <div class="header-title">
                 <h2>HỆ THỐNG WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ (PM2.5/AQI) & CẢNH BÁO SỨC KHỎE</h2>
-                <p>Khoa Công Nghệ Thông Tin - Trường ĐH Tài nguyên & Môi trường TP.HCM | SVTH: Lê Hoàng Ân | GVHD: TS. Dương Thị Thúy Nga</p>
+                <p>Khoa Công Nghệ Thông Tin - Trường ĐH Tài nguyên & Môi trường TP.HCM | SVTH: Lê Hoàng Ân | GVHD: TS.
+                    Dương Thị Thúy Nga</p>
             </div>
-            <div class="header-status">
+           <div class="header-status" style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="window.print()" class="btn" style="background: rgba(56, 189, 248, 0.15); color: #0284c7; border: 1px solid #0284c7; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    <i class="fa-solid fa-print"></i> In / Xuất Báo cáo PDF
+                </button>
+               <!-- NÚT ĐĂNG NHẬP TINH TẾ DÀNH CHO CÁN BỘ / ADMIN -->
+                <button onclick="handleAdminEntry()" class="btn" style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-lock"></i> <span id="btn-admin-text">Cán bộ / Quản trị</span>
+                </button>
                 <div class="status-indicator">
                     <span class="pulse-dot"></span>
                     <span>Hệ thống trực tuyến (Real-time)</span>
@@ -114,7 +125,8 @@
             <!-- Panel Playback 24h -->
             <div id="panel-playback" class="panel floating-playback">
                 <div class="playback-header">
-                    <button id="btn-play-pause" class="btn-circle-play" type="button" title="Phát/Tạm dừng mô phỏng 24h">
+                    <button id="btn-play-pause" class="btn-circle-play" type="button"
+                        title="Phát/Tạm dừng mô phỏng 24h">
                         <i id="play-icon" class="fa-solid fa-play"></i>
                     </button>
                     <div class="time-display">
@@ -138,19 +150,19 @@
                 </div>
             </div>
 
-           <!-- Cụm Điều khiển Hợp nhất Góc trên Phải -->
+            <!-- Cụm Điều khiển Hợp nhất Góc trên Phải -->
             <div id="panel-controls" class="floating-top-right-controls">
                 <!-- Hàng điều khiển ngang: Nút GPS và Cụm Zoom nằm cạnh nhau -->
                 <div class="top-action-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                    <button id="btn-locate" class="btn-gps" type="button" title="Xác định vị trí GPS của bạn" style="margin-bottom: 0;">
+                    <button id="btn-locate" class="btn-gps" type="button" title="Xác định vị trí GPS của bạn"
+                        style="margin-bottom: 0;">
                         <i class="fa-solid fa-crosshairs"></i> Vị trí của tôi
                     </button>
                     <!-- Khung gắn cụm nút Zoom (+ / -) của Leaflet -->
                     <div id="custom-zoom-slot"></div>
                 </div>
 
-                <div class="panel map-layer-control">
-                    <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
+                <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
                     <label class="layer-item">
                         <span><i class="fa-solid fa-tower-broadcast"></i> Trạm quan trắc</span>
                         <input type="checkbox" id="chk-stations" checked>
@@ -163,18 +175,26 @@
                         <span><i class="fa-solid fa-map"></i> Ranh giới phường/xã</span>
                         <input type="checkbox" id="chk-wards" checked>
                     </label>
+                    <!-- BỔ SUNG CHECKBOX HƯỚNG GIÓ ĐỘNG -->
+                    <label class="layer-item">
+                        <span><i class="fa-solid fa-wind" style="color: #0284c7;"></i> Dòng chảy gió (Wind Stream)</span>
+                        <input type="checkbox" id="chk-wind" checked>
+                    </label>
 
-                    <div class="layer-group-title" style="margin-top: 10px;"><i class="fa-solid fa-map-location"></i> Bản đồ nền (Basemap)</div>
+                    <div class="layer-group-title" style="margin-top: 10px;"><i class="fa-solid fa-map-location"></i>
+                        Bản đồ nền (Basemap)</div>
                     <select id="select-basemap" class="basemap-select">
+                        <option value="light">Nền sáng chuyên đề (Esri Light Gray)</option>
                         <option value="dark">Nền tối (Esri Dark Gray)</option>
-                        <option value="osm">Tiêu chuẩn (OpenStreetMap)</option>
+                        <option value="osm">Bản đồ giao thông (OpenStreetMap)</option>
                         <option value="satellite">Ảnh vệ tinh (Esri Satellite)</option>
                     </select>
                 </div>
             </div>
 
             <div id="panel-legend" class="panel floating-bottom-right">
-                <h5 style="margin-bottom: 6px; color: #94a3b8; font-size: 11px; text-transform: uppercase;">Mức độ AQI (US EPA)</h5>
+                <h5 style="margin-bottom: 6px; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 700;">Mức độ AQI
+                    (US EPA)</h5>
                 <div class="legend-scale">
                     <div><span style="background: #00E400;"></span> 0-50: Tốt</div>
                     <div><span style="background: #FFFF00;"></span> 51-100: Trung bình</div>
@@ -193,10 +213,11 @@
                     <div class="panel-header">
                         <div>
                             <h3><i class="fa-solid fa-brain"></i> Dự báo Biến thiên Chuỗi thời gian PM2.5 & AQI</h3>
-                            <p>Mô hình Học máy Random Forest kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
+                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">Mô hình Học máy Random Forest kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
                         </div>
                         <div class="forecast-controls">
-                            <button class="btn btn-forecast active" onclick="loadForecast(24, event)">24 Giờ tới</button>
+                            <button class="btn btn-forecast active" onclick="loadForecast(24, event)">24 Giờ
+                                tới</button>
                             <button class="btn btn-forecast" onclick="loadForecast(72, event)">72 Giờ (3 Ngày)</button>
                             <button class="btn btn-forecast" onclick="loadForecast(168, event)">7 Ngày tới</button>
                         </div>
@@ -207,48 +228,121 @@
                 </div>
 
                 <!-- Thẻ KPI Dự báo -->
-                <div class="forecast-kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                <div class="forecast-kpi-grid"
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-mountain-city"></i> Đỉnh PM2.5 cao nhất</span>
-                        <b id="kpi-peak-pm25" style="color: #38bdf8;">-- µg/m³</b>
-                        <small id="kpi-peak-time">Đang tính toán...</small>
+                        <b id="kpi-peak-pm25" style="color: #0284c7;">-- µg/m³</b>
+                        <small id="kpi-peak-time" style="color: #64748b; font-weight: 600;">Đang tính toán...</small>
                     </div>
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-chart-line-up"></i> AQI Đỉnh điểm</span>
-                        <b id="kpi-peak-aqi" style="color: #f59e0b;">--</b>
-                        <small>Chuẩn US EPA</small>
+                        <b id="kpi-peak-aqi" style="color: #d97706;">--</b>
+                        <small style="color: #64748b; font-weight: 600;">Chuẩn US EPA</small>
                     </div>
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-arrows-spin"></i> Xu hướng Biến thiên</span>
-                        <b id="kpi-trend" style="color: #4ade80;">Giảm dần về trưa</b>
-                        <small>Xáo trộn lớp biên khí quyển</small>
+                        <b id="kpi-trend" style="color: #16a34a;">Giảm dần về trưa</b>
+                        <small style="color: #64748b; font-weight: 600;">Xáo trộn lớp biên khí quyển</small>
                     </div>
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-microchip"></i> Độ chính xác AI ($R^2$)</span>
-                        <b style="color: #a855f7;">0.879 (87.9%)</b>
-                        <small>Random Forest Regressor</small>
+                        <b style="color: #9333ea;">0.879 (87.9%)</b>
+                        <small style="color: #64748b; font-weight: 600;">Random Forest Regressor</small>
+                    </div>
+                </div>
+                <!-- GIẢI THÍCH MÔ HÌNH HỌC MÁY (FEATURE IMPORTANCE / XAI) -->
+                <div class="panel card-full" style="padding: 20px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px;">
+                        <div>
+                            <h4 style="margin: 0; color: #7e22ce;">
+                                <i class="fa-solid fa-network-wired"></i> Mức Độ Ảnh Hưởng Của Các Yếu Tố Đến Dự Báo (Feature Importance)
+                            </h4>
+                            <p style="font-size: 12.5px; color: #475569; margin: 4px 0 0 0; font-weight: 500;">
+                                Phân rã độ đóng góp thuộc tính thuật toán Random Forest Regressor ($R^2 = 0.88$)
+                            </p>
+                        </div>
+                        <span style="font-size: 11px; background: rgba(168, 85, 247, 0.15); color: #7e22ce; padding: 4px 10px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.3);">
+                            Explainable AI
+                        </span>
+                    </div>
+
+                    <!-- Danh sách thanh mức độ ảnh hưởng -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                <span style="color: #0f172a; font-weight: 600;">Nồng độ bụi PM2.5 trung bình 7 ngày trước (Chu kỳ nền)</span>
+                                <b style="color: #0284c7;">74.0%</b>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 74%; height: 100%; background: #0284c7; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                <span style="color: #0f172a; font-weight: 600;">Tốc độ gió 10m & Hệ số khuếch tán khí quyển (ERA5)</span>
+                                <b style="color: #16a34a;">13.6%</b>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 13.6%; height: 100%; background: #16a34a; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                <span style="color: #0f172a; font-weight: 600;">Biến trễ PM2.5 giờ trước ($t-1$ và $t-24$)</span>
+                                <b style="color: #d97706;">5.2%</b>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 5.2%; height: 100%; background: #d97706; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                <span style="color: #0f172a; font-weight: 600;">Nhiệt độ bề mặt 2m & Bức xạ mặt trời</span>
+                                <b style="color: #dc2626;">4.8%</b>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 4.8%; height: 100%; background: #dc2626; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                <span style="color: #0f172a; font-weight: 600;">Chỉ số Sol khí hấp thụ Sentinel-5P (AAI)</span>
+                                <b style="color: #7e22ce;">2.4%</b>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 2.4%; height: 100%; background: #7e22ce; border-radius: 4px;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Bảng Chi tiết Chuỗi Số liệu Dự báo -->
                 <div class="panel card-full">
                     <div class="panel-header">
-                        <h4><i class="fa-solid fa-table-list"></i> Bảng Chi tiết Chuỗi Số liệu Dự báo Cuốn chiếu Theo Giờ</h4>
+                        <h4><i class="fa-solid fa-table-list"></i> Bảng Chi tiết Chuỗi Số liệu Dự báo Cuốn chiếu Theo
+                            Giờ</h4>
                     </div>
                     <div class="table-container" style="max-height: 280px;">
                         <table class="custom-table">
-                            <thead>
+                           <thead>
                                 <tr>
-                                    <th>Mốc thời gian</th>
-                                    <th>PM2.5 Dự báo</th>
-                                    <th>PM10 Ước tính</th>
-                                    <th>US AQI</th>
-                                    <th>Phân loại Môi trường</th>
-                                    <th>QCVN 05:2023</th>
+                                    <th style="text-align: left; width: 22%;">Mốc thời gian</th>
+                                    <th style="text-align: center; width: 17%;">PM2.5 Dự báo</th>
+                                    <th style="text-align: center; width: 17%;">PM10 Ước tính</th>
+                                    <th style="text-align: center; width: 12%;">US AQI</th>
+                                    <th style="text-align: center; width: 18%;">Phân loại Môi trường</th>
+                                    <th style="text-align: center; width: 14%;">QCVN 05:2023</th>
                                 </tr>
                             </thead>
                             <tbody id="forecast-table-body">
-                                <tr><td colspan="6" style="text-align: center;">Đang nạp dữ liệu từ AI Engine...</td></tr>
+                                <tr>
+                                    <td colspan="6" style="text-align: center;">Đang nạp dữ liệu từ AI Engine...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -261,57 +355,187 @@
             <div class="content-wrapper">
                 <div class="dss-grid" style="margin-bottom: 24px;">
                     <div class="panel dss-card">
-                        <div class="dss-icon" style="color: #38bdf8;"><i class="fa-solid fa-users"></i></div>
+                        <div class="dss-icon" style="color: #0284c7;"><i class="fa-solid fa-users"></i></div>
                         <h4>Cộng đồng Dân cư</h4>
                         <div class="dss-badge" id="dss-status-badge">Đang tải...</div>
-                        <p id="dss-general">Hệ thống đang trích xuất bộ quy tắc cảnh báo...</p>
+                        <p id="dss-general" style="color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang trích xuất bộ quy tắc cảnh báo...</p>
                     </div>
                     <div class="panel dss-card">
-                        <div class="dss-icon" style="color: #f59e0b;"><i class="fa-solid fa-person-breastfeeding"></i></div>
+                        <div class="dss-icon" style="color: #d97706;"><i class="fa-solid fa-person-breastfeeding"></i>
+                        </div>
                         <h4>Nhóm Người Nhạy cảm</h4>
-                        <small style="color: var(--text-sub);">Trẻ em, người cao tuổi, bệnh nhân hô hấp</small>
-                        <p id="dss-sensitive" style="margin-top: 15px;">Hệ thống đang tính toán khuyến cáo cá thể hóa...</p>
+                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Trẻ em, người cao tuổi, bệnh nhân hô hấp</small>
+                        <p id="dss-sensitive" style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang tính toán khuyến cáo cá thể hóa...
+                        </p>
                     </div>
                     <div class="panel dss-card">
-                        <div class="dss-icon" style="color: #ef4444;"><i class="fa-solid fa-city"></i></div>
+                        <div class="dss-icon" style="color: #dc2626;"><i class="fa-solid fa-city"></i></div>
                         <h4>Cơ quan Quản lý Đô thị</h4>
-                        <small style="color: var(--text-sub);">Kịch bản điều hành ứng phó môi trường</small>
-                        <p id="dss-action" style="margin-top: 15px;">Hệ thống đang tham chiếu kịch bản phân luồng...</p>
+                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Kịch bản điều hành ứng phó môi trường</small>
+                        <p id="dss-action" style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang tham chiếu kịch bản phân luồng...</p>
                     </div>
                 </div>
-
-                <!-- Bộ Tra cứu Tương tác AQI Slider -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="panel">
-                        <h4><i class="fa-solid fa-sliders"></i> Bộ Mô phỏng Tra cứu Kịch bản DSS Tương tác</h4>
-                        <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 16px 0;">Kéo thanh trượt để thử nghiệm kịch bản ứng phó cho các mức AQI khác nhau</p>
-
-                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-                            <input type="range" id="eval-aqi-slider" min="0" max="300" value="105" class="time-range-slider" style="flex:1;">
-                            <b id="eval-aqi-val" style="font-size: 22px; color: #ff7e00; width: 60px;">105</b>
-                        </div>
-
-                        <div id="eval-result-box" style="padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 4px solid #ff7e00; font-size: 13px; line-height: 1.5;">
-                            <b>Khuyến cáo mức Kém (101-150):</b> Người dân nên đeo khẩu trang N95 khi di chuyển ngoài đường vào giờ cao điểm. Các trường học hạn chế hoạt động thể dục ngoài trời cho học sinh.
+                <!-- 1. KHUNG GIỜ NÊN RA NGOÀI & TƯ VẤN CÁ NHÂN HÓA (THAM KHẢO TỪ MẪU) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                    <!-- Thẻ Khung giờ Vàng -->
+                    <div class="panel" style="padding: 20px;">
+                        <h4 style="margin: 0 0 12px 0; color: #0284c7;">
+                            <i class="fa-solid fa-clock"></i> Khung Giờ Nên Ra Ngoài (24 Giờ Tới)
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="background: rgba(74, 222, 128, 0.15); border-left: 4px solid #16a34a; padding: 10px 14px; border-radius: 6px;">
+                                <b style="color: #16a34a; font-size: 13px;"><i class="fa-solid fa-circle-check"></i> Thời điểm không khí sạch nhất:</b>
+                                <p id="best-hours-text" style="margin: 4px 0 0 0; font-size: 13px; color: #064e3b; font-weight: 600;">
+                                    11:00 - 15:00 (PM2.5 ≈ 11.5 - 13.0 µg/m³ - Đối lưu mạnh, bụi phát tán tốt)
+                                </p>
+                            </div>
+                            <div style="background: rgba(239, 68, 68, 0.12); border-left: 4px solid #dc2626; padding: 10px 14px; border-radius: 6px;">
+                                <b style="color: #dc2626; font-size: 13px;"><i class="fa-solid fa-circle-xmark"></i> Khung giờ nên hạn chế ra đường:</b>
+                                <p id="worst-hours-text" style="margin: 4px 0 0 0; font-size: 13px; color: #7f1d1d; font-weight: 600;">
+                                    07:00 - 09:00 & 17:30 - 20:00 (Giờ cao điểm ùn tắc và nghịch nhiệt tầng thấp)
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="panel">
-                        <h4><i class="fa-solid fa-scale-balanced"></i> So sánh Ngưỡng Giới hạn PM2.5 (24h Trung bình)</h4>
-                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                                <div>
-                                    <b style="color: #38bdf8;">QCVN 05:2023/BTNMT</b>
-                                    <small style="display:block; color:#94a3b8;">Quy chuẩn kỹ thuật Quốc gia Việt Nam</small>
-                                </div>
-                                <b style="font-size: 18px;">50 µg/m³</b>
+                    <!-- Thẻ Lời khuyên Cá nhân hóa -->
+                    <div class="panel" style="padding: 20px;">
+                        <h4 style="margin: 0 0 12px 0; color: #d97706;">
+                            <i class="fa-solid fa-person-walking"></i> Lời Khuyên Hoạt Động Cá Nhân Hóa
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Đối tượng:</label>
+                                <select id="sel-user-group" class="custom-input" style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
+                                    <option value="normal">Người bình thường</option>
+                                    <option value="sensitive">Nhóm nhạy cảm (Trẻ em/Người già)</option>
+                                    <option value="respiratory">Người có bệnh hô hấp / Tim mạch</option>
+                                </select>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                                <div>
-                                    <b style="color: #4ade80;">Khuyến nghị WHO (2021)</b>
-                                    <small style="display:block; color:#94a3b8;">Tổ chức Y tế Thế giới</small>
+                            <div>
+                                <label style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Hoạt động dự kiến:</label>
+                                <select id="sel-activity" class="custom-input" style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
+                                    <option value="commute">Lưu thông xe máy / Ngoài đường</option>
+                                    <option value="exercise">Tập thể thao / Chạy bộ ngoài trời</option>
+                                    <option value="indoor">Làm việc trong văn phòng / Nhà kín</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="personal-advisory-box" style="padding: 10px 14px; background: #f8fafc; border-radius: 6px; font-size: 13px; line-height: 1.6; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 500;">
+                            <!-- Nội dung cập nhật tự động bằng JS -->
+                        </div>
+                    </div>
+                </div>
+                <!-- BỘ MÔ PHỎNG KỊCH BẢN WHAT-IF (THAY ĐỔI CÁC YẾU TỐ ĐẦU VÀO) -->
+                <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;">
+                    <!-- Cột 1: Bộ điều khiển tham số What-If -->
+                    <div class="panel">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <h4 style="margin: 0;"><i class="fa-solid fa-sliders" style="color: #0284c7;"></i> Mô phỏng
+                                Kịch bản Dự báo What-If</h4>
+                            <span
+                                style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(2, 132, 199, 0.12); color: #0284c7; font-weight: 700; border: 1px solid rgba(2, 132, 199, 0.25);">AI
+                                Engine</span>
+                        </div>
+                        <p style="font-size: 12.5px; color: #475569; margin: 0 0 16px 0; font-weight: 500;">
+                            Kéo các thanh trượt tham số đầu vào để AI tính toán diễn biến chất lượng không khí tương ứng
+                        </p>
+
+                        <!-- 3 Tham số đầu vào -->
+                        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px;">
+                            <!-- Tham số 1: Giao thông -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
+                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-car-side"></i> Lưu lượng Giao
+                                        thông:</span>
+                                    <b id="lbl-traffic" style="color: #d97706;">0% (Bình thường)</b>
                                 </div>
-                                <b style="font-size: 18px;">15 µg/m³</b>
+                                <input type="range" id="param-traffic" min="-50" max="100" value="0" step="10"
+                                    class="time-range-slider" oninput="runScenarioSimulation()">
+                            </div>
+
+                            <!-- Tham số 2: Nhiệt độ -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
+                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-temperature-half"></i> Biến
+                                        thiên Nhiệt độ:</span>
+                                    <b id="lbl-temp" style="color: #0284c7;">0 °C (Không đổi)</b>
+                                </div>
+                                <input type="range" id="param-temp" min="-5" max="5" value="0" step="1"
+                                    class="time-range-slider" oninput="runScenarioSimulation()">
+                            </div>
+
+                            <!-- Tham số 3: Tốc độ gió -->
+                            <div>
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
+                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-wind"></i> Hệ số Khuếch tán
+                                        Gió:</span>
+                                    <b id="lbl-wind" style="color: #16a34a;">1.0x (Bình thường)</b>
+                                </div>
+                                <input type="range" id="param-wind" min="0.5" max="2.0" value="1.0" step="0.1"
+                                    class="time-range-slider" oninput="runScenarioSimulation()">
+                            </div>
+                        </div>
+
+                        <!-- Khung kết quả dự báo kịch bản -->
+                        <div id="scenario-result-box"
+                            style="padding: 14px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; transition: border-color 0.3s;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Dự báo PM2.5 Kịch
+                                        bản</span>
+                                    <b id="scen-pm25" style="font-size: 18px; color: #0284c7;">-- µg/m³</b>
+                                </div>
+                                <div>
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">US AQI Kịch
+                                        bản</span>
+                                    <b id="scen-aqi" style="font-size: 18px; color: #d97706;">--</b>
+                                </div>
+                                <div id="scen-badge"
+                                    style="padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; background: #0284c7; color: #fff;">
+                                    Đang tính toán...
+                                </div>
+                            </div>
+                            <div id="scen-advisory" style="font-size: 13px; line-height: 1.6; color: #0f172a; font-weight: 500;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: So sánh Quy chuẩn QCVN 05 & WHO -->
+                    <div class="panel">
+                        <h4><i class="fa-solid fa-scale-balanced" style="color: #16a34a;"></i> So sánh Quy chuẩn Môi
+                            trường</h4>
+                        <p style="font-size: 12.5px; color: #475569; margin: 4px 0 16px 0; font-weight: 500;">Đối sánh ngưỡng bụi mịn PM2.5
+                            trung bình 24h</p>
+
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <b style="color: #0284c7; font-size: 13px;">QCVN 05:2023/BTNMT</b>
+                                    <small style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Quy chuẩn Quốc gia
+                                        Việt Nam</small>
+                                </div>
+                                <b style="font-size: 18px; color: #0f172a;">50 µg/m³</b>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <b style="color: #16a34a; font-size: 13px;">Khuyến nghị WHO (2021)</b>
+                                    <small style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Tổ chức Y tế Thế
+                                        giới</small>
+                                </div>
+                                <b style="font-size: 18px; color: #0f172a;">15 µg/m³</b>
+                            </div>
+                            <div
+                                style="padding: 12px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; font-size: 12.5px; line-height: 1.5; color: #1e293b; border: 1px solid rgba(2, 132, 199, 0.2);">
+                                <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i> <b>Ghi chú chuyên
+                                    môn:</b> Nồng độ PM2.5 tại đô thị chịu ảnh hưởng bởi hiện tượng nghịch nhiệt tầng
+                                mặt vào sáng sớm và phát tán mạnh vào giữa trưa khi nhiệt độ tăng cao.
                             </div>
                         </div>
                     </div>
@@ -326,9 +550,10 @@
                     <div class="panel-header">
                         <div>
                             <h3><i class="fa-solid fa-chart-column"></i> Phân tích Điểm nóng Ô nhiễm (Hotspots)</h3>
-                            <p>Xếp hạng mức độ ô nhiễm không khí tại 166 Phường/Xã TP.Hồ Chí Minh</p>
+                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">Xếp hạng mức độ ô nhiễm không khí tại 166 Phường/Xã TP.Hồ Chí Minh</p>
                         </div>
-                        <input type="text" id="search-ward" class="search-box" placeholder="Tìm kiếm Phường/Xã..." onkeyup="filterWards()">
+                        <input type="text" id="search-ward" class="search-box" placeholder="Tìm kiếm Phường/Xã..."
+                            onkeyup="filterWards()">
                     </div>
                     <div class="table-container">
                         <table class="custom-table">
@@ -345,7 +570,9 @@
                                 </tr>
                             </thead>
                             <tbody id="hotspots-table-body">
-                                <tr><td colspan="8" style="text-align: center;">Đang nạp dữ liệu từ PostGIS...</td></tr>
+                                <tr>
+                                    <td colspan="8" style="text-align: center;">Đang nạp dữ liệu từ PostGIS...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -358,31 +585,39 @@
             <div class="content-wrapper" style="display: flex; justify-content: center; align-items: center;">
                 <div class="panel" style="width: 560px; padding: 32px;">
                     <div style="text-align: center; margin-bottom: 24px;">
-                        <div style="font-size: 42px; color: #38bdf8; margin-bottom: 10px;"><i class="fa-solid fa-bell-concierge"></i></div>
-                        <h3 style="font-size: 20px;">Đăng ký Nhận Cảnh báo AQI Tự động</h3>
-                        <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Hệ thống sẽ tự động gửi thông báo khi chỉ số ô nhiễm tại khu vực của bạn vượt ngưỡng an toàn</p>
+                        <div style="font-size: 42px; color: #0284c7; margin-bottom: 10px;"><i
+                                class="fa-solid fa-bell-concierge"></i></div>
+                        <h3 style="font-size: 20px; color: #0f172a;">Đăng ký Nhận Cảnh báo AQI Tự động</h3>
+                        <p style="font-size: 13px; color: #475569; margin-top: 4px; font-weight: 500;">Hệ thống sẽ tự động gửi thông báo
+                            khi chỉ số ô nhiễm tại khu vực của bạn vượt ngưỡng an toàn</p>
                     </div>
 
                     <form id="form-subscribe">
                         <div style="margin-bottom: 16px;">
-                            <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Họ và tên người nhận</label>
-                            <input type="text" id="sub-name" class="custom-input" placeholder="Nhập họ và tên..." required>
+                            <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Họ và
+                                tên người nhận</label>
+                            <input type="text" id="sub-name" class="custom-input" placeholder="Nhập họ và tên..."
+                                required>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                             <div>
-                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Địa chỉ Email</label>
-                                <input type="email" id="sub-email" class="custom-input" placeholder="name@example.com" required>
+                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Địa
+                                    chỉ Email</label>
+                                <input type="email" id="sub-email" class="custom-input" placeholder="name@example.com"
+                                    required>
                             </div>
                             <div>
-                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Số điện thoại (Zalo)</label>
+                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Số
+                                    điện thoại (Zalo)</label>
                                 <input type="tel" id="sub-phone" class="custom-input" placeholder="0901234567">
                             </div>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                             <div>
-                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Khu vực/Phường Xã theo dõi</label>
+                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Khu
+                                    vực/Phường Xã theo dõi</label>
                                 <select id="sub-ward" class="custom-input">
                                     <option value="27424">Phường Bình Đông (Quận 8)</option>
                                     <option value="26884">Phường Gò Vấp</option>
@@ -391,7 +626,9 @@
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 6px;">Ngưỡng kích hoạt cảnh báo</label>
+                                <label
+                                    style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Ngưỡng
+                                    kích hoạt cảnh báo</label>
                                 <select id="sub-threshold" class="custom-input">
                                     <option value="100">AQI > 100 (Mức Kém)</option>
                                     <option value="150" selected>AQI > 150 (Mức Xấu)</option>
@@ -400,12 +637,15 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #0284c7; color: #fff; font-size: 14px; border-radius: 10px;">
+                        <button type="submit" class="btn btn-primary"
+                            style="width: 100%; padding: 12px; background: #0284c7; color: #fff; font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer;">
                             <i class="fa-solid fa-paper-plane"></i> Đăng ký Nhận Cảnh báo
                         </button>
                     </form>
 
-                    <div id="sub-toast" style="display: none; margin-top: 16px; padding: 12px; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; color: #4ade80; border-radius: 8px; font-size: 13px; text-align: center;"></div>
+                    <div id="sub-toast"
+                        style="display: none; margin-top: 16px; padding: 12px; background: rgba(74, 222, 128, 0.15); border: 1px solid #16a34a; color: #166534; font-weight: 600; border-radius: 8px; font-size: 13px; text-align: center;">
+                    </div>
                 </div>
             </div>
         </section>
@@ -414,43 +654,151 @@
         <section id="tab-about" class="tab-content">
             <div class="content-wrapper">
                 <div class="panel card-full" style="padding: 32px;">
-                    <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 24px;">
-                        <h2 style="font-size: 22px; color: #38bdf8;"><i class="fa-solid fa-earth-asia"></i> HỆ THỐNG WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ AIRHCM</h2>
-                        <p style="font-size: 13px; color: #94a3b8; margin-top: 6px;">Đồ án Chuyên ngành Công nghệ Thông tin - Chuyên ngành IT Môi trường | Trường Đại học Tài nguyên và Môi trường TP.HCM (HCMUNRE)</p>
+                    <div
+                        style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
+                        <h2 style="font-size: 22px; color: #0284c7;"><i class="fa-solid fa-earth-asia"></i> HỆ THỐNG
+                            WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ AIRHCM</h2>
+                        <p style="font-size: 13px; color: #475569; margin-top: 6px; font-weight: 500;">Đồ án Chuyên ngành Công nghệ Thông
+                            tin - Chuyên ngành IT Môi trường | Trường Đại học Tài nguyên và Môi trường TP.HCM (HCMUNRE)
+                        </p>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                         <div>
-                            <h4 style="color: #f59e0b; margin-bottom: 12px;"><i class="fa-solid fa-user-graduate"></i> Thông tin Thực hiện</h4>
-                            <ul style="list-style: none; font-size: 13px; line-height: 2; color: #cbd5e1;">
-                                <li><b>Sinh viên thực hiện:</b> LÊ HOÀNG ÂN</li>
-                                <li><b>Mã số sinh viên:</b> 1250080001 </li>
-                                <li><b>Chuyên ngành:</b> Tin Học Môi Trường </li>
-                                <li><b>Giảng viên hướng dẫn:</b> TS. Dương Thị Thúy Nga</li>
-                                <li><b>Đơn vị đào tạo:</b> Trường Đại Học Tài Nguyên & Môi Trường TP. Hồ Chí Minh</li>
+                            <h4 style="color: #d97706; margin-bottom: 12px;"><i class="fa-solid fa-user-graduate"></i>
+                                Thông tin Thực hiện</h4>
+                            <ul style="list-style: none; font-size: 13.5px; line-height: 2.1; color: #0f172a;">
+                                <li><b style="color: #0f172a;">Sinh viên thực hiện:</b> LÊ HOÀNG ÂN</li>
+                                <li><b style="color: #0f172a;">Mã số sinh viên:</b> 1250080001 </li>
+                                <li><b style="color: #0f172a;">Chuyên ngành:</b> Tin Học Môi Trường </li>
+                                <li><b style="color: #0f172a;">Giảng viên hướng dẫn:</b> TS. Dương Thị Thúy Nga</li>
+                                <li><b style="color: #0f172a;">Đơn vị đào tạo:</b> Trường Đại Học Tài Nguyên & Môi Trường TP. Hồ Chí Minh</li>
                             </ul>
 
-                            <h4 style="color: #38bdf8; margin: 20px 0 12px 0;"><i class="fa-solid fa-bullseye"></i> Mục tiêu Đồ án</h4>
-                            <p style="font-size: 13px; line-height: 1.6; color: #94a3b8; text-align: justify;">
-                                Xây dựng giải pháp WebGIS tích hợp trí tuệ nhân tạo (Mô hình Học máy Random Forest) và động cơ hỗ trợ ra quyết định (DSS Engine) nhằm giám sát, dự báo chuỗi thời gian nồng độ bụi mịn PM2.5 và chỉ số US AQI theo thời gian thực cho 166 Phường/Xã trên địa bàn TP.Hồ Chí Minh.
+                            <h4 style="color: #0284c7; margin: 20px 0 12px 0;"><i class="fa-solid fa-bullseye"></i> Mục
+                                tiêu Đồ án</h4>
+                            <p style="font-size: 13.5px; line-height: 1.7; color: #1e293b; text-align: justify; font-weight: 500;">
+                                Xây dựng giải pháp WebGIS tích hợp trí tuệ nhân tạo (Mô hình Học máy Random Forest) và
+                                động cơ hỗ trợ ra quyết định (DSS Engine) nhằm giám sát, dự báo chuỗi thời gian nồng độ
+                                bụi mịn PM2.5 và chỉ số US AQI theo thời gian thực cho 166 Phường/Xã trên địa bàn TP.Hồ
+                                Chí Minh.
                             </p>
                         </div>
 
                         <div>
-                            <h4 style="color: #4ade80; margin-bottom: 12px;"><i class="fa-solid fa-layer-group"></i> Sơ đồ Kiến trúc Hệ thống 3 Lớp (3-Tier Architecture)</h4>
-                            <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); font-size: 12px; line-height: 1.8;">
-                                <p><b style="color: #38bdf8;">1. Lớp Dữ liệu (Data Layer):</b> PostgreSQL 16 + PostGIS Extension, Chuỗi thời gian Open-Meteo, Ảnh vệ tinh Sentinel-5P (AAI) & Khí tượng ERA5-Land.</p>
-                                <p><b style="color: #f59e0b;">2. Lớp Dịch vụ & AI (Service Layer):</b> FastAPI Python, Mô hình Random Forest Regressor ($R^2 = 0.88$), Động cơ DSS tham chiếu QCVN 05:2023/BTNMT & US EPA.</p>
-                                <p><b style="color: #4ade80;">3. Lớp Giao diện (Presentation Layer):</b> Bản đồ số Leaflet.js, Biểu đồ Chart.js, Thiết kế Glassmorphism Dashboard Responsive.</p>
+                            <h4 style="color: #16a34a; margin-bottom: 12px;"><i class="fa-solid fa-layer-group"></i> Sơ
+                                đồ Kiến trúc Hệ thống 3 Lớp (3-Tier Architecture)</h4>
+                            <div
+                                style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12.5px; line-height: 1.8; color: #1e293b;">
+                                <p style="margin-bottom: 6px;"><b style="color: #0284c7;">1. Lớp Dữ liệu (Data Layer):</b> PostgreSQL 16 + PostGIS
+                                    Extension, Chuỗi thời gian Open-Meteo, Ảnh vệ tinh Sentinel-5P (AAI) & Khí tượng
+                                    ERA5-Land.</p>
+                                <p style="margin-bottom: 6px;"><b style="color: #d97706;">2. Lớp Dịch vụ & AI (Service Layer):</b> FastAPI Python,
+                                    Mô hình Random Forest Regressor ($R^2 = 0.88$), Động cơ DSS tham chiếu QCVN
+                                    05:2023/BTNMT & US EPA.</p>
+                                <p><b style="color: #16a34a;">3. Lớp Giao diện (Presentation Layer):</b> Bản đồ số
+                                    Leaflet.js, Biểu đồ Chart.js, Thiết kế Glassmorphism Dashboard Responsive.</p>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- BẢNG ĐẶC TẢ ĐỘ PHÂN GIẢI KHÔNG GIAN, THỜI GIAN & NGUỒN DỮ LIỆU ĐƯỢC ĐẶT FULL CHIỀU RỘNG -->
+                    <div style="margin-top: 28px;">
+                        <h4 style="color: #0284c7; margin-bottom: 14px;">
+                            <i class="fa-solid fa-satellite-dish"></i> Đặc tả Kỹ thuật Độ phân giải Không gian,
+                            Thời gian & Cơ chế Xử lý Dữ liệu
+                        </h4>
+                        <div class="table-container"
+                            style="background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <table class="custom-table" style="font-size: 13px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 22%;">Hạng mục Dữ liệu</th>
+                                        <th style="width: 28%;">Độ phân giải Không gian (Spatial)</th>
+                                        <th style="width: 22%;">Độ phân giải Thời gian (Temporal)</th>
+                                        <th style="width: 28%;">Phương pháp Xử lý & Ứng dụng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><b>Mô hình Khí tượng & Khí quyển (Open-Meteo / ERA5)</b></td>
+                                        <td>Lưới Grid: <b>0.1° × 0.1°</b><br><small style="color: #64748b; font-weight: 600;">(~9
+                                                km × 11 km tại vĩ độ TP.HCM)</small></td>
+                                        <td><b>1 giờ / lần (Hourly)</b><br><small style="color: #16a34a; font-weight: 700;">Cập
+                                                nhật Real-time</small></td>
+                                        <td>Cung cấp trường nồng độ bụi nền PM2.5, PM10 và biến khí tượng biên
+                                            (Nhiệt độ 2m, Gió, Độ ẩm).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Ảnh Vệ tinh Viễn thám (Sentinel-5P qua GEE)</b></td>
+                                        <td>Lưới Grid: <b>3.5 km × 5.5 km</b><br><small
+                                                style="color: #64748b; font-weight: 600;">Cảm biến TROPOMI (ESA)</small></td>
+                                        <td><b>1 lần / ngày (Daily)</b><br><small style="color: #64748b; font-weight: 600;">Quét
+                                                qua lúc 13:30 LT</small></td>
+                                        <td>Trích xuất chỉ số sol khí hấp thụ (AAI) phục vụ đánh giá mật độ phát
+                                            thải khói bụi công nghiệp.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Mạng lưới Trạm Quan trắc Mặt đất PostGIS</b></td>
+                                        <td><b>8 Trạm quan trắc chuẩn</b><br><small
+                                                style="color: #64748b; font-weight: 600;">(Ground Truth mốc thực tế)</small></td>
+                                        <td><b>1 giờ / lần (Hourly)</b><br><small style="color: #0284c7; font-weight: 700;">Đồng
+                                                bộ CSDL PostGIS</small></td>
+                                        <td>Dữ liệu kiểm chứng thực địa, dùng để hiệu chỉnh sai số
+                                            (Calibration/Bias Correction) cho ô lưới mô hình.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Bản đồ WebGIS Phân vùng Hành chính</b></td>
+                                        <td><b>166/167 Phường/Xã/Thị trấn</b><br><small
+                                                style="color: #d97706; font-weight: 700;">Ranh giới đa giác chuẩn WGS84</small>
+                                        </td>
+                                        <td><b>Biến thiên 24 Giờ & Dự báo 7 Ngày</b></td>
+                                        <td>Hợp nhất dữ liệu (Data Fusion), hạ tỉ lệ không gian và thống kê vùng
+                                            (Zonal Statistics) cho từng đơn vị hành chính.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-
+        <!-- MODAL ĐĂNG NHẬP XÁC THỰC QUYỀN ADMIN -->
+    <div id="modal-login" class="modal-overlay">
+        <div class="modal-card" style="width: 420px; background: #ffffff; border-radius: 14px; border: 1px solid #cbd5e1; box-shadow: 0 20px 45px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-shield-halved" style="color: #0284c7;"></i> Đăng Nhập Quản Trị Hệ Thống
+                </h3>
+                <button class="btn-modal-close" onclick="closeLoginModal()" style="background: none; border: none; font-size: 22px; color: #64748b; cursor: pointer;">&times;</button>
+            </div>
+            <form id="form-login" onsubmit="submitAdminLogin(event)">
+                <div class="modal-body" style="padding: 22px;">
+                    <p style="font-size: 12.5px; color: #475569; margin: 0 0 16px 0; font-weight: 500;">
+                        Cổng điều hành dành riêng cho cán bộ quản lý Sở/Bộ Tài nguyên & Môi trường TP.HCM.
+                    </p>
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Tài khoản Quản trị</label>
+                        <input type="text" id="login-username" class="custom-input" placeholder="Nhập tài khoản (vd: admin)..." required style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Mật khẩu</label>
+                        <input type="password" id="login-password" class="custom-input" placeholder="Nhập mật khẩu..." required style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
+                    </div>
+                    <div id="login-error-msg" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid #dc2626; color: #991b1b; border-radius: 6px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px;"></div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #e2e8f0; background: #f8fafc; padding: 14px 22px; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 14px 14px;">
+                    <button type="button" class="btn" onclick="closeLoginModal()" style="background: #e2e8f0; color: #334155; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Hủy</button>
+                    <button type="submit" class="btn" style="background: #0284c7; color: #ffffff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                        <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     </main>
 
     <script src="js/app.js"></script>
 </body>
+
 </html>

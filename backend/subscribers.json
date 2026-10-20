@@ -1,12 +1,12 @@
 [
   {
     "id": 5,
-    "fullname": "string",
-    "email": "user@example.com",
-    "phone": "N/A",
-    "ward_code": "Phường string",
-    "threshold_aqi": 100,
-    "created_at": "2026-10-10"
+    "fullname": "Lê Văn Em",
+    "email": "lehoangan1128@gmail.com",
+    "phone": "0789446824",
+    "ward_code": "Phường Bình Đông",
+    "threshold_aqi": 150,
+    "created_at": "2026-10-16"
   },
   {
     "id": 4,
@@ -25,14 +25,5 @@
     "ward_code": "Phường Bình Đông (Q.8)",
     "threshold_aqi": 150,
     "created_at": "2026-10-09"
-  },
-  {
-    "id": 2,
-    "fullname": "Nguyễn Văn An",
-    "email": "an.nguyen@gmail.com",
-    "phone": "0908123456",
-    "ward_code": "Phường Bình Đông (Q.8)",
-    "threshold_aqi": 100,
-    "created_at": "2026-10-05"
   }
 ]

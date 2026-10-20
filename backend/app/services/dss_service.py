@@ -1,21 +1,33 @@
 class DSSEngine:
     @staticmethod
     def calculate_us_aqi(pm25: float) -> int:
-        """Quy đổi nồng độ PM2.5 (ug/m3) sang chỉ số US AQI chuẩn EPA"""
-        if pm25 is None or pm25 < 0:
+        """Thuật toán tính US AQI chuẩn EPA, triệt tiêu hoàn toàn lỗi khe hở ranh giới"""
+        try:
+            cp = float(pm25)
+        except (ValueError, TypeError):
             return 0
-        breakpoints = [
-            (0.0, 12.0, 0, 50),
-            (12.1, 35.4, 51, 100),
-            (35.5, 55.4, 101, 150),
-            (55.5, 150.4, 151, 200),
-            (150.5, 250.4, 201, 300),
-            (250.5, 500.4, 301, 500)
-        ]
-        for c_low, c_high, i_low, i_high in breakpoints:
-            if c_low <= pm25 <= c_high:
-                return round(((i_high - i_low) / (c_high - c_low)) * (pm25 - c_low) + i_low)
-        return 500
+
+        if cp < 0:
+            return 0
+        elif cp <= 12.0:
+            c_low, c_high, i_low, i_high = 0.0, 12.0, 0, 50
+        elif cp <= 35.4:
+            c_low, c_high, i_low, i_high = 12.0, 35.4, 51, 100
+        elif cp <= 55.4:
+            c_low, c_high, i_low, i_high = 35.4, 55.4, 101, 150
+        elif cp <= 150.4:
+            c_low, c_high, i_low, i_high = 55.4, 150.4, 151, 200
+        elif cp <= 250.4:
+            c_low, c_high, i_low, i_high = 150.4, 250.4, 201, 300
+        elif cp <= 350.4:
+            c_low, c_high, i_low, i_high = 250.4, 350.4, 301, 400
+        elif cp <= 500.4:
+            c_low, c_high, i_low, i_high = 350.4, 500.4, 401, 500
+        else:
+            return 500  
+
+        aqi = ((i_high - i_low) / (c_high - c_low)) * (cp - c_low) + i_low
+        return int(round(aqi))
 
     @staticmethod
     def get_health_advisory(aqi: int, pm25: float) -> dict:

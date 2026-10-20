@@ -22,10 +22,12 @@
         #adm-station-table td {
             vertical-align: middle;
         }
+
         #adm-station-table td:nth-child(5) {
             text-align: center !important;
             white-space: nowrap !important;
         }
+
         #adm-station-table td:nth-child(5) span {
             white-space: nowrap !important;
             display: inline-block !important;
@@ -38,35 +40,32 @@
 </head>
 
 <body class="admin-body"
-    style="display: flex; flex-direction: column; width: 100%; min-height: 100vh; background: #060b18; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0;">
+    style="display: flex; flex-direction: column; width: 100%; min-height: 100vh; background: #f8fafc; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0;">
 
     <!-- 1. THANH HEADER ADMIN ĐIỀU HÀNH FULL BỀ NGANG 100% (KÉO DÀI RA TOÀN MÀN HÌNH) -->
     <header class="admin-topbar"
-        style="width: 100%; box-sizing: border-box; background: #0b1329; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <!-- Logo & Thông tin đơn vị -->
+        style="width: 100%; box-sizing: border-box; background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
         <div class="admin-brand" style="display: flex; align-items: center; gap: 16px;">
             <div class="admin-logo-icon"
-                style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
-                <i class="fa-solid fa-shield-halved"></i>
+                style="width: 44px; height: 44px; border-radius: 10px; background: rgba(2, 132, 199, 0.12); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);">
+                <i class="fa-solid fa-chart-line"></i>
             </div>
             <div>
-                <h2 style="font-size: 19px; font-weight: 800; color: #f8fafc; margin: 0; letter-spacing: 0.5px;">
+                <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: 0.5px;">
                     AirHCM — TRUNG TÂM ĐIỀU HÀNH & QUẢN TRỊ DSS
                 </h2>
-                <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0;">
+                <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">
                     Khoa CNTT - Trường ĐH Tài nguyên & Môi trường TP.HCM | Bộ Nông nghiệp & Môi trường
                 </p>
             </div>
         </div>
-
-        <!-- Các nút tác vụ điều hướng bên phải -->
         <div class="admin-actions" style="display: flex; align-items: center; gap: 12px;">
             <a href="index.html" class="btn-admin-nav"
-                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #f8fafc; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">
+                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;">
                 <i class="fa-solid fa-desktop"></i> Giao diện Người dùng
             </a>
-            <button onclick="alert('Đã đăng xuất hệ thống Admin!')" class="btn-admin-logout"
-                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+            <button onclick="handleAdminLogout()" class="btn-admin-logout"
+                style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </button>
         </div>
@@ -88,7 +87,7 @@
                     PostGIS</small>
             </div>
             <div class="panel admin-kpi-box"
-                style="background: #0f172a; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                style="background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                 <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px;"><i
                         class="fa-solid fa-smog"></i> PM2.5 Hiện tại</span>
                 <b style="font-size: 24px; color: #f59e0b; display: block;" id="adm-pm25">-- µg/m³</b>
@@ -174,9 +173,15 @@
                             <p style="font-size: 11px; color: #94a3b8;">Danh sách các trạm đo kết nối cơ sở dữ liệu
                                 không gian</p>
                         </div>
-                        <button class="btn-add-station" onclick="openAddStationModal()">
-                            <i class="fa-solid fa-plus-circle"></i> Thêm Trạm mới
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-add-station" onclick="exportStationsToCSV()"
+                                style="background: #16a34a;">
+                                <i class="fa-solid fa-file-excel"></i> Xuất Excel (CSV)
+                            </button>
+                            <button class="btn-add-station" onclick="openAddStationModal()">
+                                <i class="fa-solid fa-plus-circle"></i> Thêm Trạm mới
+                            </button>
+                        </div>
                     </div>
                     <div class="table-container" style="max-height: 420px;">
                         <table class="custom-table">
@@ -186,7 +191,8 @@
                                     <th>Tên Trạm Quan Trắc</th>
                                     <th>Đơn vị Quản lý</th>
                                     <th>Tọa độ (Lat, Lng)</th>
-                                    <th style="min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                                    <th style="min-width: 120px; text-align: center; white-space: nowrap;">Trạng thái
+                                    </th>
                                     <th style="min-width: 150px; text-align: center; white-space: nowrap;">Thao tác</th>
                                 </tr>
                             </thead>
@@ -257,13 +263,17 @@
                         <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Công cụ dành cho Nhà quản lý Bộ
                             Nông nghiệp & Môi trường kiểm tra, thêm, xóa, sửa và phát cảnh báo trực tiếp</p>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <input type="text" id="search-sub" class="custom-box" placeholder="Tìm theo Tên/Email..." onkeyup="filterSubscribers()">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="search-sub" class="custom-box" placeholder="Tìm theo Tên/Email..."
+                            onkeyup="filterSubscribers()">
+                        <button class="btn-add-station" onclick="exportSubscribersToCSV()" style="background: #16a34a;">
+                            <i class="fa-solid fa-file-excel"></i> Xuất Danh sách (Excel)
+                        </button>
                         <button class="btn-add-station" onclick="openAddSubscriberModal()" style="background: #8b5cf6;">
                             <i class="fa-solid fa-user-plus"></i> Thêm Người nhận mới
                         </button>
-                        <!-- BỔ SUNG NÚT PHÁT CẢNH BÁO TOÀN BỘ NÀY -->
-                        <button class="btn-add-station" onclick="broadcastAlertToAll()" style="background: #ef4444; border: 1px solid #f87171;">
+                        <button class="btn-add-station" onclick="broadcastAlertToAll()"
+                            style="background: #ef4444; border: 1px solid #f87171;">
                             <i class="fa-solid fa-bullhorn"></i> Phát Cảnh Báo Khẩn (Toàn bộ)
                         </button>
                     </div>
@@ -360,7 +370,8 @@
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label>Mã trạm (Mã định danh không đổi)</label>
-                            <input type="text" id="edit-st-id" class="custom-input" readonly style="background: rgba(255,255,255,0.05); color: #38bdf8; cursor: not-allowed;">
+                            <input type="text" id="edit-st-id" class="custom-input" readonly
+                                style="background: rgba(255,255,255,0.05); color: #38bdf8; cursor: not-allowed;">
                         </div>
                         <div class="form-group">
                             <label>Trạng thái hoạt động</label>
@@ -372,11 +383,13 @@
                     </div>
                     <div class="form-group" style="margin-top: 14px;">
                         <label>Tên Trạm Quan Trắc <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="edit-st-name" class="custom-input" placeholder="VD: Trạm Quan Trắc Sơn Kỳ - Quận Tân Phú" required>
+                        <input type="text" id="edit-st-name" class="custom-input"
+                            placeholder="VD: Trạm Quan Trắc Sơn Kỳ - Quận Tân Phú" required>
                     </div>
                     <div class="form-group" style="margin-top: 14px;">
                         <label>Đơn vị Quản lý / Vận hành <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="edit-st-owner" class="custom-input" placeholder="VD: Chi cục Bảo vệ Môi Trường Tân Phú" required>
+                        <input type="text" id="edit-st-owner" class="custom-input"
+                            placeholder="VD: Chi cục Bảo vệ Môi Trường Tân Phú" required>
                     </div>
                     <div class="form-grid-2" style="margin-top: 14px;">
                         <div class="form-group">
@@ -425,15 +438,12 @@
                         </div>
                     </div>
                     <div class="form-grid-2" style="margin-top: 14px;">
-                        <div class="form-group">
-                            <label>Khu vực theo dõi</label>
-                            <select id="adm-sub-ward" class="custom-input">
-                                <option value="Phường Bình Đông (Q.8)">Phường Bình Đông (Quận 8)</option>
-                                <option value="Phường Gò Vấp">Phường Gò Vấp</option>
-                                <option value="Phường Tân Tạo (Bình Tân)">Phường Tân Tạo (Bình Tân)</option>
-                                <option value="Tất cả TP.HCM">Tất cả TP.HCM</option>
-                            </select>
-                        </div>
+                       <div class="form-group">
+                          <label>Khu vực theo dõi</label>
+                          <select id="adm-sub-ward" class="custom-input">
+                              <option value="Tất cả TP.HCM">⭐ Tất cả khu vực TP.HCM</option>
+                          </select>
+                      </div>
                         <div class="form-group">
                             <label>Ngưỡng kích hoạt</label>
                             <select id="adm-sub-threshold" class="custom-input">
