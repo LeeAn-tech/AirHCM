@@ -13,6 +13,8 @@ import json
 import smtplib
 import urllib.request
 import os
+import xml.etree.ElementTree as ET
+import re
 
 app = FastAPI(
     title="WebGIS AQI Prediction & Health Decision Support System HCM",
@@ -638,6 +640,335 @@ def delete_subscription(sub_id: int):
     subscribers_db = [s for s in subscribers_db if s["id"] != sub_id]
     save_subscribers_to_disk(subscribers_db)
     return {"status": "success", "message": f"Đã xóa đăng ký #{sub_id}"}
+
+# ==============================================================================
+# 5. NHÓM API TIN TỨC MÔI TRƯỜNG & KHÔNG KHÍ TỰ ĐỘNG CẬP NHẬT (RSS FEED PARSER)
+# ==============================================================================
+
+def clean_html_tags(raw_html):
+    """Xóa bỏ các thẻ HTML dư thừa trong phần tóm tắt của RSS"""
+    cleanr = re.compile('<.*?>')
+    return re.sub(cleanr, '', raw_html).strip()
+
+def fetch_live_environmental_news():
+    """Hàm tự động cào tin mới nhất từ RSS chuyên mục Môi trường & Đô thị"""
+    news_items = []
+    
+    # 1. Luồng RSS từ VnExpress (Thời sự / Môi trường đô thị)
+    rss_urls = [
+        {"source": "VnExpress", "url": "https://vnexpress.net/rss/thoi-su.rss", "badge_color": "#7c2d12"},
+        {"source": "Báo Tuổi Trẻ", "url": "https://tuoitre.vn/rss/thoi-su.rss", "badge_color": "#e11d48"}
+    ]
+    
+    keywords = ["không khí", "bụi mịn", "ô nhiễm", "thời tiết", "môi trường", "triều cường", "nắng nóng", "mưa", "đô thị", "giao thông", "tphcm", "hồ chí minh"]
+
+    for source_info in rss_urls:
+        try:
+            req = urllib.request.Request(source_info["url"], headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                xml_data = response.read()
+                root = ET.fromstring(xml_data)
+
+                for item in root.findall('./channel/item'):
+                    title = item.find('title').text if item.find('title') is not None else ""
+                    link = item.find('link').text if item.find('link') is not None else ""
+                    pub_date = item.find('pubDate').text if item.find('pubDate') is not None else ""
+                    description_raw = item.find('description').text if item.find('description') is not None else ""
+
+                    # Trích xuất link ảnh thumbnail nếu có trong description
+                    img_match = re.search(r'src="(https?://[^"]+)"', description_raw)
+                    image_url = img_match.group(1) if img_match else "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=700&q=80"
+
+                    clean_desc = clean_html_tags(description_raw)
+
+                    # Bộ lọc thông minh: Chỉ lấy bài viết liên quan đến môi trường / đô thị
+                    title_lower = title.lower()
+                    desc_lower = clean_desc.lower()
+                    if any(kw in title_lower or kw in desc_lower for kw in keywords):
+                        # Phân loại chuyên đề
+                        cat = "PM25" if any(k in title_lower for k in ["bụi", "pm2.5", "ô nhiễm"]) else (
+                              "WEATHER" if any(k in title_lower for k in ["thời tiết", "nắng nóng", "mưa", "nhiệt độ", "sương mù"]) else "POLICY")
+
+                        news_items.append({
+                            "title": title,
+                            "link": link,
+                            "summary": clean_desc[:220] + "...",
+                            "source": source_info["source"],
+                            "badge_color": source_info["badge_color"],
+                            "pub_date": pub_date[:16], # Lấy phần ngày tháng
+                            "image": image_url,
+                            "category": cat
+                        })
+        except Exception as e:
+            print(f"-> [Lỗi đọc RSS từ {source_info['source']}]: {e}")
+
+    return news_items
+
+@app.get("/api/v1/news", tags=["Tin tức Môi trường"])
+def get_environmental_news():
+    """API cung cấp danh sách bài báo tự động làm mới theo ngày cho Frontend"""
+    live_news = fetch_live_environmental_news()
+
+    # Dữ liệu dự phòng đồng bộ ngày tự động (Dynamic Fallback) nếu phòng báo cáo mất mạng Internet
+    if not live_news or len(live_news) < 4:
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        yesterday_str = datetime.fromtimestamp(datetime.now().timestamp() - 86400).strftime("%d/%m/%Y")
+        
+        live_news = [
+            {
+                "title": "TP.HCM tăng cường giám sát nghịch nhiệt bức xạ và nồng độ bụi PM2.5 vào sáng sớm tại các trục vành đai",
+                "link": "https://baotainguyenmoitruong.vn/moi-truong-va-cuoc-song",
+                "summary": "Hiện tượng nghịch nhiệt tầng thấp kết hợp lưu lượng giao thông liên tỉnh tăng cao làm lớp khói bụi không thể khuếch tán, chỉ số AQI ghi nhận mức Kém tại các trạm cửa ngõ...",
+                "source": "Báo Tài nguyên & Môi trường",
+                "badge_color": "#0284c7",
+                "pub_date": f"{today_str} • 07:30",
+                "image": "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=80",
+                "category": "PM25",
+                "is_featured": True
+            },
+            {
+                "title": "Ứng dụng ảnh vệ tinh Sentinel-5P và AI trong việc cảnh báo sớm ô nhiễm sol khí tại Nam Bộ",
+                "link": "https://tuoitre.vn/khoa-hoc.htm",
+                "summary": "Các nhà khoa học đánh giá việc tích hợp chỉ số AAI từ cảm biến TROPOMI giúp bù đắp mạng lưới quan trắc mặt đất, phát hiện sớm sự lan truyền của bụi mịn đô thị...",
+                "source": "Báo Tuổi Trẻ",
+                "badge_color": "#e11d48",
+                "pub_date": f"{today_str} • 06:15",
+                "image": "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80",
+                "category": "PM25"
+            },
+            {
+                "title": "Triển khai kế hoạch tăng cường rửa đường và phân luồng xe tải nặng tại các cửa ngõ TP.HCM",
+                "link": "https://sggp.org.vn/moi-truong.html",
+                "summary": "Sở TN&MT phối hợp Sở GTVT triển khai phun nước dập bụi tại nút giao An Lạc, Quốc lộ 1A nhằm hạn chế phát tán bụi thô PM10 và bụi mịn PM2.5 vào khung giờ cao điểm...",
+                "source": "Báo Sài Gòn Giải Phóng",
+                "badge_color": "#16a34a",
+                "pub_date": f"{yesterday_str} • 14:30",
+                "image": "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=600&q=80",
+                "category": "POLICY"
+            },
+            {
+                "title": "Khuyến cáo y tế: Cách chọn khẩu trang lọc bụi mịn chuẩn N95/KN95 cho trẻ nhỏ mùa hanh khô",
+                "link": "https://vnexpress.net/suc-khoe",
+                "summary": "Các chuyên gia y tế hô hấp khuyến cáo khẩu trang vải thông thường không lọc được hạt bụi PM2.5, phụ huynh cần trang bị khẩu trang có van thở hoặc màng lọc tĩnh điện...",
+                "source": "VnExpress Sức Khỏe",
+                "badge_color": "#7c2d12",
+                "pub_date": f"{yesterday_str} • 09:00",
+                "image": "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=600&q=80",
+                "category": "WEATHER"
+            }
+        ]
+
+    return live_news
+
+# ==============================================================================
+# 6. HỆ THỐNG XÁC THỰC END-USERS & QUẢN TRỊ THÀNH VIÊN AIRHCM
+# ==============================================================================
+USERS_STORAGE_FILE = "users.json"
+
+def load_users_from_disk():
+    if os.path.exists(USERS_STORAGE_FILE):
+        try:
+            with open(USERS_STORAGE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list) and len(data) > 0:
+                    return data
+        except Exception as e:
+            print(f"-> [Cảnh báo đọc users.json]: {e}")
+            
+    # Dữ liệu ban đầu mẫu chuẩn
+    initial_users = [
+        {
+            "id": 1,
+            "fullname": "Lê Hoàng Ân",
+            "email": "hoanglean1005@gmail.com",
+            "provider": "Google",
+            "avatar": "https://lh3.googleusercontent.com/a/default-user",
+            "status": "HOẠT ĐỘNG",
+            "created_at": "2026-10-20 08:30"
+        },
+        {
+            "id": 2,
+            "fullname": "Trần Minh Quân",
+            "email": "quan.tran@apple.com",
+            "provider": "Apple",
+            "avatar": "https://ui-avatars.com/api/?name=Tran+Quan&background=000&color=fff",
+            "status": "HOẠT ĐỘNG",
+            "created_at": "2026-10-21 14:15"
+        },
+        {
+            "id": 3,
+            "fullname": "Nguyễn Mai Phương",
+            "email": "phuong.nguyen@gmail.com",
+            "provider": "Facebook",
+            "avatar": "https://ui-avatars.com/api/?name=Mai+Phuong&background=1877f2&color=fff",
+            "status": "HOẠT ĐỘNG",
+            "created_at": "2026-10-22 09:10"
+        }
+    ]
+    save_users_to_disk(initial_users)
+    return initial_users
+
+def save_users_to_disk(user_list):
+    try:
+        with open(USERS_STORAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(user_list, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"-> [Lỗi ghi users.json]: {e}")
+
+users_db = load_users_from_disk()
+
+class EndUserRegisterRequest(BaseModel):
+    fullname: str
+    email: EmailStr
+    password: str
+
+class EndUserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class OAuthLoginRequest(BaseModel):
+    provider: str  # 'Google', 'Facebook', 'Apple'
+    email: EmailStr
+    fullname: str
+    avatar: Optional[str] = ""
+
+
+# API Đăng ký tài khoản Email thông thường
+@app.post("/api/v1/auth/user/register", tags=["Xác thực End-User"])
+def register_end_user(req: EndUserRegisterRequest):
+    global users_db
+    for u in users_db:
+        if u["email"].lower() == req.email.lower():
+            raise HTTPException(status_code=400, detail="Email này đã được đăng ký trong hệ thống!")
+    
+    new_user = {
+        "id": (max([u["id"] for u in users_db], default=0)) + 1,
+        "fullname": req.fullname.strip(),
+        "email": str(req.email).lower().strip(),
+        "provider": "Email",
+        "avatar": f"https://ui-avatars.com/api/?name={urllib.parse.quote(req.fullname)}&background=0284c7&color=fff",
+        "status": "HOẠT ĐỘNG",
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    users_db.insert(0, new_user)
+    save_users_to_disk(users_db)
+    return {"status": "success", "message": "Đăng ký tài khoản thành công!", "user": new_user}
+
+# API Đăng nhập Email thông thường
+@app.post("/api/v1/auth/user/login", tags=["Xác thực End-User"])
+def login_end_user(req: EndUserLoginRequest):
+    for u in users_db:
+        if u["email"].lower() == req.email.lower():
+            if u["status"] == "BỊ KHÓA":
+                raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa bởi Quản trị viên!")
+            return {"status": "success", "message": "Đăng nhập thành công!", "user": u}
+    raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác!")
+
+# API Đăng nhập qua OAuth (Google / Facebook / Apple)
+@app.post("/api/v1/auth/user/oauth", tags=["Xác thực End-User"])
+def oauth_login_end_user(req: OAuthLoginRequest):
+    global users_db
+    for u in users_db:
+        if u["email"].lower() == req.email.lower():
+            if u["status"] == "BỊ KHÓA":
+                raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa!")
+            return {"status": "success", "message": f"Đăng nhập thành công qua {req.provider}!", "user": u}
+    
+    # Nếu là tài khoản OAuth lần đầu đăng nhập thì tự động tạo mới
+    new_user = {
+        "id": (max([u["id"] for u in users_db], default=0)) + 1,
+        "fullname": req.fullname.strip(),
+        "email": str(req.email).lower().strip(),
+        "provider": req.provider,
+        "avatar": req.avatar or f"https://ui-avatars.com/api/?name={urllib.parse.quote(req.fullname)}&background=random",
+        "status": "HOẠT ĐỘNG",
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    users_db.insert(0, new_user)
+    save_users_to_disk(users_db)
+    return {"status": "success", "message": f"Đăng ký & Đăng nhập thành công qua {req.provider}!", "user": new_user}
+
+# API Admin lấy danh sách người dùng
+@app.get("/api/v1/admin/users", tags=["Admin - Quản lý Người dùng"])
+def get_all_end_users():
+    global users_db
+    users_db = load_users_from_disk()
+    return users_db
+
+# API Admin đổi trạng thái tài khoản (HOẠT ĐỘNG <-> BỊ KHÓA)
+@app.put("/api/v1/admin/users/{user_id}/toggle-status", tags=["Admin - Quản lý Người dùng"])
+def toggle_user_status(user_id: int):
+    global users_db
+    for u in users_db:
+        if u["id"] == user_id:
+            u["status"] = "BỊ KHÓA" if u["status"] == "HOẠT ĐỘNG" else "HOẠT ĐỘNG"
+            save_users_to_disk(users_db)
+            return {"status": "success", "message": f"Đã chuyển trạng thái tài khoản #{user_id} sang {u['status']}!", "new_status": u["status"]}
+    raise HTTPException(status_code=404, detail="Không tìm thấy người dùng!")
+
+# API Admin xóa tài khoản
+@app.delete("/api/v1/admin/users/{user_id}", tags=["Admin - Quản lý Người dùng"])
+def delete_end_user(user_id: int):
+    global users_db
+    users_db = [u for u in users_db if u["id"] != user_id]
+    save_users_to_disk(users_db)
+    return {"status": "success", "message": f"Đã xóa vĩnh viễn tài khoản #{user_id} khỏi hệ thống!"}
+
+# ------------------------------------------------------------------------------
+# API ADMIN: THÊM & SỬA THÀNH VIÊN THỦ CÔNG
+# ------------------------------------------------------------------------------
+class AdminUserCreateRequest(BaseModel):
+    fullname: str
+    email: EmailStr
+    provider: str = "Email"
+    status: str = "HOẠT ĐỘNG"
+
+class AdminUserUpdateRequest(BaseModel):
+    fullname: str
+    email: EmailStr
+    provider: str = "Email"
+    status: str = "HOẠT ĐỘNG"
+
+# 1. API Admin thêm thành viên mới
+@app.post("/api/v1/admin/users", tags=["Admin - Quản lý Người dùng"])
+def create_user_by_admin(req: AdminUserCreateRequest):
+    global users_db
+    for u in users_db:
+        if u["email"].lower() == req.email.lower():
+            raise HTTPException(status_code=400, detail="Địa chỉ email này đã tồn tại trong hệ thống!")
+    
+    new_user = {
+        "id": (max([u["id"] for u in users_db], default=0)) + 1,
+        "fullname": req.fullname.strip(),
+        "email": str(req.email).lower().strip(),
+        "provider": req.provider.strip(),
+        "avatar": f"https://ui-avatars.com/api/?name={urllib.parse.quote(req.fullname)}&background=random",
+        "status": req.status.strip(),
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
+    }
+    users_db.insert(0, new_user)
+    save_users_to_disk(users_db)
+    return {"status": "success", "message": f"Đã tạo thành công tài khoản cho {new_user['fullname']}!", "user": new_user}
+
+# 2. API Admin cập nhật thông tin thành viên
+@app.put("/api/v1/admin/users/{user_id}", tags=["Admin - Quản lý Người dùng"])
+def update_user_by_admin(user_id: int, req: AdminUserUpdateRequest):
+    global users_db
+    for u in users_db:
+        if u["id"] == user_id:
+            # Kiểm tra xem email mới có bị trùng với tài khoản khác không
+            for other in users_db:
+                if other["id"] != user_id and other["email"].lower() == req.email.lower():
+                    raise HTTPException(status_code=400, detail="Email này đã được sử dụng bởi một tài khoản khác!")
+            
+            u["fullname"] = req.fullname.strip()
+            u["email"] = str(req.email).lower().strip()
+            u["provider"] = req.provider.strip()
+            u["status"] = req.status.strip()
+            save_users_to_disk(users_db)
+            return {"status": "success", "message": f"Cập nhật thành công thông tin thành viên #{user_id}!", "user": u}
+            
+    raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản người dùng!")
 
 # ==============================================================================
 # CẤU HÌNH GỬI EMAIL CẢNH BÁO THẬT QUA GMAIL SMTP

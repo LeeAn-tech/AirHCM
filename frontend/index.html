@@ -14,6 +14,16 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Cấu hình chuẩn ứng dụng di động PWA & Chống zoom vỡ layout -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0284c7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AirHCM">
+    
+    <!-- Liên kết Web Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/img/Logo AirHCM.png">
 
     <link rel="stylesheet" href="assets/css/style.css">
 
@@ -21,7 +31,6 @@
 </head>
 
 <body>
-
     <!-- Sidebar Navigation -->
     <nav class="sidebar">
         <div class="logo">
@@ -48,6 +57,10 @@
                 <i class="fa-solid fa-bell"></i>
                 <span class="tooltip">Đăng ký Cảnh báo</span>
             </li>
+            <li class="nav-item" data-tab="tab-news">
+                <i class="fa-solid fa-newspaper"></i>
+                <span class="tooltip">Bản tin Môi trường</span>
+            </li>
             <li class="nav-item" data-tab="tab-about">
                 <i class="fa-solid fa-circle-info"></i>
                 <span class="tooltip">Giới thiệu Hệ thống</span>
@@ -68,12 +81,32 @@
                 <p>Khoa Công Nghệ Thông Tin - Trường ĐH Tài nguyên & Môi trường TP.HCM | SVTH: Lê Hoàng Ân | GVHD: TS.
                     Dương Thị Thúy Nga</p>
             </div>
-           <div class="header-status" style="display: flex; gap: 10px; align-items: center;">
-                <button onclick="window.print()" class="btn" style="background: rgba(56, 189, 248, 0.15); color: #0284c7; border: 1px solid #0284c7; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+            <div class="header-status" style="display: flex; gap: 10px; align-items: center;">
+                <!-- BỘ CHUYỂN ĐỔI CHUẨN ĐO LƯỜNG AQI: VIỆT NAM (QĐ 1459) vs HOA KỲ (US EPA) -->
+                <div class="aqi-standard-switcher">
+                    <button id="btn-std-vn" class="btn-std active" onclick="setAQIStandard('VN')"
+                        title="Chỉ số chất lượng không khí Việt Nam (Quyết định 1459/QĐ-TCMT)">
+                        🇻🇳 VN_AQI
+                    </button>
+                    <button id="btn-std-us" class="btn-std" onclick="setAQIStandard('US')"
+                        title="Chỉ số chất lượng không khí Hoa Kỳ (US EPA)">
+                        🇺🇸 US AQI
+                    </button>
+                </div>
+                <!-- NÚT ĐĂNG NHẬP / PROFILE THÀNH VIÊN DÀNH CHO END-USERS -->
+                <div id="user-auth-slot">
+                    <button onclick="openUserAuthModal('login')" class="btn"
+                        style="background: #0284c7; color: #ffffff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-user"></i> <span>Đăng nhập / Đăng ký</span>
+                    </button>
+                </div>
+                <button onclick="exportOfficialReport()" class="btn"
+                    style="background: rgba(56, 189, 248, 0.15); color: #0284c7; border: 1px solid #0284c7; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
                     <i class="fa-solid fa-print"></i> In / Xuất Báo cáo PDF
                 </button>
-               <!-- NÚT ĐĂNG NHẬP TINH TẾ DÀNH CHO CÁN BỘ / ADMIN -->
-                <button onclick="handleAdminEntry()" class="btn" style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+
+                <button onclick="handleAdminEntry()" class="btn"
+                    style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-lock"></i> <span id="btn-admin-text">Cán bộ / Quản trị</span>
                 </button>
                 <div class="status-indicator">
@@ -163,37 +196,39 @@
                 </div>
 
                 <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
-                    <label class="layer-item">
-                        <span><i class="fa-solid fa-tower-broadcast"></i> Trạm quan trắc</span>
-                        <input type="checkbox" id="chk-stations" checked>
-                    </label>
-                    <label class="layer-item">
-                        <span><i class="fa-solid fa-fire-flame-curved"></i> Bản đồ nhiệt (Heatmap)</span>
-                        <input type="checkbox" id="chk-heatmap" checked>
-                    </label>
-                    <label class="layer-item">
-                        <span><i class="fa-solid fa-map"></i> Ranh giới phường/xã</span>
-                        <input type="checkbox" id="chk-wards" checked>
-                    </label>
-                    <!-- BỔ SUNG CHECKBOX HƯỚNG GIÓ ĐỘNG -->
-                    <label class="layer-item">
-                        <span><i class="fa-solid fa-wind" style="color: #0284c7;"></i> Dòng chảy gió (Wind Stream)</span>
-                        <input type="checkbox" id="chk-wind" checked>
-                    </label>
+                <label class="layer-item">
+                    <span><i class="fa-solid fa-tower-broadcast"></i> Trạm quan trắc</span>
+                    <input type="checkbox" id="chk-stations" checked>
+                </label>
+                <label class="layer-item">
+                    <span><i class="fa-solid fa-fire-flame-curved"></i> Bản đồ nhiệt (Heatmap)</span>
+                    <input type="checkbox" id="chk-heatmap" checked>
+                </label>
+                <label class="layer-item">
+                    <span><i class="fa-solid fa-map"></i> Ranh giới phường/xã</span>
+                    <input type="checkbox" id="chk-wards" checked>
+                </label>
+                <!-- BỔ SUNG CHECKBOX HƯỚNG GIÓ ĐỘNG -->
+                <label class="layer-item">
+                    <span><i class="fa-solid fa-wind" style="color: #0284c7;"></i> Dòng chảy gió (Wind Stream)</span>
+                    <input type="checkbox" id="chk-wind" checked>
+                </label>
 
-                    <div class="layer-group-title" style="margin-top: 10px;"><i class="fa-solid fa-map-location"></i>
-                        Bản đồ nền (Basemap)</div>
-                    <select id="select-basemap" class="basemap-select">
-                        <option value="light">Nền sáng chuyên đề (Esri Light Gray)</option>
-                        <option value="dark">Nền tối (Esri Dark Gray)</option>
-                        <option value="osm">Bản đồ giao thông (OpenStreetMap)</option>
-                        <option value="satellite">Ảnh vệ tinh (Esri Satellite)</option>
-                    </select>
-                </div>
+                <div class="layer-group-title" style="margin-top: 10px;"><i class="fa-solid fa-map-location"></i>
+                    Bản đồ nền (Basemap)</div>
+                <select id="select-basemap" class="basemap-select">
+                    <option value="light">Nền sáng chuyên đề (Esri Light Gray)</option>
+                    <option value="dark">Nền tối (Esri Dark Gray)</option>
+                    <option value="osm">Bản đồ giao thông (OpenStreetMap)</option>
+                    <option value="satellite">Ảnh vệ tinh (Esri Satellite)</option>
+                </select>
+            </div>
             </div>
 
             <div id="panel-legend" class="panel floating-bottom-right">
-                <h5 style="margin-bottom: 6px; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 700;">Mức độ AQI
+                <h5
+                    style="margin-bottom: 6px; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 700;">
+                    Mức độ AQI
                     (US EPA)</h5>
                 <div class="legend-scale">
                     <div><span style="background: #00E400;"></span> 0-50: Tốt</div>
@@ -213,7 +248,8 @@
                     <div class="panel-header">
                         <div>
                             <h3><i class="fa-solid fa-brain"></i> Dự báo Biến thiên Chuỗi thời gian PM2.5 & AQI</h3>
-                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">Mô hình Học máy Random Forest kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
+                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">Mô hình Học máy Random Forest
+                                kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
                         </div>
                         <div class="forecast-controls">
                             <button class="btn btn-forecast active" onclick="loadForecast(24, event)">24 Giờ
@@ -238,7 +274,8 @@
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-chart-line-up"></i> AQI Đỉnh điểm</span>
                         <b id="kpi-peak-aqi" style="color: #d97706;">--</b>
-                        <small style="color: #64748b; font-weight: 600;">Chuẩn US EPA</small>
+                        <small id="kpi-peak-standard" style="color: #64748b; font-weight: 600;">QĐ 1459/QĐ-TCMT (Việt
+                            Nam)</small>
                     </div>
                     <div class="panel kpi-card">
                         <span><i class="fa-solid fa-arrows-spin"></i> Xu hướng Biến thiên</span>
@@ -246,9 +283,9 @@
                         <small style="color: #64748b; font-weight: 600;">Xáo trộn lớp biên khí quyển</small>
                     </div>
                     <div class="panel kpi-card">
-                        <span><i class="fa-solid fa-microchip"></i> Độ chính xác AI ($R^2$)</span>
-                        <b style="color: #9333ea;">0.879 (87.9%)</b>
-                        <small style="color: #64748b; font-weight: 600;">Random Forest Regressor</small>
+                        <span><i class="fa-solid fa-microchip"></i> Hệ số xác định ($R^2$) & Sai số</span>
+                        <b style="color: #9333ea; font-size: 17px;">$R^2 = 0.88$ | MAE = 3.8</b>
+                        <small style="color: #64748b; font-weight: 600;">Random Forest Regressor (Chuẩn hóa)</small>
                     </div>
                 </div>
                 <!-- GIẢI THÍCH MÔ HÌNH HỌC MÁY (FEATURE IMPORTANCE / XAI) -->
@@ -256,13 +293,15 @@
                     <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px;">
                         <div>
                             <h4 style="margin: 0; color: #7e22ce;">
-                                <i class="fa-solid fa-network-wired"></i> Mức Độ Ảnh Hưởng Của Các Yếu Tố Đến Dự Báo (Feature Importance)
+                                <i class="fa-solid fa-network-wired"></i> Mức Độ Ảnh Hưởng Của Các Yếu Tố Đến Dự Báo
+                                (Feature Importance)
                             </h4>
                             <p style="font-size: 12.5px; color: #475569; margin: 4px 0 0 0; font-weight: 500;">
                                 Phân rã độ đóng góp thuộc tính thuật toán Random Forest Regressor ($R^2 = 0.88$)
                             </p>
                         </div>
-                        <span style="font-size: 11px; background: rgba(168, 85, 247, 0.15); color: #7e22ce; padding: 4px 10px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.3);">
+                        <span
+                            style="font-size: 11px; background: rgba(168, 85, 247, 0.15); color: #7e22ce; padding: 4px 10px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.3);">
                             Explainable AI
                         </span>
                     </div>
@@ -271,50 +310,60 @@
                     <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
                         <div>
                             <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                                <span style="color: #0f172a; font-weight: 600;">Nồng độ bụi PM2.5 trung bình 7 ngày trước (Chu kỳ nền)</span>
+                                <span style="color: #0f172a; font-weight: 600;">Nồng độ bụi PM2.5 trung bình 7 ngày
+                                    trước (Chu kỳ nền)</span>
                                 <b style="color: #0284c7;">74.0%</b>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                                 <div style="width: 74%; height: 100%; background: #0284c7; border-radius: 4px;"></div>
                             </div>
                         </div>
 
                         <div>
                             <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                                <span style="color: #0f172a; font-weight: 600;">Tốc độ gió 10m & Hệ số khuếch tán khí quyển (ERA5)</span>
+                                <span style="color: #0f172a; font-weight: 600;">Tốc độ gió 10m & Hệ số khuếch tán khí
+                                    quyển (ERA5)</span>
                                 <b style="color: #16a34a;">13.6%</b>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                                 <div style="width: 13.6%; height: 100%; background: #16a34a; border-radius: 4px;"></div>
                             </div>
                         </div>
 
                         <div>
                             <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                                <span style="color: #0f172a; font-weight: 600;">Biến trễ PM2.5 giờ trước ($t-1$ và $t-24$)</span>
+                                <span style="color: #0f172a; font-weight: 600;">Biến trễ PM2.5 giờ trước ($t-1$ và
+                                    $t-24$)</span>
                                 <b style="color: #d97706;">5.2%</b>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                                 <div style="width: 5.2%; height: 100%; background: #d97706; border-radius: 4px;"></div>
                             </div>
                         </div>
 
                         <div>
                             <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                                <span style="color: #0f172a; font-weight: 600;">Nhiệt độ bề mặt 2m & Bức xạ mặt trời</span>
+                                <span style="color: #0f172a; font-weight: 600;">Nhiệt độ bề mặt 2m & Bức xạ mặt
+                                    trời</span>
                                 <b style="color: #dc2626;">4.8%</b>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                                 <div style="width: 4.8%; height: 100%; background: #dc2626; border-radius: 4px;"></div>
                             </div>
                         </div>
 
                         <div>
                             <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-                                <span style="color: #0f172a; font-weight: 600;">Chỉ số Sol khí hấp thụ Sentinel-5P (AAI)</span>
+                                <span style="color: #0f172a; font-weight: 600;">Chỉ số Sol khí hấp thụ Sentinel-5P
+                                    (AAI)</span>
                                 <b style="color: #7e22ce;">2.4%</b>
                             </div>
-                            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div
+                                style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                                 <div style="width: 2.4%; height: 100%; background: #7e22ce; border-radius: 4px;"></div>
                             </div>
                         </div>
@@ -329,14 +378,14 @@
                     </div>
                     <div class="table-container" style="max-height: 280px;">
                         <table class="custom-table">
-                           <thead>
+                            <thead>
                                 <tr>
-                                    <th style="text-align: left; width: 22%;">Mốc thời gian</th>
-                                    <th style="text-align: center; width: 17%;">PM2.5 Dự báo</th>
-                                    <th style="text-align: center; width: 17%;">PM10 Ước tính</th>
+                                    <th style="text-align: left; width: 20%;">Mốc thời gian</th>
+                                    <th style="text-align: center; width: 16%;">PM2.5 Dự báo</th>
+                                    <th style="text-align: center; width: 16%;">PM10 Ước tính</th>
                                     <th style="text-align: center; width: 12%;">US AQI</th>
                                     <th style="text-align: center; width: 18%;">Phân loại Môi trường</th>
-                                    <th style="text-align: center; width: 14%;">QCVN 05:2023</th>
+                                    <th style="text-align: center; width: 18%;">Đối chiếu QCVN (TB 24h)</th>
                                 </tr>
                             </thead>
                             <tbody id="forecast-table-body">
@@ -345,6 +394,12 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <div
+                            style="margin-top: 10px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid #0284c7; border-radius: 4px; font-size: 12px; color: #475569; font-style: italic;">
+                            (*) <b>Căn cứ pháp lý:</b> QCVN 05:2023/BTNMT quy định giới hạn PM2.5 trung bình 24 giờ là
+                            50 µg/m³. Cột đối chiếu phản ánh nồng độ dự báo tức thời so với ngưỡng trung bình ngày phục
+                            vụ mục đích phát hiện rủi ro và cảnh báo sớm.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -358,21 +413,29 @@
                         <div class="dss-icon" style="color: #0284c7;"><i class="fa-solid fa-users"></i></div>
                         <h4>Cộng đồng Dân cư</h4>
                         <div class="dss-badge" id="dss-status-badge">Đang tải...</div>
-                        <p id="dss-general" style="color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang trích xuất bộ quy tắc cảnh báo...</p>
+                        <p id="dss-general"
+                            style="color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang
+                            trích xuất bộ quy tắc cảnh báo...</p>
                     </div>
                     <div class="panel dss-card">
                         <div class="dss-icon" style="color: #d97706;"><i class="fa-solid fa-person-breastfeeding"></i>
                         </div>
                         <h4>Nhóm Người Nhạy cảm</h4>
-                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Trẻ em, người cao tuổi, bệnh nhân hô hấp</small>
-                        <p id="dss-sensitive" style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang tính toán khuyến cáo cá thể hóa...
+                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Trẻ em, người cao tuổi, bệnh
+                            nhân hô hấp</small>
+                        <p id="dss-sensitive"
+                            style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">
+                            Hệ thống đang tính toán khuyến cáo cá thể hóa...
                         </p>
                     </div>
                     <div class="panel dss-card">
                         <div class="dss-icon" style="color: #dc2626;"><i class="fa-solid fa-city"></i></div>
                         <h4>Cơ quan Quản lý Đô thị</h4>
-                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Kịch bản điều hành ứng phó môi trường</small>
-                        <p id="dss-action" style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">Hệ thống đang tham chiếu kịch bản phân luồng...</p>
+                        <small style="color: #475569; font-weight: 600; font-size: 12px;">Kịch bản điều hành ứng phó môi
+                            trường</small>
+                        <p id="dss-action"
+                            style="margin-top: 15px; color: #1e293b; font-size: 13.5px; font-weight: 500; line-height: 1.6;">
+                            Hệ thống đang tham chiếu kịch bản phân luồng...</p>
                     </div>
                 </div>
                 <!-- 1. KHUNG GIỜ NÊN RA NGOÀI & TƯ VẤN CÁ NHÂN HÓA (THAM KHẢO TỪ MẪU) -->
@@ -383,15 +446,21 @@
                             <i class="fa-solid fa-clock"></i> Khung Giờ Nên Ra Ngoài (24 Giờ Tới)
                         </h4>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <div style="background: rgba(74, 222, 128, 0.15); border-left: 4px solid #16a34a; padding: 10px 14px; border-radius: 6px;">
-                                <b style="color: #16a34a; font-size: 13px;"><i class="fa-solid fa-circle-check"></i> Thời điểm không khí sạch nhất:</b>
-                                <p id="best-hours-text" style="margin: 4px 0 0 0; font-size: 13px; color: #064e3b; font-weight: 600;">
+                            <div
+                                style="background: rgba(74, 222, 128, 0.15); border-left: 4px solid #16a34a; padding: 10px 14px; border-radius: 6px;">
+                                <b style="color: #16a34a; font-size: 13px;"><i class="fa-solid fa-circle-check"></i>
+                                    Thời điểm không khí sạch nhất:</b>
+                                <p id="best-hours-text"
+                                    style="margin: 4px 0 0 0; font-size: 13px; color: #064e3b; font-weight: 600;">
                                     11:00 - 15:00 (PM2.5 ≈ 11.5 - 13.0 µg/m³ - Đối lưu mạnh, bụi phát tán tốt)
                                 </p>
                             </div>
-                            <div style="background: rgba(239, 68, 68, 0.12); border-left: 4px solid #dc2626; padding: 10px 14px; border-radius: 6px;">
-                                <b style="color: #dc2626; font-size: 13px;"><i class="fa-solid fa-circle-xmark"></i> Khung giờ nên hạn chế ra đường:</b>
-                                <p id="worst-hours-text" style="margin: 4px 0 0 0; font-size: 13px; color: #7f1d1d; font-weight: 600;">
+                            <div
+                                style="background: rgba(239, 68, 68, 0.12); border-left: 4px solid #dc2626; padding: 10px 14px; border-radius: 6px;">
+                                <b style="color: #dc2626; font-size: 13px;"><i class="fa-solid fa-circle-xmark"></i>
+                                    Khung giờ nên hạn chế ra đường:</b>
+                                <p id="worst-hours-text"
+                                    style="margin: 4px 0 0 0; font-size: 13px; color: #7f1d1d; font-weight: 600;">
                                     07:00 - 09:00 & 17:30 - 20:00 (Giờ cao điểm ùn tắc và nghịch nhiệt tầng thấp)
                                 </p>
                             </div>
@@ -405,23 +474,30 @@
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                             <div>
-                                <label style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Đối tượng:</label>
-                                <select id="sel-user-group" class="custom-input" style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
+                                <label
+                                    style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Đối
+                                    tượng:</label>
+                                <select id="sel-user-group" class="custom-input"
+                                    style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
                                     <option value="normal">Người bình thường</option>
                                     <option value="sensitive">Nhóm nhạy cảm (Trẻ em/Người già)</option>
                                     <option value="respiratory">Người có bệnh hô hấp / Tim mạch</option>
                                 </select>
                             </div>
                             <div>
-                                <label style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Hoạt động dự kiến:</label>
-                                <select id="sel-activity" class="custom-input" style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
+                                <label
+                                    style="font-size: 12px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 4px;">Hoạt
+                                    động dự kiến:</label>
+                                <select id="sel-activity" class="custom-input"
+                                    style="padding: 6px 10px; font-size: 12px;" onchange="updatePersonalAdvisory()">
                                     <option value="commute">Lưu thông xe máy / Ngoài đường</option>
                                     <option value="exercise">Tập thể thao / Chạy bộ ngoài trời</option>
                                     <option value="indoor">Làm việc trong văn phòng / Nhà kín</option>
                                 </select>
                             </div>
                         </div>
-                        <div id="personal-advisory-box" style="padding: 10px 14px; background: #f8fafc; border-radius: 6px; font-size: 13px; line-height: 1.6; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 500;">
+                        <div id="personal-advisory-box"
+                            style="padding: 10px 14px; background: #f8fafc; border-radius: 6px; font-size: 13px; line-height: 1.6; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 500;">
                             <!-- Nội dung cập nhật tự động bằng JS -->
                         </div>
                     </div>
@@ -448,7 +524,8 @@
                             <div>
                                 <div
                                     style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
-                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-car-side"></i> Lưu lượng Giao
+                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-car-side"></i>
+                                        Lưu lượng Giao
                                         thông:</span>
                                     <b id="lbl-traffic" style="color: #d97706;">0% (Bình thường)</b>
                                 </div>
@@ -460,7 +537,8 @@
                             <div>
                                 <div
                                     style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
-                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-temperature-half"></i> Biến
+                                    <span style="color: #0f172a; font-weight: 600;"><i
+                                            class="fa-solid fa-temperature-half"></i> Biến
                                         thiên Nhiệt độ:</span>
                                     <b id="lbl-temp" style="color: #0284c7;">0 °C (Không đổi)</b>
                                 </div>
@@ -472,7 +550,8 @@
                             <div>
                                 <div
                                     style="display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px;">
-                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-wind"></i> Hệ số Khuếch tán
+                                    <span style="color: #0f172a; font-weight: 600;"><i class="fa-solid fa-wind"></i> Hệ
+                                        số Khuếch tán
                                         Gió:</span>
                                     <b id="lbl-wind" style="color: #16a34a;">1.0x (Bình thường)</b>
                                 </div>
@@ -487,12 +566,14 @@
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
                                 <div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Dự báo PM2.5 Kịch
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Dự
+                                        báo PM2.5 Kịch
                                         bản</span>
                                     <b id="scen-pm25" style="font-size: 18px; color: #0284c7;">-- µg/m³</b>
                                 </div>
                                 <div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">US AQI Kịch
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">US
+                                        AQI Kịch
                                         bản</span>
                                     <b id="scen-aqi" style="font-size: 18px; color: #d97706;">--</b>
                                 </div>
@@ -501,7 +582,8 @@
                                     Đang tính toán...
                                 </div>
                             </div>
-                            <div id="scen-advisory" style="font-size: 13px; line-height: 1.6; color: #0f172a; font-weight: 500;"></div>
+                            <div id="scen-advisory"
+                                style="font-size: 13px; line-height: 1.6; color: #0f172a; font-weight: 500;"></div>
                         </div>
                     </div>
 
@@ -509,7 +591,8 @@
                     <div class="panel">
                         <h4><i class="fa-solid fa-scale-balanced" style="color: #16a34a;"></i> So sánh Quy chuẩn Môi
                             trường</h4>
-                        <p style="font-size: 12.5px; color: #475569; margin: 4px 0 16px 0; font-weight: 500;">Đối sánh ngưỡng bụi mịn PM2.5
+                        <p style="font-size: 12.5px; color: #475569; margin: 4px 0 16px 0; font-weight: 500;">Đối sánh
+                            ngưỡng bụi mịn PM2.5
                             trung bình 24h</p>
 
                         <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -517,7 +600,9 @@
                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                                 <div>
                                     <b style="color: #0284c7; font-size: 13px;">QCVN 05:2023/BTNMT</b>
-                                    <small style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Quy chuẩn Quốc gia
+                                    <small
+                                        style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Quy
+                                        chuẩn Quốc gia
                                         Việt Nam</small>
                                 </div>
                                 <b style="font-size: 18px; color: #0f172a;">50 µg/m³</b>
@@ -526,7 +611,8 @@
                                 style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                                 <div>
                                     <b style="color: #16a34a; font-size: 13px;">Khuyến nghị WHO (2021)</b>
-                                    <small style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Tổ chức Y tế Thế
+                                    <small style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Tổ
+                                        chức Y tế Thế
                                         giới</small>
                                 </div>
                                 <b style="font-size: 18px; color: #0f172a;">15 µg/m³</b>
@@ -543,14 +629,17 @@
             </div>
         </section>
 
-        <!-- VIEW 4: BẢNG ĐIỂM NÓNG 166 PHƯỜNG/XÃ -->
+        <!-- VIEW 4: BẢNG ĐIỂM NÓNG 167 PHƯỜNG/XÃ -->
         <section id="tab-hotspots" class="tab-content">
             <div class="content-wrapper">
                 <div class="panel card-full">
                     <div class="panel-header">
                         <div>
                             <h3><i class="fa-solid fa-chart-column"></i> Phân tích Điểm nóng Ô nhiễm (Hotspots)</h3>
-                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">Xếp hạng mức độ ô nhiễm không khí tại 166 Phường/Xã TP.Hồ Chí Minh</p>
+                            <p style="color: #475569; font-size: 13px; margin-top: 4px;">
+                                Xếp hạng mức độ ô nhiễm không khí tại 167 Phường/Xã/Thị trấn (Mô hình Vùng đô thị TP.HCM
+                                mở rộng)
+                            </p>
                         </div>
                         <input type="text" id="search-ward" class="search-box" placeholder="Tìm kiếm Phường/Xã..."
                             onkeyup="filterWards()">
@@ -580,86 +669,172 @@
             </div>
         </section>
 
-        <!-- VIEW 5: ĐĂNG KÝ NHẬN CẢNH BÁO TỰ ĐỘNG -->
+        <!-- VIEW 5: ĐĂNG KÝ NHẬN CẢNH BÁO TỰ ĐỘNG (BỐ CỤC 2 CỘT CHUẨN CÔNG VỤ) -->
         <section id="tab-subscribe" class="tab-content">
-            <div class="content-wrapper" style="display: flex; justify-content: center; align-items: center;">
-                <div class="panel" style="width: 560px; padding: 32px;">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <div style="font-size: 42px; color: #0284c7; margin-bottom: 10px;"><i
-                                class="fa-solid fa-bell-concierge"></i></div>
-                        <h3 style="font-size: 20px; color: #0f172a;">Đăng ký Nhận Cảnh báo AQI Tự động</h3>
-                        <p style="font-size: 13px; color: #475569; margin-top: 4px; font-weight: 500;">Hệ thống sẽ tự động gửi thông báo
-                            khi chỉ số ô nhiễm tại khu vực của bạn vượt ngưỡng an toàn</p>
+            <div class="content-wrapper"
+                style="display: flex; justify-content: center; align-items: center; padding: 20px;">
+                <div class="panel subscribe-wrapper-grid"
+                    style="width: 100%; max-width: 960px; padding: 32px; background: #ffffff; border-radius: 14px;">
+                    <!-- Cột trái: Thông tin chính sách & Lợi ích cộng đồng -->
+                    <div class="sub-info-col"
+                        style="border-right: 1px solid #e2e8f0; padding-right: 32px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="font-size: 38px; color: #0284c7; margin-bottom: 12px;">
+                                <i class="fa-solid fa-bell-concierge"></i>
+                            </div>
+                            <h3 style="font-size: 20px; color: #0f172a; margin-bottom: 8px;">
+                                Dịch Vụ Cảnh Báo Ô Nhiễm Không Khí Đô Thị
+                            </h3>
+                            <p
+                                style="font-size: 13.5px; color: #475569; line-height: 1.6; font-weight: 500; text-align: justify;">
+                                Hệ thống WebGIS thông minh AirHCM tự động gửi thông báo chủ động đến thư điện tử (Email)
+                                và kênh liên lạc của bạn ngay khi phát hiện nồng độ bụi mịn PM2.5 vượt ngưỡng an toàn
+                                theo QCVN 05:2023.
+                            </p>
+
+                            <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 14px;">
+                                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <i class="fa-solid fa-circle-check" style="color: #16a34a; margin-top: 3px;"></i>
+                                    <span style="font-size: 13px; color: #334155;"><b>Thông báo khẩn cấp:</b> Tự động
+                                        phát email khi chỉ số AQI vượt mức cam kết.</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <i class="fa-solid fa-circle-check" style="color: #0284c7; margin-top: 3px;"></i>
+                                    <span style="font-size: 13px; color: #334155;"><b>Khuyến cáo sức khỏe cá thể
+                                            hóa:</b> Đính kèm cẩm nang ứng phó y tế cho người già & trẻ nhỏ.</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                    <i class="fa-solid fa-shield-halved" style="color: #d97706; margin-top: 3px;"></i>
+                                    <span style="font-size: 13px; color: #334155;"><b>Bảo mật thông tin:</b> Dữ liệu
+                                        liên hệ được mã hóa và bảo mật tuyệt đối theo quy định.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: 24px; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 12px; color: #166534;">
+                            <i class="fa-solid fa-leaf"></i> Phục vụ miễn phí vì sức khỏe cộng đồng TP.Hồ Chí Minh.
+                        </div>
                     </div>
 
-                    <form id="form-subscribe">
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Họ và
-                                tên người nhận</label>
-                            <input type="text" id="sub-name" class="custom-input" placeholder="Nhập họ và tên..."
-                                required>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                            <div>
-                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Địa
-                                    chỉ Email</label>
-                                <input type="email" id="sub-email" class="custom-input" placeholder="name@example.com"
+                    <!-- Cột phải: Form nhập thông tin đăng ký -->
+                    <div class="sub-form-col" style="padding-left: 32px;">
+                        <h4 style="font-size: 16px; color: #0f172a; margin-bottom: 16px; font-weight: 700;">
+                            Điền Thông Tin Tiếp Nhận Cảnh Báo
+                        </h4>
+                        <form id="form-subscribe">
+                            <div style="margin-bottom: 14px;">
+                                <label
+                                    style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Họ
+                                    và tên người nhận</label>
+                                <input type="text" id="sub-name" class="custom-input" placeholder="Ví dụ: Nguyễn Văn A"
                                     required>
                             </div>
-                            <div>
-                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Số
-                                    điện thoại (Zalo)</label>
-                                <input type="tel" id="sub-phone" class="custom-input" placeholder="0901234567">
-                            </div>
-                        </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-                            <div>
-                                <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Khu
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                                <div>
+                                    <label
+                                        style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Địa
+                                        chỉ Email</label>
+                                    <input type="email" id="sub-email" class="custom-input"
+                                        placeholder="name@example.com" required>
+                                </div>
+                                <div>
+                                    <label
+                                        style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Số
+                                        điện thoại (Zalo)</label>
+                                    <input type="tel" id="sub-phone" class="custom-input" placeholder="0901234567">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 14px;">
+                                <label
+                                    style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Khu
                                     vực/Phường Xã theo dõi</label>
                                 <select id="sub-ward" class="custom-input">
-                                    <option value="27424">Phường Bình Đông (Quận 8)</option>
-                                    <option value="26884">Phường Gò Vấp</option>
-                                    <option value="26782">Phường Tân Thới Hiệp (Q.12)</option>
-                                    <option value="ALL">Tất cả khu vực TP.HCM</option>
+                                    <option value="ALL">⭐ Tất cả khu vực Vùng đô thị TP.HCM</option>
                                 </select>
                             </div>
-                            <div>
+
+                            <div style="margin-bottom: 20px;">
                                 <label
-                                    style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Ngưỡng
+                                    style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Ngưỡng
                                     kích hoạt cảnh báo</label>
                                 <select id="sub-threshold" class="custom-input">
-                                    <option value="100">AQI > 100 (Mức Kém)</option>
-                                    <option value="150" selected>AQI > 150 (Mức Xấu)</option>
-                                    <option value="200">AQI > 200 (Mức Rất xấu)</option>
+                                    <option value="100">AQI > 100 (Bắt đầu ảnh hưởng nhóm nhạy cảm)</option>
+                                    <option value="150" selected>AQI > 150 (Mức Xấu - Không lành mạnh)</option>
+                                    <option value="200">AQI > 200 (Mức Rất xấu - Báo động đỏ)</option>
                                 </select>
                             </div>
+
+                            <button type="submit" class="btn btn-primary"
+                                style="width: 100%; padding: 11px; background: #0284c7; color: #fff; font-size: 13.5px; font-weight: 700; border-radius: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-paper-plane"></i> Xác Nhận Đăng Ký Nhận Cảnh Báo
+                            </button>
+                        </form>
+
+                        <div id="sub-toast"
+                            style="display: none; margin-top: 14px; padding: 10px; background: rgba(74, 222, 128, 0.15); border: 1px solid #16a34a; color: #166534; font-weight: 600; border-radius: 6px; font-size: 12.5px; text-align: center;">
                         </div>
-
-                        <button type="submit" class="btn btn-primary"
-                            style="width: 100%; padding: 12px; background: #0284c7; color: #fff; font-size: 14px; font-weight: 700; border-radius: 10px; cursor: pointer;">
-                            <i class="fa-solid fa-paper-plane"></i> Đăng ký Nhận Cảnh báo
-                        </button>
-                    </form>
-
-                    <div id="sub-toast"
-                        style="display: none; margin-top: 16px; padding: 12px; background: rgba(74, 222, 128, 0.15); border: 1px solid #16a34a; color: #166534; font-weight: 600; border-radius: 8px; font-size: 13px; text-align: center;">
                     </div>
                 </div>
             </div>
         </section>
+        <!-- VIEW 6: BẢN TIN CHUYÊN ĐỀ MÔI TRƯỜNG & KHÔNG KHÍ ĐÔ THỊ (DYNAMIC AUTO-UPDATE) -->
+        <section id="tab-news" class="tab-content">
+            <div class="content-wrapper" style="max-width: 1200px; margin: 0 auto; width: 100%;">
 
-        <!-- VIEW 6: GIỚI THIỆU HỆ THỐNG WEBGIS -->
+                <!-- Header Trang tin tức -->
+                <div class="panel"
+                    style="padding: 22px 28px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div>
+                        <h2
+                            style="font-size: 20px; color: #0284c7; margin: 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-newspaper"></i> CỔNG THÔNG TIN & BẢN TIN MÔI TRƯỜNG ĐÔ THỊ TP.HCM
+                        </h2>
+                        <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                            Cập nhật tự động diễn biến ô nhiễm không khí (PM2.5), khí tượng viễn thám và chỉ đạo ứng phó
+                            y tế cộng đồng
+                        </p>
+                    </div>
+
+                    <!-- Bộ lọc danh mục tin tức -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="news-filter-group">
+                        <button class="btn-news-filter active" onclick="filterNews('ALL', this)">Tất cả</button>
+                        <button class="btn-news-filter" onclick="filterNews('PM25', this)">Bụi mịn & AQI</button>
+                        <button class="btn-news-filter" onclick="filterNews('WEATHER', this)">Khí quyển & Thời
+                            tiết</button>
+                        <button class="btn-news-filter" onclick="filterNews('POLICY', this)">Quy chuẩn & Chỉ
+                            đạo</button>
+                    </div>
+                </div>
+
+                <!-- 1. BÀI BÁO TIÊU ĐIỂM (RENDER ĐỘNG TỰ ĐỘNG THEO NGÀY) -->
+                <div id="news-featured-container">
+                    <div class="panel" style="padding: 30px; text-align: center; color: #64748b;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Đang cập nhật bản tin môi trường mới nhất hôm nay...
+                    </div>
+                </div>
+
+                <!-- 2. LƯỚI DANH SÁCH BÀI BÁO TỰ ĐỘNG CẬP NHẬT THEO NGÀY (GRID 3 CỘT) -->
+                <div class="news-grid-container" id="news-card-grid"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <!-- JS sẽ tự động render các thẻ bài báo mới vào đây -->
+                </div>
+
+            </div>
+        </section>
+        <!-- VIEW 7: GIỚI THIỆU HỆ THỐNG WEBGIS -->
         <section id="tab-about" class="tab-content">
             <div class="content-wrapper">
                 <div class="panel card-full" style="padding: 32px;">
-                    <div
-                        style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
+                    <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
                         <h2 style="font-size: 22px; color: #0284c7;"><i class="fa-solid fa-earth-asia"></i> HỆ THỐNG
                             WEBGIS DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ AIRHCM</h2>
-                        <p style="font-size: 13px; color: #475569; margin-top: 6px; font-weight: 500;">Đồ án Chuyên ngành Công nghệ Thông
-                            tin - Chuyên ngành IT Môi trường | Trường Đại học Tài nguyên và Môi trường TP.HCM (HCMUNRE)
+                        <p style="font-size: 13px; color: #475569; margin-top: 6px; font-weight: 500;">Đồ án Chuyên
+                            ngành Công nghệ Thông
+                            tin - Chuyên ngành Tin Học Môi trường | Trường Đại học Tài nguyên và Môi trường TP.HCM
+                            (HCMUNRE)
                         </p>
                     </div>
 
@@ -672,12 +847,14 @@
                                 <li><b style="color: #0f172a;">Mã số sinh viên:</b> 1250080001 </li>
                                 <li><b style="color: #0f172a;">Chuyên ngành:</b> Tin Học Môi Trường </li>
                                 <li><b style="color: #0f172a;">Giảng viên hướng dẫn:</b> TS. Dương Thị Thúy Nga</li>
-                                <li><b style="color: #0f172a;">Đơn vị đào tạo:</b> Trường Đại Học Tài Nguyên & Môi Trường TP. Hồ Chí Minh</li>
+                                <li><b style="color: #0f172a;">Đơn vị đào tạo:</b> Trường Đại Học Tài Nguyên & Môi
+                                    Trường TP. Hồ Chí Minh</li>
                             </ul>
 
                             <h4 style="color: #0284c7; margin: 20px 0 12px 0;"><i class="fa-solid fa-bullseye"></i> Mục
                                 tiêu Đồ án</h4>
-                            <p style="font-size: 13.5px; line-height: 1.7; color: #1e293b; text-align: justify; font-weight: 500;">
+                            <p
+                                style="font-size: 13.5px; line-height: 1.7; color: #1e293b; text-align: justify; font-weight: 500;">
                                 Xây dựng giải pháp WebGIS tích hợp trí tuệ nhân tạo (Mô hình Học máy Random Forest) và
                                 động cơ hỗ trợ ra quyết định (DSS Engine) nhằm giám sát, dự báo chuỗi thời gian nồng độ
                                 bụi mịn PM2.5 và chỉ số US AQI theo thời gian thực cho 166 Phường/Xã trên địa bàn TP.Hồ
@@ -690,10 +867,12 @@
                                 đồ Kiến trúc Hệ thống 3 Lớp (3-Tier Architecture)</h4>
                             <div
                                 style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12.5px; line-height: 1.8; color: #1e293b;">
-                                <p style="margin-bottom: 6px;"><b style="color: #0284c7;">1. Lớp Dữ liệu (Data Layer):</b> PostgreSQL 16 + PostGIS
+                                <p style="margin-bottom: 6px;"><b style="color: #0284c7;">1. Lớp Dữ liệu (Data
+                                        Layer):</b> PostgreSQL 16 + PostGIS
                                     Extension, Chuỗi thời gian Open-Meteo, Ảnh vệ tinh Sentinel-5P (AAI) & Khí tượng
                                     ERA5-Land.</p>
-                                <p style="margin-bottom: 6px;"><b style="color: #d97706;">2. Lớp Dịch vụ & AI (Service Layer):</b> FastAPI Python,
+                                <p style="margin-bottom: 6px;"><b style="color: #d97706;">2. Lớp Dịch vụ & AI (Service
+                                        Layer):</b> FastAPI Python,
                                     Mô hình Random Forest Regressor ($R^2 = 0.88$), Động cơ DSS tham chiếu QCVN
                                     05:2023/BTNMT & US EPA.</p>
                                 <p><b style="color: #16a34a;">3. Lớp Giao diện (Presentation Layer):</b> Bản đồ số
@@ -722,9 +901,11 @@
                                 <tbody>
                                     <tr>
                                         <td><b>Mô hình Khí tượng & Khí quyển (Open-Meteo / ERA5)</b></td>
-                                        <td>Lưới Grid: <b>0.1° × 0.1°</b><br><small style="color: #64748b; font-weight: 600;">(~9
+                                        <td>Lưới Grid: <b>0.1° × 0.1°</b><br><small
+                                                style="color: #64748b; font-weight: 600;">(~9
                                                 km × 11 km tại vĩ độ TP.HCM)</small></td>
-                                        <td><b>1 giờ / lần (Hourly)</b><br><small style="color: #16a34a; font-weight: 700;">Cập
+                                        <td><b>1 giờ / lần (Hourly)</b><br><small
+                                                style="color: #16a34a; font-weight: 700;">Cập
                                                 nhật Real-time</small></td>
                                         <td>Cung cấp trường nồng độ bụi nền PM2.5, PM10 và biến khí tượng biên
                                             (Nhiệt độ 2m, Gió, Độ ẩm).</td>
@@ -732,8 +913,10 @@
                                     <tr>
                                         <td><b>Ảnh Vệ tinh Viễn thám (Sentinel-5P qua GEE)</b></td>
                                         <td>Lưới Grid: <b>3.5 km × 5.5 km</b><br><small
-                                                style="color: #64748b; font-weight: 600;">Cảm biến TROPOMI (ESA)</small></td>
-                                        <td><b>1 lần / ngày (Daily)</b><br><small style="color: #64748b; font-weight: 600;">Quét
+                                                style="color: #64748b; font-weight: 600;">Cảm biến TROPOMI (ESA)</small>
+                                        </td>
+                                        <td><b>1 lần / ngày (Daily)</b><br><small
+                                                style="color: #64748b; font-weight: 600;">Quét
                                                 qua lúc 13:30 LT</small></td>
                                         <td>Trích xuất chỉ số sol khí hấp thụ (AAI) phục vụ đánh giá mật độ phát
                                             thải khói bụi công nghiệp.</td>
@@ -741,8 +924,10 @@
                                     <tr>
                                         <td><b>Mạng lưới Trạm Quan trắc Mặt đất PostGIS</b></td>
                                         <td><b>8 Trạm quan trắc chuẩn</b><br><small
-                                                style="color: #64748b; font-weight: 600;">(Ground Truth mốc thực tế)</small></td>
-                                        <td><b>1 giờ / lần (Hourly)</b><br><small style="color: #0284c7; font-weight: 700;">Đồng
+                                                style="color: #64748b; font-weight: 600;">(Ground Truth mốc thực
+                                                tế)</small></td>
+                                        <td><b>1 giờ / lần (Hourly)</b><br><small
+                                                style="color: #0284c7; font-weight: 700;">Đồng
                                                 bộ CSDL PostGIS</small></td>
                                         <td>Dữ liệu kiểm chứng thực địa, dùng để hiệu chỉnh sai số
                                             (Calibration/Bias Correction) cho ô lưới mô hình.</td>
@@ -750,7 +935,8 @@
                                     <tr>
                                         <td><b>Bản đồ WebGIS Phân vùng Hành chính</b></td>
                                         <td><b>166/167 Phường/Xã/Thị trấn</b><br><small
-                                                style="color: #d97706; font-weight: 700;">Ranh giới đa giác chuẩn WGS84</small>
+                                                style="color: #d97706; font-weight: 700;">Ranh giới đa giác chuẩn
+                                                WGS84</small>
                                         </td>
                                         <td><b>Biến thiên 24 Giờ & Dự báo 7 Ngày</b></td>
                                         <td>Hợp nhất dữ liệu (Data Fusion), hạ tỉ lệ không gian và thống kê vùng
@@ -764,39 +950,259 @@
             </div>
         </section>
         <!-- MODAL ĐĂNG NHẬP XÁC THỰC QUYỀN ADMIN -->
-    <div id="modal-login" class="modal-overlay">
-        <div class="modal-card" style="width: 420px; background: #ffffff; border-radius: 14px; border: 1px solid #cbd5e1; box-shadow: 0 20px 45px rgba(0,0,0,0.2);">
-            <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-shield-halved" style="color: #0284c7;"></i> Đăng Nhập Quản Trị Hệ Thống
-                </h3>
-                <button class="btn-modal-close" onclick="closeLoginModal()" style="background: none; border: none; font-size: 22px; color: #64748b; cursor: pointer;">&times;</button>
+        <div id="modal-login" class="modal-overlay">
+            <div class="modal-card"
+                style="width: 420px; background: #ffffff; border-radius: 14px; border: 1px solid #cbd5e1; box-shadow: 0 20px 45px rgba(0,0,0,0.2);">
+                <div class="modal-header"
+                    style="border-bottom: 1px solid #e2e8f0; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3
+                        style="margin: 0; color: #0f172a; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #0284c7;"></i> Đăng Nhập Quản Trị Hệ Thống
+                    </h3>
+                    <button class="btn-modal-close" onclick="closeLoginModal()"
+                        style="background: none; border: none; font-size: 22px; color: #64748b; cursor: pointer;">&times;</button>
+                </div>
+                <form id="form-login" onsubmit="submitAdminLogin(event)">
+                    <div class="modal-body" style="padding: 22px;">
+                        <p style="font-size: 12.5px; color: #475569; margin: 0 0 16px 0; font-weight: 500;">
+                            Cổng điều hành dành riêng cho cán bộ quản lý Sở/Bộ Tài nguyên & Môi trường TP.HCM.
+                        </p>
+                        <div style="margin-bottom: 14px;">
+                            <label
+                                style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Tài
+                                khoản Quản trị</label>
+                            <input type="text" id="login-username" class="custom-input"
+                                placeholder="Nhập tài khoản (vd: admin)..." required
+                                style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label
+                                style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Mật
+                                khẩu</label>
+                            <input type="password" id="login-password" class="custom-input"
+                                placeholder="Nhập mật khẩu..." required
+                                style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
+                        </div>
+                        <div id="login-error-msg"
+                            style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid #dc2626; color: #991b1b; border-radius: 6px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px;">
+                        </div>
+                    </div>
+                    <div class="modal-footer"
+                        style="border-top: 1px solid #e2e8f0; background: #f8fafc; padding: 14px 22px; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 14px 14px;">
+                        <button type="button" class="btn" onclick="closeLoginModal()"
+                            style="background: #e2e8f0; color: #334155; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Hủy</button>
+                        <button type="submit" class="btn"
+                            style="background: #0284c7; color: #ffffff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+                        </button>
+                    </div>
+                </form>
             </div>
-            <form id="form-login" onsubmit="submitAdminLogin(event)">
-                <div class="modal-body" style="padding: 22px;">
-                    <p style="font-size: 12.5px; color: #475569; margin: 0 0 16px 0; font-weight: 500;">
-                        Cổng điều hành dành riêng cho cán bộ quản lý Sở/Bộ Tài nguyên & Môi trường TP.HCM.
-                    </p>
-                    <div style="margin-bottom: 14px;">
-                        <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Tài khoản Quản trị</label>
-                        <input type="text" id="login-username" class="custom-input" placeholder="Nhập tài khoản (vd: admin)..." required style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="font-size: 13px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 6px;">Mật khẩu</label>
-                        <input type="password" id="login-password" class="custom-input" placeholder="Nhập mật khẩu..." required style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #0f172a; outline: none;">
-                    </div>
-                    <div id="login-error-msg" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid #dc2626; color: #991b1b; border-radius: 6px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px;"></div>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid #e2e8f0; background: #f8fafc; padding: 14px 22px; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 14px 14px;">
-                    <button type="button" class="btn" onclick="closeLoginModal()" style="background: #e2e8f0; color: #334155; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Hủy</button>
-                    <button type="submit" class="btn" style="background: #0284c7; color: #ffffff; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
-                        <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
-                    </button>
-                </div>
-            </form>
+        </div>
+    </main>
+    <!-- ============================================================================== -->
+    <!-- KHUNG BÁO CÁO CÔNG VỤ XUẤT PDF ĐỘC LẬP (CHỈ HIỂN THỊ KHI IN ẤN TRÊN KHỔ A4)    -->
+    <!-- ============================================================================== -->
+    <div id="official-print-document">
+        <!-- 1. Tiêu đề thể thức văn bản hành chính -->
+        <div class="doc-header">
+            <div class="doc-header-left">
+                <p class="doc-bold">UBND THÀNH PHỐ HỒ CHÍ MINH</p>
+                <p class="doc-bold" style="text-decoration: underline;">SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG</p>
+                <p style="font-size: 11px; margin-top: 3px;">Trung tâm Quan trắc Môi trường</p>
+                <p style="font-size: 11px; font-style: italic;">Số: <span id="doc-report-no">.../BC-AQI</span></p>
+            </div>
+            <div class="doc-header-right">
+                <p class="doc-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+                <p class="doc-bold" style="text-decoration: underline;">Độc lập - Tự do - Hạnh phúc</p>
+                <p style="font-size: 11.5px; font-style: italic; margin-top: 5px;" id="doc-official-date">
+                    TP. Hồ Chí Minh, ngày ... tháng ... năm 2026
+                </p>
+            </div>
+        </div>
+
+        <!-- 2. Tiêu đề báo cáo -->
+        <div class="doc-title-box">
+            <h2 class="doc-main-title">BẢN TIN DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ & CẢNH BÁO SỨC KHỎE</h2>
+            <p style="font-size: 12px; margin: 4px 0 0 0; font-style: italic;">
+                (Theo dõi nồng độ bụi mịn PM2.5 trên 167 Phường/Xã/Thị trấn Vùng đô thị TP.HCM)
+            </p>
+            <p style="font-size: 11px; color: #333; margin-top: 3px;">
+                Thời điểm xuất bản dữ liệu: <b id="doc-publish-time">--</b>
+            </p>
+        </div>
+
+        <!-- 3. Bảng số liệu Hiện trạng Quan trắc Trạm Trung tâm -->
+        <div class="doc-section">
+            <h4 class="doc-section-title">I. HIỆN TRẠNG CHẤT LƯỢNG KHÔNG KHÍ TẠI TRẠM TRUNG TÂM</h4>
+            <table class="doc-table">
+                <thead>
+                    <tr>
+                        <th>Chỉ số US AQI</th>
+                        <th>Nồng độ PM2.5</th>
+                        <th>Nồng độ PM10</th>
+                        <th>Nhiệt độ (ERA5)</th>
+                        <th>Chỉ số AAI (S5P)</th>
+                        <th>Đánh giá QCVN 05:2023</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="text-align: center; font-weight: 600;">
+                        <td id="doc-aqi" style="font-size: 14px;">--</td>
+                        <td id="doc-pm25">-- µg/m³</td>
+                        <td id="doc-pm10">-- µg/m³</td>
+                        <td id="doc-temp">-- °C</td>
+                        <td id="doc-aai">-- AAI</td>
+                        <td id="doc-qcvn">Đạt quy chuẩn</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. Diễn biến Dự báo Chuỗi thời gian 24 giờ tới (Rút gọn) -->
+        <div class="doc-section">
+            <h4 class="doc-section-title">II. DỰ BÁO BIẾN THIÊN 24 GIỜ TỚI (MÔ HÌNH RANDOM FOREST, R² = 0.88)</h4>
+            <table class="doc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Mốc thời gian</th>
+                        <th style="width: 20%;">PM2.5 Dự báo</th>
+                        <th style="width: 20%;">US AQI</th>
+                        <th style="width: 20%;">Phân loại Ô nhiễm</th>
+                        <th style="width: 20%;">Đối chiếu QCVN (TB 24h)</th>
+                    </tr>
+                </thead>
+                <tbody id="doc-forecast-tbody">
+                    <!-- Dữ liệu JS sẽ điền 6 - 8 khung giờ tiêu biểu vào đây -->
+                </tbody>
+            </table>
+            <p style="font-size: 10px; font-style: italic; margin-top: 4px; color: #444;">
+                (*) Chú thích: Giới hạn PM2.5 trung bình 24 giờ theo QCVN 05:2023/BTNMT là 50 µg/m³.
+            </p>
+        </div>
+
+        <!-- 5. Khuyến cáo Y tế & Kịch bản Điều hành Đô thị -->
+        <div class="doc-section">
+            <h4 class="doc-section-title">III. KHUYẾN NGHỊ Y TẾ & KỊCH BẢN ĐIỀU HÀNH ĐÔ THỊ (HỆ THỐNG DSS)</h4>
+            <div class="doc-box">
+                <p>• <b>Cộng đồng dân cư:</b> <span id="doc-advice-general">Đang đồng bộ...</span></p>
+                <p style="margin-top: 5px;">• <b>Nhóm người nhạy cảm (Trẻ em, người cao tuổi):</b> <span
+                        id="doc-advice-sensitive">Đang đồng bộ...</span></p>
+                <p style="margin-top: 5px;">• <b>Kịch bản chỉ đạo môi trường đô thị:</b> <span
+                        id="doc-advice-action">Đang đồng bộ...</span></p>
+            </div>
+        </div>
+
+        <!-- 6. Chữ ký xác nhận công vụ -->
+        <div class="doc-signatures">
+            <div class="sig-block">
+                <p class="doc-bold">NGƯỜI LẬP BIỂU</p>
+                <p class="sig-sub">(Ký, ghi rõ họ tên)</p>
+                <div class="sig-space"></div>
+                <p class="doc-bold">Lê Hoàng Ân</p>
+            </div>
+            <div class="sig-block">
+                <p class="doc-bold">CÁN BỘ PHỤ TRÁCH QUAN TRẮC</p>
+                <p class="sig-sub">(Ký, ghi rõ họ tên)</p>
+                <div class="sig-space"></div>
+                <p class="doc-bold">TS. Dương Thị Thúy Nga</p>
+            </div>
         </div>
     </div>
-    </main>
+    <!-- ============================================================================== -->
+    <!-- MODAL ĐĂNG NHẬP / ĐĂNG KÝ THÀNH VIÊN END-USER (SOCIAL LOGIN)                  -->
+    <!-- ============================================================================== -->
+    <div id="modal-user-auth" class="modal-overlay">
+        <div class="modal-card"
+            style="width: 440px; background: #ffffff; border-radius: 16px; border: 1px solid #cbd5e1; box-shadow: 0 25px 60px rgba(0,0,0,0.25);">
+
+            <!-- Header Modal & Chuyển Tab Đăng nhập / Đăng ký -->
+            <div class="modal-header"
+                style="border-bottom: 1px solid #e2e8f0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 10px;">
+                    <button type="button" id="tab-btn-user-login" class="btn-std active"
+                        onclick="switchUserAuthMode('login')">
+                        Đăng nhập
+                    </button>
+                    <button type="button" id="tab-btn-user-register" class="btn-std"
+                        onclick="switchUserAuthMode('register')">
+                        Đăng ký mới
+                    </button>
+                </div>
+                <button class="btn-modal-close" onclick="closeUserAuthModal()"
+                    style="background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer;">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 24px;">
+                <div style="text-align: center; margin-bottom: 18px;">
+                    <h3 id="auth-modal-title" style="margin: 0; font-size: 18px; color: #0f172a; font-weight: 800;">Chào
+                        mừng đến với AirHCM</h3>
+                    <p id="auth-modal-desc" style="font-size: 12.5px; color: #64748b; margin: 4px 0 0 0;">Đăng nhập để
+                        nhận thông báo ô nhiễm tức thời</p>
+                </div>
+
+                <!-- CỤM NÚT ĐĂNG NHẬP NHANH QUA GOOGLE, FACEBOOK, APPLE -->
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    <!-- 1. Google Button -->
+                    <button type="button" class="btn-social btn-social-google" onclick="handleSocialAuth('Google')">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
+                            style="width: 18px; height: 18px;">
+                        <span>Tiếp tục với Google</span>
+                    </button>
+                    <!-- 2. Facebook Button -->
+                    <button type="button" class="btn-social btn-social-facebook" onclick="handleSocialAuth('Facebook')">
+                        <i class="fa-brands fa-facebook-f" style="font-size: 16px;"></i>
+                        <span>Tiếp tục với Facebook</span>
+                    </button>
+                    <!-- 3. Apple Button -->
+                    <button type="button" class="btn-social btn-social-apple" onclick="handleSocialAuth('Apple')">
+                        <i class="fa-brands fa-apple" style="font-size: 18px;"></i>
+                        <span>Đăng nhập bằng Apple ID</span>
+                    </button>
+                </div>
+
+                <!-- Đường kẻ phân cách OR -->
+                <div style="display: flex; align-items: center; text-align: center; margin-bottom: 18px;">
+                    <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+                    <span style="padding: 0 12px; color: #94a3b8; font-size: 11.5px; font-weight: 700;">HOẶC BẰNG
+                        EMAIL</span>
+                    <div style="flex: 1; border-bottom: 1px solid #e2e8f0;"></div>
+                </div>
+
+                <!-- FORM ĐĂNG NHẬP / ĐĂNG KÝ EMAIL -->
+                <form id="form-user-auth" onsubmit="submitUserAuth(event)">
+                    <div id="auth-field-name" style="margin-bottom: 14px; display: none;">
+                        <label
+                            style="font-size: 12.5px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Họ
+                            và tên của bạn</label>
+                        <input type="text" id="user-auth-name" class="custom-input" placeholder="Ví dụ: Lê Hoàng Ân">
+                    </div>
+                    <div style="margin-bottom: 14px;">
+                        <label
+                            style="font-size: 12.5px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Địa
+                            chỉ Email</label>
+                        <input type="email" id="user-auth-email" class="custom-input" placeholder="name@example.com"
+                            required>
+                    </div>
+                    <div style="margin-bottom: 18px;">
+                        <label
+                            style="font-size: 12.5px; color: #0f172a; font-weight: 700; display: block; margin-bottom: 5px;">Mật
+                            khẩu</label>
+                        <input type="password" id="user-auth-pass" class="custom-input" placeholder="••••••••" required>
+                    </div>
+
+                    <div id="user-auth-msg"
+                        style="display: none; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 14px;">
+                    </div>
+
+                    <button type="submit" id="btn-user-auth-submit" class="btn"
+                        style="width: 100%; padding: 12px; background: #0284c7; color: #fff; font-size: 13.5px; font-weight: 700; border-radius: 8px; cursor: pointer; border: none;">
+                        Đăng nhập tài khoản
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script src="js/app.js"></script>
 </body>

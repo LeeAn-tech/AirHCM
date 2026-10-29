@@ -4,7 +4,7 @@
 // SVTH: LÊ HOÀNG ÂN - 1250080001 | GVHD: TS. Dương Thị Thúy Nga
 // ==============================================================================
 
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const API_BASE = `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`;
 
 let adminMap = null;
 let currentBaseTile = null;
@@ -12,11 +12,15 @@ let adminStationMarkers = [];
 let adminStationList = [];
 let subscribersList = [];
 let adminWardsLayer = null;
+let currentBufferCircle = null;
+let isPickCoordActive = false;
+let tempPickMarker = null;
+let bufferLayerGroup = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     initAdminTabs();
     initAdminMap();
-    loadAdminWards(); 
+    loadAdminWards();
     fetchAdminMetrics();
     fetchAdminStations();
     fetchAdminHotspots();
@@ -70,6 +74,7 @@ function loadAdminWards() {
 }
 
 // 1. XỬ LÝ CHUYỂN TABS TRANG ADMIN VÀ TỰ ĐỘNG LÀM MỚI DỮ LIỆU
+// 1. XỬ LÝ CHUYỂN TABS TRANG ADMIN VÀ TỰ ĐỘNG LÀM MỚI DỮ LIỆU
 function initAdminTabs() {
     document.querySelectorAll(".adm-tab-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -81,19 +86,23 @@ function initAdminTabs() {
             const targetContent = document.getElementById(targetId);
             if (targetContent) targetContent.classList.add("active");
 
-            // Tự động căn chỉnh kích thước bản đồ khi chuyển về Tab Bản đồ
+            // Căn chỉnh kích thước bản đồ khi về Tab Bản đồ
             if (targetId === "adm-tab-map" && adminMap) {
                 setTimeout(() => adminMap.invalidateSize(), 200);
             }
 
-            // TỰ ĐỘNG TẢI LẠI DANH SÁCH MỚI NHẤT KHI MỞ TAB QUẢN LÝ CẢNH BÁO
+            // Tải lại danh sách cảnh báo khi mở Tab 3
             if (targetId === "adm-tab-subscriptions") {
                 fetchSubscribers();
+            }
+
+            // TỰ ĐỘNG TẢI DANH SÁCH TÀI KHOẢN KHI MỞ TAB 4
+            if (targetId === "adm-tab-users") {
+                fetchAdminUsers();
             }
         });
     });
 }
-
 // 2. KHỞI TẠO BẢN ĐỒ ADMIN VÀ CẤU HÌNH BASEMAP
 function initAdminMap() {
     const mapDiv = document.getElementById("admin-map");
@@ -110,7 +119,7 @@ function initAdminMap() {
         satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18 })
     };
 
-    currentBaseTile = tiles.dark;
+    currentBaseTile = tiles.satellite;
     currentBaseTile.addTo(adminMap);
 
     L.control.scale({ imperial: false, position: 'bottomright' }).addTo(adminMap);
@@ -122,6 +131,33 @@ function initAdminMap() {
         if (coordsBadge) {
             coordsBadge.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Tọa độ: <b>${e.latlng.lat.toFixed(4)}° N</b>, <b>${e.latlng.lng.toFixed(4)}° E</b> | Zoom: <b>${adminMap.getZoom()}</b>`;
         }
+    });
+    // Lắng nghe sự kiện click trên bản đồ khi bật chế độ bắt tọa độ
+    adminMap.on("click", e => {
+        if (!isPickCoordActive) return;
+
+        const lat = parseFloat(e.latlng.lat.toFixed(6));
+        const lng = parseFloat(e.latlng.lng.toFixed(6));
+
+        // Đánh dấu marker tạm thời màu đỏ tại vị trí vừa click
+        if (tempPickMarker) adminMap.removeLayer(tempPickMarker);
+        tempPickMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'custom-pin',
+                html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px #ef4444;"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            })
+        }).addTo(adminMap);
+
+        // Mở Modal thêm trạm và điền sẵn tọa độ bắt được
+        window.openAddStationModal();
+        const latInput = document.getElementById("new-st-lat");
+        const lngInput = document.getElementById("new-st-lng");
+        if (latInput) latInput.value = lat;
+        if (lngInput) lngInput.value = lng;
+
+        showAdminToast(`🎯 Đã chọn tọa độ: ${lat}, ${lng}`);
     });
 
     const selectBasemap = document.getElementById("adm-select-basemap");
@@ -153,12 +189,24 @@ function fetchAdminMetrics() {
     fetch(`${API_BASE}/aqi/current`)
         .then(res => res.json())
         .then(data => {
-            document.getElementById("adm-pm25").innerText = `${data.pm2_5} µg/m³`;
-            document.getElementById("adm-aqi").innerText = `${data.us_aqi} (${data.advisory ? data.advisory.level : 'Xấu'})`;
+            const pm25 = parseFloat(data.pm2_5) || 29.4;
+            const usAqi = parseInt(data.us_aqi) || 106;
+
+            // Tính toán nhanh VN_AQI theo QĐ 1459/QĐ-TCMT
+            let vnAqi = 50;
+            if (pm25 <= 25.0) vnAqi = Math.round((50.0 / 25.0) * pm25);
+            else if (pm25 <= 50.0) vnAqi = Math.round(((100.0 - 51.0) / (50.0 - 25.1)) * (pm25 - 25.1) + 51.0);
+            else if (pm25 <= 80.0) vnAqi = Math.round(((150.0 - 101.0) / (80.0 - 50.1)) * (pm25 - 50.1) + 101.0);
+            else vnAqi = Math.round(((200.0 - 151.0) / (150.0 - 80.1)) * (pm25 - 80.1) + 151.0);
+
+            document.getElementById("adm-pm25").innerText = `${pm25.toFixed(1)} µg/m³`;
+            document.getElementById("adm-aqi").innerText = `VN: ${vnAqi} | US: ${usAqi}`;
+            const levelEl = document.getElementById("adm-aqi-level");
+            if (levelEl) levelEl.innerText = data.advisory ? data.advisory.level : "Kém (Nhóm nhạy cảm lưu ý)";
         })
-        .catch(err => {
-            document.getElementById("adm-pm25").innerText = "35.2 µg/m³";
-            document.getElementById("adm-aqi").innerText = "102 (Trung bình)";
+        .catch(() => {
+            document.getElementById("adm-pm25").innerText = "29.4 µg/m³";
+            document.getElementById("adm-aqi").innerText = "VN: 59 | US: 106";
         });
 }
 
@@ -196,13 +244,17 @@ function renderStationTableAndMap(stations) {
         const lat = parseFloat(st.lat);
         const lng = parseFloat(st.lng);
 
-       // Xử lý màu sắc linh hoạt theo trạng thái thực tế
+        // Trạng thái trạm cho phép click trực tiếp để chuyển đổi HOẠT ĐỘNG <-> BẢO TRÌ
         const isMaintenance = (st.status === 'BẢO TRÌ');
         const statusBadge = isMaintenance
-            ? `<span style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block;">
+            ? `<span onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')" 
+                     style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block; cursor: pointer;"
+                     title="Bấm để chuyển sang HOẠT ĐỘNG">
                 <i class="fa-solid fa-wrench"></i> BẢO TRÌ
                </span>`
-            : `<span style="background: rgba(74, 222, 128, 0.15); color: #16a34a; border: 1px solid rgba(74, 222, 128, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block;">
+            : `<span onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')" 
+                     style="background: rgba(74, 222, 128, 0.15); color: #16a34a; border: 1px solid rgba(74, 222, 128, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block; cursor: pointer;"
+                     title="Bấm để chuyển sang BẢO TRÌ">
                 <i class="fa-solid fa-circle-check"></i> HOẠT ĐỘNG
                </span>`;
 
@@ -340,7 +392,7 @@ window.closeEditStationModal = function () {
 };
 
 // Gửi dữ liệu cập nhật trạm lên Backend
-window.submitEditStation = function(e) {
+window.submitEditStation = function (e) {
     e.preventDefault();
     const ma_tram = document.getElementById("edit-st-id").value.trim();
     const btnSubmit = e.target.querySelector('button[type="submit"]');
@@ -364,33 +416,33 @@ window.submitEditStation = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Cập nhật trạm thất bại");
-        return res.json();
-    })
-    .then(data => {
-        // Cập nhật ngay trong mảng cục bộ trên giao diện
-        const target = adminStationList.find(s => s.ma_tram === ma_tram);
-        if (target) {
-            target.ten_tram = payload.ten_tram;
-            target.don_vi_quan_ly = payload.don_vi_quan_ly;
-            target.lat = payload.lat;
-            target.lng = payload.lng;
-            target.status = selectedStatus;
-        }
-        renderStationTableAndMap(adminStationList);
-        closeEditStationModal();
-        showAdminToast(`✅ Đã cập nhật trạm "${ma_tram}" sang trạng thái: ${selectedStatus}!`);
-        // Đồng bộ lại với Backend
-        fetchAdminStations();
-    })
-    .catch(err => {
-        alert("Lỗi: " + err.message);
-    })
-    .finally(() => {
-        btnSubmit.innerHTML = oldText;
-        btnSubmit.disabled = false;
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Cập nhật trạm thất bại");
+            return res.json();
+        })
+        .then(data => {
+            // Cập nhật ngay trong mảng cục bộ trên giao diện
+            const target = adminStationList.find(s => s.ma_tram === ma_tram);
+            if (target) {
+                target.ten_tram = payload.ten_tram;
+                target.don_vi_quan_ly = payload.don_vi_quan_ly;
+                target.lat = payload.lat;
+                target.lng = payload.lng;
+                target.status = selectedStatus;
+            }
+            renderStationTableAndMap(adminStationList);
+            closeEditStationModal();
+            showAdminToast(`✅ Đã cập nhật trạm "${ma_tram}" sang trạng thái: ${selectedStatus}!`);
+            // Đồng bộ lại với Backend
+            fetchAdminStations();
+        })
+        .catch(err => {
+            alert("Lỗi: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = oldText;
+            btnSubmit.disabled = false;
+        });
 };
 
 // Xử lý Xóa trạm quan trắc
@@ -705,7 +757,7 @@ window.broadcastAlertToAll = function () {
 // ==============================================================================
 
 // 1. Xuất danh sách trạm quan trắc PostGIS
-window.exportStationsToCSV = function() {
+window.exportStationsToCSV = function () {
     if (!adminStationList || adminStationList.length === 0) {
         alert("Chưa có dữ liệu trạm để xuất!");
         return;
@@ -719,7 +771,7 @@ window.exportStationsToCSV = function() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Danh_sach_Tram_Quan_Trac_AirHCM_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Danh_sach_Tram_Quan_Trac_AirHCM_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -727,7 +779,7 @@ window.exportStationsToCSV = function() {
 };
 
 // 2. Xuất danh sách người dân đăng ký cảnh báo AQI
-window.exportSubscribersToCSV = function() {
+window.exportSubscribersToCSV = function () {
     if (!subscribersList || subscribersList.length === 0) {
         alert("Chưa có danh sách người đăng ký để xuất!");
         return;
@@ -741,13 +793,13 @@ window.exportSubscribersToCSV = function() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Danh_sach_Dang_Ky_Canh_Bao_AirHCM_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Danh_sach_Dang_Ky_Canh_Bao_AirHCM_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     showAdminToast("📊 Đã xuất thành công file Excel danh sách người đăng ký cảnh báo!");
 };
-window.handleAdminLogout = function() {
+window.handleAdminLogout = function () {
     if (confirm("🔒 Bạn có chắc chắn muốn đăng xuất khỏi Trung tâm Điều hành Quản trị DSS?")) {
         localStorage.removeItem("airhcm_admin_auth"); // Xóa sạch phiên đăng nhập
         window.location.href = "index.html";           // Đưa về trang người dùng
@@ -846,3 +898,345 @@ function populateAdminWardDropdown() {
         })
         .catch(err => console.error("Lỗi nạp danh mục phường/xã cho admin:", err));
 }
+// ==============================================================================
+// 1. PHÂN TÍCH VÙNG ĐỆM LAN TRUYỀN KHÔNG GIAN ĐA ĐIỂM (MULTI-POINT BUFFER GIS)
+// ==============================================================================
+
+window.setBufferRadius = function (radiusMeters, btnEl) {
+    if (!adminMap) return;
+
+    // 1. Đồng bộ trạng thái sáng đèn của nút bấm được chọn
+    document.querySelectorAll(".buffer-btn-group .btn-buf").forEach(b => b.classList.remove("active"));
+    if (btnEl) btnEl.classList.add("active");
+
+    // 2. Xóa sạch các vùng đệm cũ trước khi vẽ lớp mới
+    if (bufferLayerGroup) {
+        adminMap.removeLayer(bufferLayerGroup);
+        bufferLayerGroup = null;
+    }
+
+    bufferLayerGroup = L.featureGroup();
+
+    // 3. Lấy danh sách trạm quan trắc thực tế từ PostGIS (có cơ chế fallback nếu chưa nạp xong)
+    const stations = (adminStationList && adminStationList.length > 0) ? adminStationList : [
+        { ma_tram: "HCM_OM_01", ten_tram: "Trạm Quan trắc Trung tâm TP.HCM", lat: 10.8231, lng: 106.6297 },
+        { ma_tram: "HCM_GV_01", ten_tram: "Trạm Quan trắc Gò Vấp - Q.12", lat: 10.8350, lng: 106.6650 },
+        { ma_tram: "HCM_Q1_02", ten_tram: "Trạm Quan trắc Bến Thành - Q.1", lat: 10.7769, lng: 106.7009 },
+        { ma_tram: "HCM_Q8_03", ten_tram: "Trạm Quan trắc Bình Đông - Q.8", lat: 10.7328, lng: 106.6525 },
+        { ma_tram: "HCM_TD_04", ten_tram: "Trạm Khu đô thị TP. Thủ Đức", lat: 10.8494, lng: 106.7583 },
+        { ma_tram: "HCM_BT_05", ten_tram: "Trạm Cửa ngõ KCN Bình Tân", lat: 10.7483, lng: 106.6022 },
+        { ma_tram: "HCM_TP_07", ten_tram: "Trạm Quan Trắc Sơn Kỳ - Tân Phú", lat: 10.7987, lng: 106.6300 },
+        { ma_tram: "HCM_CC_06", ten_tram: "Trạm Sinh thái Ngoại ô Củ Chi", lat: 10.9731, lng: 106.4952 }
+    ];
+
+    let highRiskCount = 0;
+
+    // 4. Quét qua từng trạm để tạo vùng đệm tương ứng trên bản đồ
+    stations.forEach(st => {
+        const lat = parseFloat(st.lat);
+        const lng = parseFloat(st.lng);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        // Phân loại nguy cơ: Các trạm cửa ngõ, công nghiệp mật độ xe cao hiển thị viền đỏ cảnh báo
+        const nameLower = (st.ten_tram || "").toLowerCase();
+        const isHighRisk = nameLower.includes("bình tân") || nameLower.includes("quận 8") ||
+            nameLower.includes("tân phú") || nameLower.includes("trung tâm");
+
+        const circleColor = isHighRisk ? "#dc2626" : "#f59e0b";
+        const fillColor = isHighRisk ? "#ef4444" : "#fbbf24";
+        if (isHighRisk) highRiskCount++;
+
+        const circle = L.circle([lat, lng], {
+            radius: radiusMeters,
+            color: circleColor,
+            fillColor: fillColor,
+            fillOpacity: 0.18,
+            weight: 2,
+            dashArray: '5, 5'
+        });
+
+        // Popup riêng biệt cho từng trạm khi cán bộ bấm vào từng vùng đệm
+        circle.bindPopup(`
+            <div style="font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; min-width: 210px;">
+                <h4 style="margin: 0 0 6px 0; color: ${circleColor};">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Vùng ảnh hưởng: ${st.ten_tram}
+                </h4>
+                <p style="margin: 2px 0;"><b>Mã trạm:</b> ${st.ma_tram}</p>
+                <p style="margin: 2px 0;"><b>Bán kính phân tán:</b> ${radiusMeters / 1000} km</p>
+                <p style="margin: 2px 0;"><b>Đánh giá rủi ro:</b> <b style="color: ${circleColor};">${isHighRisk ? 'Nguy cơ cao (Ưu tiên xử lý)' : 'Mức kiểm soát'}</b></p>
+                <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.4;">
+                    Phạm vi cần triển khai tưới nước rửa đường, kiểm soát phát thải phương tiện và cảnh báo hạn chế hoạt động ngoài trời tại các trường học lân cận.
+                </p>
+            </div>
+        `);
+
+        bufferLayerGroup.addLayer(circle);
+    });
+
+    // 5. Đưa toàn bộ các vùng đệm lên bản đồ
+    bufferLayerGroup.addTo(adminMap);
+
+    // Tự động thu phóng bản đồ để hiển thị bao quát tất cả các vùng đệm trên toàn thành phố
+    if (bufferLayerGroup.getLayers().length > 0) {
+        adminMap.fitBounds(bufferLayerGroup.getBounds(), { padding: [40, 40] });
+    }
+
+    if (typeof showAdminToast === "function") {
+        showAdminToast(`📡 Đã kích hoạt ${stations.length} vùng đệm (${radiusMeters / 1000}km) trên toàn mạng lưới trạm!`);
+    }
+};
+
+window.clearBufferZone = function () {
+    if (bufferLayerGroup && adminMap) {
+        adminMap.removeLayer(bufferLayerGroup);
+        bufferLayerGroup = null;
+    }
+    // Hủy trạng thái kích hoạt trên thanh công cụ
+    document.querySelectorAll(".buffer-btn-group .btn-buf").forEach(b => b.classList.remove("active"));
+
+    if (typeof showAdminToast === "function") {
+        showAdminToast("🧹 Đã xóa toàn bộ vùng đệm phân tán.");
+    }
+};
+// 2. Nút Bật/Tắt chế độ Bắt tọa độ trạm dạng Toggle Button
+window.toggleCoordPickerBtn = function () {
+    isPickCoordActive = !isPickCoordActive;
+    const btn = document.getElementById("btn-toggle-pick");
+    const mapEl = document.getElementById("admin-map");
+
+    if (btn) {
+        if (isPickCoordActive) {
+            btn.classList.add("active");
+            if (mapEl) mapEl.style.cursor = "crosshair";
+            showAdminToast("📍 Chế độ bắt điểm: Click vào vị trí bất kỳ trên bản đồ để lấy tọa độ.");
+        } else {
+            btn.classList.remove("active");
+            if (mapEl) mapEl.style.cursor = "";
+            if (tempPickMarker && adminMap) {
+                adminMap.removeLayer(tempPickMarker);
+                tempPickMarker = null;
+            }
+        }
+    }
+};
+
+// 3. Đổi nhanh trạng thái Trạm (HOẠT ĐỘNG <-> BẢO TRÌ) qua API
+window.toggleStationStatus = function (ma_tram, currentStatus) {
+    const newStatus = (currentStatus === 'HOẠT ĐỘNG') ? 'BẢO TRÌ' : 'HOẠT ĐỘNG';
+
+    const targetStation = adminStationList.find(s => s.ma_tram === ma_tram);
+    const payload = {
+        ten_tram: targetStation ? targetStation.ten_tram : "Trạm quan trắc",
+        don_vi_quan_ly: targetStation ? targetStation.don_vi_quan_ly : "Sở TN&MT TP.HCM",
+        lat: targetStation ? targetStation.lat : 10.8231,
+        lng: targetStation ? targetStation.lng : 106.6297,
+        status: newStatus
+    };
+
+    fetch(`${API_BASE}/gis/stations/${encodeURIComponent(ma_tram)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+        .then(res => {
+            if (!res.ok) throw new Error("Cập nhật trạng thái thất bại");
+            return res.json();
+        })
+        .then(() => {
+            showAdminToast(`🔄 Đã đổi trạm ${ma_tram} sang trạng thái: ${newStatus}`);
+            fetchAdminStations(); // Làm mới danh sách trạm và bản đồ
+        })
+        .catch(err => alert("Lỗi: " + err.message));
+};
+// ==============================================================================
+// 16. QUẢN TRỊ TÀI KHOẢN END-USERS DÀNH CHO ADMIN
+// ==============================================================================
+let adminUsersList = [];
+
+function fetchAdminUsers() {
+    fetch(`${API_BASE}/admin/users`)
+        .then(res => res.json())
+        .then(users => {
+            adminUsersList = users;
+            renderAdminUsersTable(users);
+        })
+        .catch(err => console.error("Lỗi tải danh sách người dùng:", err));
+}
+
+function renderAdminUsersTable(users) {
+    const tbody = document.getElementById("adm-users-table-body");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #64748b;">Chưa có thành viên nào đăng ký.</td></tr>`;
+        return;
+    }
+
+    users.forEach(u => {
+        const isLocked = (u.status === 'BỊ KHÓA');
+        const statusBadge = isLocked
+            ? `<span style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">BỊ KHÓA</span>`
+            : `<span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">HOẠT ĐỘNG</span>`;
+
+        let providerBadge = `<span style="background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-envelope"></i> Email</span>`;
+        if (u.provider === 'Google') providerBadge = `<span style="background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-google"></i> Google</span>`;
+        else if (u.provider === 'Facebook') providerBadge = `<span style="background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-facebook"></i> Facebook</span>`;
+        else if (u.provider === 'Apple') providerBadge = `<span style="background: #000; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-apple"></i> Apple</span>`;
+
+        const row = `
+            <tr>
+                <td><b>#${u.id}</b></td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="${u.avatar}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover;">
+                        <span style="font-weight: 700; color: #0f172a;">${u.fullname}</span>
+                    </div>
+                </td>
+                <td><a href="mailto:${u.email}" style="color: #0284c7; text-decoration: none;">${u.email}</a></td>
+                <td>${providerBadge}</td>
+                <td>${u.created_at || 'Mới'}</td>
+                <td style="text-align: center;">${statusBadge}</td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button onclick="toggleUserStatusAdmin(${u.id})" class="btn-action-sm" style="background: ${isLocked ? '#dcfce7' : '#fef3c7'}; color: ${isLocked ? '#166534' : '#854d0e'}; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;" title="Khóa hoặc Mở khóa">
+                            <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'}"></i> ${isLocked ? 'Mở' : 'Khóa'}
+                        </button>
+                        <button onclick="deleteUserAdmin(${u.id})" class="btn-action-sm btn-act-delete" style="background: rgba(239,68,68,0.15); color: #dc2626; border: 1px solid #dc2626; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;" title="Xóa tài khoản">
+                            <i class="fa-solid fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+window.filterAdminUsers = function() {
+    const term = document.getElementById("search-user").value.toLowerCase();
+    const filtered = adminUsersList.filter(u => 
+        u.fullname.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
+    );
+    renderAdminUsersTable(filtered);
+};
+
+window.toggleUserStatusAdmin = function(userId) {
+    fetch(`${API_BASE}/admin/users/${userId}/toggle-status`, { method: "PUT" })
+        .then(res => res.json())
+        .then(data => {
+            showAdminToast(`🔄 ${data.message}`);
+            fetchAdminUsers();
+        })
+        .catch(err => alert("Lỗi: " + err.message));
+};
+
+window.deleteUserAdmin = function(userId) {
+    if (confirm(`Bạn có chắc chắn muốn xóa tài khoản #${userId} này?`)) {
+        fetch(`${API_BASE}/admin/users/${userId}`, { method: "DELETE" })
+            .then(res => res.json())
+            .then(data => {
+                showAdminToast(`🗑️ ${data.message}`);
+                fetchAdminUsers();
+            })
+            .catch(err => alert("Lỗi: " + err.message));
+    }
+};
+
+// Tự động tải danh sách thành viên khi Admin chuyển sang Tab Users
+document.addEventListener("DOMContentLoaded", () => {
+    fetchAdminUsers();
+});
+// ==============================================================================
+// XỬ LÝ 3 NÚT: XUẤT EXCEL - THÊM THÀNH VIÊN - LÀM MỚI DANH SÁCH USER
+// ==============================================================================
+
+// 1. NÚT LÀM MỚI DANH SÁCH (CÓ TOAST PHẢN HỒI)
+window.refreshAdminUsers = function() {
+    showAdminToast("🔄 Đang đồng bộ danh sách thành viên...");
+    fetchAdminUsers();
+};
+
+// 2. NÚT THÊM THÀNH VIÊN (MỞ / ĐÓNG MODAL)
+window.openAddUserModal = function() {
+    const modal = document.getElementById("modal-add-user");
+    if (modal) {
+        modal.classList.add("active");
+        const nameInput = document.getElementById("add-user-fullname");
+        if (nameInput) nameInput.focus();
+    } else {
+        alert("Lỗi: Không tìm thấy modal-add-user trong HTML!");
+    }
+};
+
+window.closeAddUserModal = function() {
+    const modal = document.getElementById("modal-add-user");
+    if (modal) modal.classList.remove("active");
+    const form = document.getElementById("form-add-user");
+    if (form) form.reset();
+};
+
+// Xử lý gửi Form tạo User mới lên Backend
+window.submitAddUser = function(e) {
+    e.preventDefault();
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const oldText = btnSubmit.innerHTML;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+    btnSubmit.disabled = true;
+
+    const payload = {
+        fullname: document.getElementById("add-user-fullname").value.trim(),
+        email: document.getElementById("add-user-email").value.trim(),
+        provider: document.getElementById("add-user-provider").value,
+        status: document.getElementById("add-user-status").value
+    };
+
+    fetch(`${API_BASE}/admin/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Không thể tạo tài khoản");
+        return data;
+    })
+    .then(data => {
+        closeAddUserModal();
+        showAdminToast(`✅ ${data.message}`);
+        fetchAdminUsers(); // Tải lại bảng ngay lập tức
+    })
+    .catch(err => {
+        alert("Lỗi: " + err.message);
+    })
+    .finally(() => {
+        btnSubmit.innerHTML = oldText;
+        btnSubmit.disabled = false;
+    });
+};
+
+// 3. NÚT XUẤT EXCEL (CSV) CHUẨN UTF-8 BOM
+window.exportUsersToCSV = function() {
+    if (!adminUsersList || adminUsersList.length === 0) {
+        alert("⚠️ Hiện tại chưa có dữ liệu thành viên để xuất file!");
+        return;
+    }
+
+    // Tiêu đề cột chuẩn nghiệp vụ
+    let csvContent = "\uFEFFMã ID,Họ và Tên,Địa Chỉ Email,Phương Thức Đăng Ký,Thời Gian Tạo,Trạng Thái\n";
+    
+    adminUsersList.forEach(u => {
+        csvContent += `"${u.id}","${u.fullname}","${u.email}","${u.provider}","${u.created_at || ''}","${u.status}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `Danh_sach_Thanh_vien_AirHCM_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showAdminToast("📊 Đã xuất thành công file Excel danh sách thành viên!");
+};

@@ -1,11 +1,18 @@
 :root {
-    --bg-main: #f8fafc;           /* Nền xám trắng trang nhã */
-    --bg-card: #ffffff;           /* Nền thẻ / card trắng tinh */
-    --bg-sub: #f1f5f9;            /* Nền bảng / mục phụ */
-    --text-primary: #0f172a;      /* Chữ chính đen đậm rõ nét */
-    --text-secondary: #64748b;    /* Chữ phụ xám trung tính */
-    --border-light: #e2e8f0;      /* Viền sáng tinh tế */
-    --primary-blue: #0284c7;      /* Xanh dương chủ đạo */
+    --bg-main: #f8fafc;
+    /* Nền xám trắng trang nhã */
+    --bg-card: #ffffff;
+    /* Nền thẻ / card trắng tinh */
+    --bg-sub: #f1f5f9;
+    /* Nền bảng / mục phụ */
+    --text-primary: #0f172a;
+    /* Chữ chính đen đậm rõ nét */
+    --text-secondary: #64748b;
+    /* Chữ phụ xám trung tính */
+    --border-light: #e2e8f0;
+    /* Viền sáng tinh tế */
+    --primary-blue: #0284c7;
+    /* Xanh dương chủ đạo */
     --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
@@ -62,7 +69,8 @@ body {
     transition: var(--transition);
 }
 
-.nav-item:hover, .nav-item.active {
+.nav-item:hover,
+.nav-item.active {
     background: rgba(56, 189, 248, 0.15);
     color: var(--primary);
 }
@@ -82,8 +90,8 @@ body {
     opacity: 0;
     pointer-events: none;
     transition: var(--transition);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     z-index: 100000;
 }
 
@@ -282,7 +290,8 @@ body {
 /* Sắp xếp vị trí cụm nút Zoom Leaflet không bị đè */
 .leaflet-top.leaflet-right {
     top: 20px !important;
-    right: 275px !important; /* Đẩy cụm Zoom sang bên trái của bảng điều khiển */
+    right: 275px !important;
+    /* Đẩy cụm Zoom sang bên trái của bảng điều khiển */
 }
 
 /* Ẩn bộ chọn basemap cũ của Leaflet */
@@ -477,28 +486,150 @@ body {
 }
 
 /* CSS Cho Tabs khác & Tables */
-.content-wrapper { flex: 1; padding: 26px; overflow-y: auto; }
-.card-full { width: 100%; min-height: 500px; }
-.chart-container { height: 400px; margin-top: 15px; }
-.btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-.btn-primary { background: rgba(255,255,255,0.06); color: #fff; margin-left: 8px; }
-.btn-primary.active, .btn-primary:hover { background: var(--primary); color: #000; }
-.dss-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.dss-card { text-align: center; padding: 30px 20px; }
-.dss-icon { font-size: 38px; margin-bottom: 16px; }
-.dss-badge { display: inline-block; padding: 5px 14px; border-radius: 20px; margin: 12px 0; font-weight: 700; background: #00e400; color: #000; }
-.dss-card p { font-size: 13px; line-height: 1.6; color: #cbd5e1; text-align: justify; }
-.search-box { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--panel-border); background: rgba(255,255,255,0.05); color: #fff; width: 240px; }
-.table-container { max-height: 440px; overflow-y: auto; margin-top: 15px; }
-.custom-table { width: 100%; border-collapse: collapse; }
-.custom-table th, .custom-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
-.custom-table th { background: rgba(255,255,255,0.02); color: var(--text-sub); }
+.content-wrapper {
+    flex: 1;
+    padding: 26px;
+    overflow-y: auto;
+}
+
+.card-full {
+    width: 100%;
+    min-height: 500px;
+}
+
+.chart-container {
+    height: 400px;
+    margin-top: 15px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    margin-left: 8px;
+}
+
+.btn-primary.active,
+.btn-primary:hover {
+    background: var(--primary);
+    color: #000;
+}
+
+.dss-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.dss-card {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.dss-icon {
+    font-size: 38px;
+    margin-bottom: 16px;
+}
+
+.dss-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin: 12px 0;
+    font-weight: 700;
+    background: #00e400;
+    color: #000;
+}
+
+.dss-card p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    text-align: justify;
+}
+
+.search-box {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    width: 240px;
+}
+
+.table-container {
+    max-height: 440px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-table th,
+.custom-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+}
+
+.custom-table th {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-sub);
+}
 
 /* Radar Icon Trạm quan trắc */
-.station-radar-marker { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
-.station-radar-core { width: 14px; height: 14px; background: #38bdf8; border: 2px solid #ffffff; border-radius: 50%; z-index: 2; box-shadow: 0 0 10px #38bdf8; }
-.station-radar-wave { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); animation: radar-pulse 2s infinite ease-out; z-index: 1; }
-@keyframes radar-pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+.station-radar-marker {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.station-radar-core {
+    width: 14px;
+    height: 14px;
+    background: #38bdf8;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+.station-radar-wave {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.4);
+    animation: radar-pulse 2s infinite ease-out;
+    z-index: 1;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
 
 /* Thẻ KPI Trang Dự báo AI */
 .kpi-card {
@@ -548,6 +679,7 @@ body {
     background: #0f172a;
     color: #ffffff;
 }
+
 /* Nút dự báo thời gian active */
 .btn-forecast {
     background: rgba(255, 255, 255, 0.08);
@@ -562,12 +694,14 @@ body {
     transition: var(--transition);
 }
 
-.btn-forecast:hover, .btn-forecast.active {
+.btn-forecast:hover,
+.btn-forecast.active {
     background: var(--primary);
     color: #0f172a;
     border-color: var(--primary);
     box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
+
 /* ==========================================================================
    DINH DANG MONG CHO DẠNG ADMIN DASHBOARD CHUYÊN NGHIỆP
    ========================================================================== */
@@ -709,7 +843,8 @@ body {
     gap: 20px;
 }
 
-.admin-left-col, .admin-right-col {
+.admin-left-col,
+.admin-right-col {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -855,8 +990,15 @@ body {
 }
 
 @keyframes modal-fade-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .modal-header {
@@ -937,10 +1079,11 @@ body {
     border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     display: none;
     z-index: 100000;
 }
+
 /* ==========================================================================
    DINH DANG TABS VA HEADER ADMIN DASHBOARD MỚI
    ========================================================================== */
@@ -1001,11 +1144,27 @@ body {
     margin-right: 4px;
 }
 
-.btn-act-alert { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
-.btn-act-alert:hover { background: #ef4444; color: #fff; }
+.btn-act-alert {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
 
-.btn-act-delete { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
-.btn-act-delete:hover { background: #64748b; color: #fff; }
+.btn-act-alert:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-act-delete {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.btn-act-delete:hover {
+    background: #64748b;
+    color: #fff;
+}
 
 /* Xóa viền đen outline mặc định của trình duyệt khi click vào polygon ranh giới */
 path.leaflet-interactive:focus {
@@ -1020,9 +1179,11 @@ path.leaflet-interactive:focus {
     border: 1px solid #38bdf8;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
+
 .ward-popup .leaflet-popup-tip {
     background: #0f172a;
 }
+
 /* ========================================================================== */
 /* TÙY CHỈNH NÚT ZOOM NẰM BÊN PHẢI NÚT VỊ TRÍ & TRIỆT TIÊU VIỀN ĐEN PHƯỜNG  */
 /* ========================================================================== */
@@ -1078,6 +1239,7 @@ path.leaflet-interactive:focus {
 .ward-popup .leaflet-popup-tip {
     background: #0f172a;
 }
+
 /* ========================================================================== */
 /* BIỂU TƯỢNG TRẠM QUAN TRẮC CHUẨN PHONG CÁCH IQAIR                           */
 /* ========================================================================== */
@@ -1107,35 +1269,40 @@ path.leaflet-interactive:focus {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
     z-index: 1000 !important;
 }
+
 /* ============================================================================== */
 /* BỔ SUNG GIAO DIỆN SÁNG (LIGHT THEME) CHO TOÀN BỘ TRANG USER & ADMIN            */
 /* ============================================================================== */
 
 /* 1. Nền tổng thể và thanh Header Topbar */
-body, .admin-body {
+body,
+.admin-body {
     background-color: #f8fafc !important;
     color: #0f172a !important;
 }
 
-.topbar, .admin-topbar {
+.topbar,
+.admin-topbar {
     background: #ffffff !important;
     border-bottom: 1px solid #e2e8f0 !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
 }
 
-.topbar h2, .admin-brand h2 {
+.topbar h2,
+.admin-brand h2 {
     color: #0f172a !important;
 }
 
-.topbar p, .admin-brand p {
+.topbar p,
+.admin-brand p {
     color: #64748b !important;
 }
 
 /* 2. Thẻ Panel, KPI Card và Khung nổi trên bản đồ */
-.panel, 
-.admin-kpi-box, 
-.kpi-card, 
-.card-full, 
+.panel,
+.admin-kpi-box,
+.kpi-card,
+.card-full,
 .dss-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
@@ -1143,18 +1310,22 @@ body, .admin-body {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
 }
 
-.panel h3, .panel h4, .panel h5 {
+.panel h3,
+.panel h4,
+.panel h5 {
     color: #0f172a !important;
 }
 
-.panel small, .kpi-card small, .metric-item span {
+.panel small,
+.kpi-card small,
+.metric-item span {
     color: #64748b !important;
 }
 
 /* 3. Các widget nổi trên bản đồ (Floating Panels) */
-.floating-top-left, 
-.floating-playback, 
-.floating-top-right-controls, 
+.floating-top-left,
+.floating-playback,
+.floating-top-right-controls,
 .floating-bottom-right {
     background: rgba(255, 255, 255, 0.95) !important;
     backdrop-filter: blur(10px) !important;
@@ -1177,56 +1348,64 @@ body, .admin-body {
 }
 
 /* 4. Bảng biểu dữ liệu (Tables) */
-.custom-table, 
-#adm-station-table, 
-#adm-subscribers-table, 
-#forecast-table-body, 
+.custom-table,
+#adm-station-table,
+#adm-subscribers-table,
+#forecast-table-body,
 #hotspots-table-body {
     background: #ffffff !important;
     color: #0f172a !important;
 }
 
-.custom-table thead tr, table thead tr {
+.custom-table thead tr,
+table thead tr {
     background: #f1f5f9 !important;
     color: #334155 !important;
     border-bottom: 2px solid #e2e8f0 !important;
 }
 
-.custom-table th, table th {
+.custom-table th,
+table th {
     color: #334155 !important;
     font-weight: 700 !important;
 }
 
-.custom-table tbody tr, table tbody tr {
+.custom-table tbody tr,
+table tbody tr {
     border-bottom: 1px solid #e2e8f0 !important;
 }
 
-.custom-table tbody tr:hover, table tbody tr:hover {
+.custom-table tbody tr:hover,
+table tbody tr:hover {
     background: #f8fafc !important;
 }
 
-.custom-table td, table td {
+.custom-table td,
+table td {
     color: #1e293b !important;
 }
 
 /* 5. Ô nhập liệu, ô tìm kiếm và Dropdown */
-.custom-input, 
-.search-box, 
-.custom-box, 
-.basemap-select, 
-select, 
+.custom-input,
+.search-box,
+.custom-box,
+.basemap-select,
+select,
 input {
     background: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     color: #0f172a !important;
 }
 
-.custom-input:focus, .search-box:focus, select:focus {
+.custom-input:focus,
+.search-box:focus,
+select:focus {
     border-color: #0284c7 !important;
     box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
 }
 
-.basemap-select option, .custom-input option {
+.basemap-select option,
+.custom-input option {
     background: #ffffff !important;
     color: #0f172a !important;
 }
@@ -1283,6 +1462,7 @@ input {
     border: 1px solid #e2e8f0 !important;
     color: #0f172a !important;
 }
+
 /* ============================================================================== */
 /* CHUẨN HÓA SIDEBAR SÁNG & CỤM ĐIỀU KHIỂN GÓC TRÊN PHẢI (LIGHT THEME)            */
 /* ============================================================================== */
@@ -1291,13 +1471,16 @@ input {
 /* 1. THANH SIDEBAR BÊN TRÁI NỀN TRẮNG SÁNG, ICON RÕ NÉT                      */
 /* -------------------------------------------------------------------------- */
 .sidebar {
-    background: #ffffff !important;              /* Đổi nền sidebar sang trắng */
-    border-right: 1px solid #e2e8f0 !important;  /* Viền phải xám sáng thanh mảnh */
+    background: #ffffff !important;
+    /* Đổi nền sidebar sang trắng */
+    border-right: 1px solid #e2e8f0 !important;
+    /* Viền phải xám sáng thanh mảnh */
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04) !important;
 }
 
 .sidebar .logo {
-    color: #0284c7 !important;                   /* Logo đổi sang màu xanh thương hiệu */
+    color: #0284c7 !important;
+    /* Logo đổi sang màu xanh thương hiệu */
 }
 
 /* Các icon điều hướng chưa chọn: hiện màu xám đen đậm rõ ràng */
@@ -1327,6 +1510,7 @@ input {
 .sidebar-footer i {
     color: #94a3b8 !important;
 }
+
 .sidebar-footer i:hover {
     color: #0284c7 !important;
 }
@@ -1364,8 +1548,10 @@ input {
 }
 
 #custom-zoom-slot .leaflet-control-zoom a {
-    background-color: #ffffff !important;        /* Nền trắng đồng bộ */
-    color: #0f172a !important;                   /* Dấu + và - màu đen đậm */
+    background-color: #ffffff !important;
+    /* Nền trắng đồng bộ */
+    color: #0f172a !important;
+    /* Dấu + và - màu đen đậm */
     border: none !important;
     border-right: 1px solid #e2e8f0 !important;
     width: 36px !important;
@@ -1396,7 +1582,8 @@ input {
 
 /* Tiêu đề nhóm "LỚP DỮ LIỆU WEBGIS" và "BẢN ĐỒ NỀN" */
 .layer-group-title {
-    color: #0284c7 !important;                   /* Chuyển sang xanh đậm nổi bật */
+    color: #0284c7 !important;
+    /* Chuyển sang xanh đậm nổi bật */
     font-weight: 800 !important;
     font-size: 11px !important;
     letter-spacing: 0.6px !important;
@@ -1405,7 +1592,8 @@ input {
 
 /* Khắc phục chữ "Trạm quan trắc, Bản đồ nhiệt, Ranh giới" bị mờ */
 .layer-item {
-    color: #1e293b !important;                   /* Chữ đen đậm rõ nét 100% */
+    color: #1e293b !important;
+    /* Chữ đen đậm rõ nét 100% */
     font-weight: 600 !important;
     font-size: 13px !important;
     padding: 6px 0 !important;
@@ -1436,39 +1624,45 @@ input {
     background: #ffffff !important;
     color: #0f172a !important;
 }
+
 /* ============================================================================== */
 /* KHẮC PHỤC MÀU CHỮ ĐỘ TƯƠNG PHẢN CAO CHO NGƯỜI CAO TUỔI & TRỢ NĂNG (WCAG AAA)  */
 /* ============================================================================== */
 
 /* 1. Trang Khuyến nghị Y tế (Tab DSS) */
 #tab-dss .dss-card p {
-    color: #1e293b !important;       /* Đen than đậm, nét chữ rõ ràng */
+    color: #1e293b !important;
+    /* Đen than đậm, nét chữ rõ ràng */
     font-size: 13.5px !important;
     font-weight: 500 !important;
     line-height: 1.6 !important;
 }
 
 #tab-dss .dss-card small {
-    color: #475569 !important;       /* Xám đậm dễ đọc */
+    color: #475569 !important;
+    /* Xám đậm dễ đọc */
     font-size: 12px !important;
     font-weight: 600 !important;
 }
 
 /* Sửa chữ trong khung giờ nên ra ngoài / nên tránh */
 #best-hours-text {
-    color: #064e3b !important;       /* Xanh rêu đậm tương phản cao trên nền xanh nhạt */
+    color: #064e3b !important;
+    /* Xanh rêu đậm tương phản cao trên nền xanh nhạt */
     font-weight: 600 !important;
 }
 
 #worst-hours-text {
-    color: #7f1d1d !important;       /* Đỏ thẫm đậm tương phản cao trên nền đỏ nhạt */
+    color: #7f1d1d !important;
+    /* Đỏ thẫm đậm tương phản cao trên nền đỏ nhạt */
     font-weight: 600 !important;
 }
 
 /* Sửa khung lời khuyên cá nhân hóa */
 #personal-advisory-box {
     background: #f8fafc !important;
-    color: #0f172a !important;       /* Chữ đen rõ nét */
+    color: #0f172a !important;
+    /* Chữ đen rõ nét */
     border: 1px solid #cbd5e1 !important;
     font-size: 13px !important;
     font-weight: 500 !important;
@@ -1476,7 +1670,8 @@ input {
 
 /* Sửa số quy chuẩn 50 µg/m³ và 15 µg/m³ bị tàng hình */
 #tab-dss .panel b[style*="font-size: 18px"] {
-    color: #0f172a !important;       /* Chuyển từ màu trắng sang đen tuyền nổi bật */
+    color: #0f172a !important;
+    /* Chuyển từ màu trắng sang đen tuyền nổi bật */
 }
 
 /* 2. Trang Đăng ký Nhận Cảnh báo (Tab Subscribe) */
@@ -1485,13 +1680,15 @@ input {
 }
 
 #tab-subscribe label {
-    color: #0f172a !important;       /* Nhãn form đen đậm, chữ dày rõ */
+    color: #0f172a !important;
+    /* Nhãn form đen đậm, chữ dày rõ */
     font-weight: 700 !important;
     font-size: 13px !important;
 }
 
 #tab-subscribe input::placeholder {
-    color: #64748b !important;       /* Placeholder rõ nét không bị chìm */
+    color: #64748b !important;
+    /* Placeholder rõ nét không bị chìm */
     font-weight: 400 !important;
 }
 
@@ -1503,13 +1700,15 @@ input {
 
 /* 3. Trang Giới thiệu Hệ thống (Tab About) */
 #tab-about p {
-    color: #1e293b !important;       /* Toàn bộ đoạn văn chuyển sang chữ đen dễ đọc */
+    color: #1e293b !important;
+    /* Toàn bộ đoạn văn chuyển sang chữ đen dễ đọc */
     line-height: 1.7 !important;
     font-size: 13.5px !important;
 }
 
 #tab-about ul li {
-    color: #0f172a !important;       /* Danh sách thông tin thực hiện đen rõ */
+    color: #0f172a !important;
+    /* Danh sách thông tin thực hiện đen rõ */
     font-size: 13.5px !important;
     font-weight: 500 !important;
 }
@@ -1537,6 +1736,7 @@ input {
 #tab-about div[style*="background: rgba(255, 255, 255, 0.03)"] p {
     color: #0f172a !important;
 }
+
 /* ============================================================================== */
 /* KHẮC PHỤC KHUNG HIỂN THỊ TỌA ĐỘ BẢN ĐỒ ADMIN (LIGHT THEME)                     */
 /* ============================================================================== */
@@ -1545,19 +1745,24 @@ input {
     position: absolute !important;
     bottom: 12px !important;
     left: 12px !important;
-    background: rgba(255, 255, 255, 0.92) !important; /* Nền trắng sáng mờ sang trọng */
+    background: rgba(255, 255, 255, 0.92) !important;
+    /* Nền trắng sáng mờ sang trọng */
     backdrop-filter: blur(8px) !important;
-    border: 1px solid #cbd5e1 !important;              /* Viền xám sáng tinh tế */
+    border: 1px solid #cbd5e1 !important;
+    /* Viền xám sáng tinh tế */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     padding: 6px 14px !important;
     border-radius: 8px !important;
     font-size: 12px !important;
     font-weight: 700 !important;
-    color: #0284c7 !important;                         /* Chữ màu xanh dương đậm nổi bật */
+    color: #0284c7 !important;
+    /* Chữ màu xanh dương đậm nổi bật */
     letter-spacing: 0.3px !important;
     z-index: 1000 !important;
-    pointer-events: none;                              /* Không cản trở thao tác kéo thả bản đồ */
+    pointer-events: none;
+    /* Không cản trở thao tác kéo thả bản đồ */
 }
+
 /* ============================================================================== */
 /* KẺ RÕ ĐƯỜNG CHIA CỘT / DÒNG VÀ TĂNG TƯƠNG PHẢN CHO BẢNG DỰ BÁO                */
 /* ============================================================================== */
@@ -1576,9 +1781,10 @@ input {
     border-collapse: collapse !important;
 }
 
-.custom-table th, 
+.custom-table th,
 .custom-table td {
-    border: 1px solid #e2e8f0 !important;   /* Đường kẻ ô chia rõ từng cột và dòng */
+    border: 1px solid #e2e8f0 !important;
+    /* Đường kẻ ô chia rõ từng cột và dòng */
     padding: 10px 14px !important;
     font-size: 13px !important;
     vertical-align: middle !important;
@@ -1599,8 +1805,10 @@ input {
 }
 
 .custom-table tbody tr:hover {
-    background-color: #f0f9ff !important;   /* Đổi màu xanh sáng nhẹ khi rê chuột */
+    background-color: #f0f9ff !important;
+    /* Đổi màu xanh sáng nhẹ khi rê chuột */
 }
+
 /* ============================================================================== */
 /* CHUẨN HÓA CÁC KHUNG SỐ LIỆU & TÁCH RỜI CỤM ĐIỀU KHIỂN GÓC TRÊN BẢN ĐỒ          */
 /* ============================================================================== */
@@ -1620,7 +1828,8 @@ input {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-end !important;
-    gap: 12px !important;            /* Tạo khoảng cách thông thoáng giữa các cụm */
+    gap: 12px !important;
+    /* Tạo khoảng cách thông thoáng giữa các cụm */
     position: absolute !important;
     top: 18px !important;
     right: 18px !important;
@@ -1712,7 +1921,8 @@ input {
     position: absolute !important;
     top: 18px !important;
     left: 18px !important;
-    width: 330px !important;          /* Thu gọn chiều ngang để bản đồ thoáng hơn */
+    width: 330px !important;
+    /* Thu gọn chiều ngang để bản đồ thoáng hơn */
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
@@ -1821,6 +2031,7 @@ input {
     font-weight: 600 !important;
     color: #334155 !important;
 }
+
 /* ============================================================================== */
 /* KHÔI PHỤC CHIẾC KHUNG PANEL HOÀN CHỈNH CHO CỤM ĐIỀU KHIỂN GÓC TRÊN BẢN ĐỒ      */
 /* ============================================================================== */
@@ -1830,12 +2041,16 @@ input {
     position: absolute !important;
     top: 18px !important;
     right: 18px !important;
-    width: 270px !important;                                  /* Chiều rộng vừa vặn, gọn gàng */
-    background: rgba(255, 255, 255, 0.96) !important;         /* Nền trắng sang trọng, chắn vệt gió phía sau */
+    width: 270px !important;
+    /* Chiều rộng vừa vặn, gọn gàng */
+    background: rgba(255, 255, 255, 0.96) !important;
+    /* Nền trắng sang trọng, chắn vệt gió phía sau */
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid #cbd5e1 !important;                     /* Viền bo sắc nét, rõ ràng */
-    border-radius: 14px !important;                           /* Bo tròn góc hiện đại */
+    border: 1px solid #cbd5e1 !important;
+    /* Viền bo sắc nét, rõ ràng */
+    border-radius: 14px !important;
+    /* Bo tròn góc hiện đại */
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
     padding: 14px 16px !important;
     display: flex !important;
@@ -1915,13 +2130,17 @@ input {
 
 /* 3. PHẦN DƯỚI: LỚP DỮ LIỆU & BASEMAP (TRIỆT TIÊU LỖI LẤN KHUNG) */
 .map-layer-control {
-    background: transparent !important;                       /* Khử bỏ nền trùng lặp bên trong */
-    border: none !important;                                  /* Khử bỏ viền lồng nhau */
-    box-shadow: none !important;                              /* Khử bóng lồng nhau */
+    background: transparent !important;
+    /* Khử bỏ nền trùng lặp bên trong */
+    border: none !important;
+    /* Khử bỏ viền lồng nhau */
+    box-shadow: none !important;
+    /* Khử bóng lồng nhau */
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
-    border-top: 1px solid #e2e8f0 !important;                 /* Đường gạch ngang phân cách tinh tế giữa nút và lớp */
+    border-top: 1px solid #e2e8f0 !important;
+    /* Đường gạch ngang phân cách tinh tế giữa nút và lớp */
     padding-top: 12px !important;
 }
 
@@ -1944,7 +2163,8 @@ input {
     align-items: center !important;
     justify-content: space-between !important;
     padding: 5px 0 !important;
-    color: #0f172a !important;                               /* Chữ đen đậm rõ nét trên nền trắng */
+    color: #0f172a !important;
+    /* Chữ đen đậm rõ nét trên nền trắng */
     font-weight: 600 !important;
     font-size: 12.5px !important;
     cursor: pointer !important;
@@ -1981,12 +2201,15 @@ input {
     border-color: #0284c7 !important;
     box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
 }
+
 /* ============================================================================== */
 /* ĐẨY BIỂU TƯỢNG NÓN TỐT NGHIỆP XUỐNG SÁT ĐÁY THANH SIDEBAR (TỐI ƯU THẨM MỸ)     */
 /* ============================================================================== */
 .sidebar-footer {
-    margin-top: auto !important;          /* Tự động chiếm toàn bộ khoảng trống để đẩy xuống đáy */
-    padding-bottom: 12px !important;       /* Cách mép dưới một khoảng thoáng đãng */
+    margin-top: auto !important;
+    /* Tự động chiếm toàn bộ khoảng trống để đẩy xuống đáy */
+    padding-bottom: 12px !important;
+    /* Cách mép dưới một khoảng thoáng đãng */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1997,9 +2220,11 @@ input {
     width: 44px !important;
     height: 44px !important;
     border-radius: 12px !important;
-    background: #f1f5f9 !important;       /* Nền xám sáng đồng bộ giao diện mới */
+    background: #f1f5f9 !important;
+    /* Nền xám sáng đồng bộ giao diện mới */
     border: 1px solid #e2e8f0 !important;
-    color: #64748b !important;            /* Màu xám trung tính tinh tế */
+    color: #64748b !important;
+    /* Màu xám trung tính tinh tế */
     font-size: 18px !important;
     display: flex !important;
     align-items: center !important;
@@ -2012,17 +2237,20 @@ input {
 .sidebar-footer i:hover {
     background: rgba(2, 132, 199, 0.12) !important;
     border-color: #0284c7 !important;
-    color: #0284c7 !important;            /* Đổi sang màu xanh chủ đạo của đồ án */
+    color: #0284c7 !important;
+    /* Đổi sang màu xanh chủ đạo của đồ án */
     transform: scale(1.1) !important;
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2) !important;
 }
+
 /* ============================================================================== */
 /* KHÓA CỨNG HÌNH TRÒN US AQI 100% (TRIỆT TIÊU LỖI BỊ BÓP MÉO HÌNH BẦU DỤC)       */
 /* ============================================================================== */
 
 /* 1. Mở rộng khung chứa vừa vặn để chứa đủ nhãn chữ dài */
 .floating-top-left {
-    width: 350px !important;              /* Tăng nhẹ độ rộng để bố cục thoáng đãng */
+    width: 350px !important;
+    /* Tăng nhẹ độ rộng để bố cục thoáng đãng */
 }
 
 /* 2. Khung ngang chứa vòng tròn và nhãn */
@@ -2037,13 +2265,17 @@ input {
 #aqi-indicator-circle {
     width: 78px !important;
     height: 78px !important;
-    min-width: 78px !important;           /* Chặn tuyệt đối không cho chiều ngang bị co lại */
+    min-width: 78px !important;
+    /* Chặn tuyệt đối không cho chiều ngang bị co lại */
     max-width: 78px !important;
     min-height: 78px !important;
     max-height: 78px !important;
-    flex-shrink: 0 !important;            /* Thuộc tính cốt lõi: triệt tiêu lực ép của flexbox */
-    aspect-ratio: 1 / 1 !important;       /* Cố định tỷ lệ 1:1 hình học chuẩn */
-    border-radius: 50% !important;        /* Bo tròn hoàn hảo */
+    flex-shrink: 0 !important;
+    /* Thuộc tính cốt lõi: triệt tiêu lực ép của flexbox */
+    aspect-ratio: 1 / 1 !important;
+    /* Cố định tỷ lệ 1:1 hình học chuẩn */
+    border-radius: 50% !important;
+    /* Bo tròn hoàn hảo */
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -2064,3 +2296,807 @@ input {
     border-radius: 14px !important;
     word-break: break-word !important;
 }
+
+/* Bố cục 2 cột cho trang Đăng ký nhận cảnh báo */
+.subscribe-wrapper-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0 !important;
+}
+
+@media (max-width: 860px) {
+    .subscribe-wrapper-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .sub-info-col {
+        border-right: none !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 24px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .sub-form-col {
+        padding-left: 0 !important;
+    }
+}
+
+/* ============================================================================== */
+/* CẤU HÌNH IN ẤN & XUẤT BÁO CÁO PDF CHUẨN THỂ THỨC VĂN BẢN                     */
+/* ============================================================================== */
+.print-official-header {
+    display: none;
+}
+
+@media print {
+
+    /* Ẩn các thành phần giao diện không cần thiết khi in */
+    .sidebar,
+    .topbar,
+    .floating-top-right-controls,
+    .floating-playback,
+    .forecast-controls,
+    .btn,
+    #modal-login,
+    .modal-overlay,
+    .search-box {
+        display: none !important;
+    }
+
+    /* Hiển thị tiêu đề văn bản hành chính */
+    .print-official-header {
+        display: block !important;
+    }
+
+    body,
+    .main-container,
+    .content-wrapper {
+        background: #ffffff !important;
+        color: #000000 !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .tab-content {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Đảm bảo bảng số liệu và card hiển thị sắc nét trên trang giấy A4 */
+    .panel,
+    .card-full,
+    .dss-card {
+        box-shadow: none !important;
+        border: 1px solid #94a3b8 !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-bottom: 16px !important;
+    }
+
+    .custom-table th,
+    .custom-table td {
+        border: 1px solid #cbd5e1 !important;
+        color: #000000 !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+
+    .custom-table th {
+        background-color: #f1f5f9 !important;
+    }
+
+    /* Chữ ký xác nhận cuối trang in */
+    body::after {
+        content: "CÁN BỘ PHỤ TRÁCH QUAN TRẮC                                 NGƯỜI LẬP BIỂU";
+        display: block;
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        margin-top: 40px;
+        letter-spacing: 2px;
+    }
+}
+
+/* ============================================================================== */
+/* CSS CHUYÊN BIỆT CHO XUẤT BÁO CÁO PDF / IN ẤN KHỔ GIẤY A4                       */
+/* ============================================================================== */
+
+/* Mặc định trên màn hình: Ẩn tuyệt đối mẫu in ấn */
+#official-print-document {
+    display: none;
+}
+
+@page {
+    size: A4 portrait;
+    margin: 12mm 15mm 12mm 15mm;
+    /* Căn lề chuẩn văn bản */
+}
+
+/* ============================================================================== */
+/* NÚT CHUYỂN ĐỔI CHUẨN ĐO LƯỜNG VN_AQI VÀ US AQI (SWITCHER BUTTONS)             */
+/* ============================================================================== */
+.aqi-standard-switcher {
+    display: flex;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.btn-std {
+    background: transparent;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-std:hover {
+    color: #0284c7;
+}
+
+.btn-std.active {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+@media print {
+
+    /* 1. TRIỆT TIÊU TOÀN BỘ GIAO DIỆN WEB HIỆN TẠI */
+    body {
+        display: block !important;
+        /* HỦY BỎ display: flex gây méo 3 cột */
+        background: #ffffff !important;
+        color: #000000 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: "Times New Roman", Times, serif !important;
+        /* Font chữ chuẩn văn bản hành chính */
+    }
+
+    /* Ẩn sạch sẽ thanh sidebar, header web, bản đồ map và các modal */
+    .sidebar,
+    .main-container,
+    .modal-overlay,
+    #modal-login {
+        display: none !important;
+    }
+
+    /* 2. KÍCH HOẠT DUY NHẤT KHUNG BÁO CÁO CÔNG VỤ */
+    #official-print-document {
+        display: block !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+        line-height: 1.45;
+    }
+
+    /* Header Quốc hiệu - Cơ quan */
+    .doc-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        border-bottom: 2px solid #000000;
+        padding-bottom: 8px;
+        margin-bottom: 14px;
+    }
+
+    .doc-header-left,
+    .doc-header-right {
+        text-align: center;
+    }
+
+    .doc-header-left {
+        width: 45%;
+    }
+
+    .doc-header-right {
+        width: 52%;
+    }
+
+    .doc-bold {
+        font-weight: bold;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    /* Tiêu đề bản tin */
+    .doc-title-box {
+        text-align: center;
+        margin-bottom: 14px;
+    }
+
+    .doc-main-title {
+        font-size: 15.5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    /* Các phần nội dung */
+    .doc-section {
+        margin-bottom: 12px;
+        page-break-inside: avoid;
+    }
+
+    .doc-section-title {
+        font-size: 12.5px;
+        font-weight: bold;
+        margin: 0 0 6px 0;
+        text-transform: uppercase;
+    }
+
+    /* Bảng số liệu */
+    .doc-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 4px;
+    }
+
+    .doc-table th,
+    .doc-table td {
+        border: 1px solid #333333 !important;
+        padding: 5px 8px !important;
+        font-size: 11.5px !important;
+    }
+
+    .doc-table th {
+        background-color: #f1f5f9 !important;
+        font-weight: bold !important;
+        text-align: center !important;
+    }
+
+    /* Khung khuyến nghị DSS */
+    .doc-box {
+        border: 1px solid #333333;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 11.5px;
+        background-color: #fafafa;
+    }
+
+    .doc-box p {
+        margin: 0;
+        text-align: justify;
+    }
+
+    /* Chữ ký 2 bên */
+    .doc-signatures {
+        display: flex !important;
+        justify-content: space-between !important;
+        margin-top: 25px;
+        page-break-inside: avoid;
+    }
+
+    .sig-block {
+        width: 45%;
+        text-align: center;
+    }
+
+    .sig-sub {
+        font-size: 11px;
+        font-style: italic;
+        margin: 3px 0 0 0;
+    }
+
+    .sig-space {
+        height: 60px;
+        /* Chừa khoảng trống để ký và đóng dấu */
+    }
+}
+/* ============================================================================== */
+/* THANH CÔNG CỤ TÁC NGHIỆP GIS ADMIN (MODERN TOOLBAR STRIP)                     */
+/* ============================================================================== */
+.gis-toolbar-strip {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 7px 14px !important;
+    margin-bottom: 12px !important;
+}
+
+.gis-toolbar-strip .tool-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.gis-toolbar-strip .tool-label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* Nhóm nút Vùng đệm liền nhau (Segmented Group) */
+.buffer-btn-group {
+    display: inline-flex !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.buffer-btn-group .btn-buf {
+    background: #ffffff !important;
+    border: none !important;
+    border-right: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 5px 12px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.buffer-btn-group .btn-buf:last-child {
+    border-right: none !important;
+}
+
+.buffer-btn-group .btn-buf:hover {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+}
+
+/* Nút Vùng đệm khi đang kích hoạt */
+.buffer-btn-group .btn-buf.active {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.buffer-btn-group .btn-buf-clear:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+/* Nút Bắt tọa độ dạng Pill Button có đèn tín hiệu */
+.btn-tool-pick {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    padding: 5px 14px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.btn-tool-pick:hover {
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+    background: #f0f9ff !important;
+}
+
+.btn-tool-pick .pick-status-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #94a3b8 !important;
+    display: inline-block !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Khi bật chế độ Bắt tọa độ */
+.btn-tool-pick.active {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35) !important;
+}
+
+.btn-tool-pick.active .pick-status-dot {
+    background: #4ade80 !important;
+    box-shadow: 0 0 6px #4ade80 !important;
+}
+/* ============================================================================== */
+/* GIAO DIỆN PHÂN HỆ BẢN TIN MÔI TRƯỜNG (TAB NEWS)                                */
+/* ============================================================================== */
+.btn-news-filter {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-news-filter:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-news-filter.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.news-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    border-radius: 12px !important;
+}
+
+.news-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+.news-source-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.news-tag {
+    background: #f1f5f9;
+    color: #0284c7;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    .news-grid-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+/* ============================================================================== */
+/* NÚT ĐĂNG NHẬP MẠNG XÃ HỘI (GOOGLE, FACEBOOK, APPLE) CHO END-USER              */
+/* ============================================================================== */
+.btn-social {
+    width: 100% !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+}
+
+/* Nút Google */
+.btn-social-google {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+}
+.btn-social-google:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Nút Facebook */
+.btn-social-facebook {
+    background: #1877f2 !important;
+    border: 1px solid #1877f2 !important;
+    color: #ffffff !important;
+}
+.btn-social-facebook:hover {
+    background: #166fe5 !important;
+    box-shadow: 0 4px 12px rgba(24, 119, 242, 0.35) !important;
+}
+
+/* Nút Apple */
+.btn-social-apple {
+    background: #000000 !important;
+    border: 1px solid #000000 !important;
+    color: #ffffff !important;
+}
+.btn-social-apple:hover {
+    background: #1c1c1e !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+/* ============================================================================== */
+/* TỐI ƯU HÓA GIAO DIỆN DI ĐỘNG (MOBILE-FIRST WEBGIS & BOTTOM NAVIGATION BAR)      */
+/* ============================================================================== */
+@media (max-width: 768px) {
+    /* 1. Đổi hướng layout tổng thể */
+    body {
+        flex-direction: column !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    /* 2. CHUYỂN SIDEBAR TRÁI THÀNH THANH ĐIỀU HƯỚNG ĐÁY (BOTTOM NAV BAR) */
+    .sidebar {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 60px !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        padding: 0 8px !important;
+        background: #ffffff !important;
+        border-top: 1px solid #cbd5e1 !important;
+        border-right: none !important;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
+        z-index: 10000 !important;
+    }
+
+    .sidebar .logo,
+    .sidebar-footer {
+        display: none !important; /* Ẩn logo và nón tốt nghiệp trên thanh đáy */
+    }
+
+    .nav-links {
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        width: 100% !important;
+        gap: 0 !important;
+    }
+
+    .nav-item {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 10px !important;
+    }
+
+    .nav-item.active {
+        border-left: none !important;
+        border-bottom: 3px solid #0284c7 !important;
+        border-radius: 8px !important;
+    }
+
+    .nav-item i {
+        font-size: 18px !important;
+    }
+
+    .tooltip {
+        display: none !important; /* Ẩn tooltip rê chuột trên màn hình cảm ứng */
+    }
+
+    /* 3. KHÔNG GIAN LÀM VIỆC CHÍNH */
+    .main-container {
+        height: calc(100vh - 60px) !important; /* Trừ không gian cho thanh đáy */
+        margin-bottom: 60px !important;
+    }
+
+    /* 4. RÚT GỌN HEADER TOPBAR */
+    .topbar {
+        height: 54px !important;
+        padding: 0 12px !important;
+    }
+
+    .header-title h2 {
+        font-size: 13px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 190px !important;
+    }
+
+    .header-title p,
+    .status-indicator {
+        display: none !important; /* Ẩn dòng chữ dài để nhường chỗ cho các nút */
+    }
+
+    .header-status {
+        gap: 6px !important;
+    }
+
+    .header-status .btn {
+        padding: 5px 8px !important;
+        font-size: 11px !important;
+    }
+
+    /* 5. CĂN CHỈNH CÁC WIDGET NỔI TRÊN BẢN ĐỒ (CHỐNG TRÀN MÀN HÌNH) */
+    /* Khung Trạm Trung tâm góc trên trái */
+    .floating-top-left {
+        top: 10px !important;
+        left: 10px !important;
+        width: calc(100% - 20px) !important;
+        max-width: 320px !important;
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .aqi-circle {
+        width: 64px !important;
+        height: 64px !important;
+        min-width: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .aqi-circle span {
+        font-size: 22px !important;
+    }
+
+    .metrics-grid {
+        gap: 6px !important;
+        margin-top: 10px !important;
+    }
+
+    .metric-item {
+        padding: 6px 8px !important;
+    }
+
+    .metric-item b {
+        font-size: 13px !important;
+    }
+
+    /* Cụm điều khiển góc trên phải (Lớp bản đồ, GPS, Zoom) */
+    .floating-top-right-controls {
+        top: 10px !important;
+        right: 10px !important;
+        width: 42px !important; /* Thu gọn thành nút tiện ích */
+        overflow: hidden !important;
+        padding: 4px !important;
+    }
+
+    .floating-top-right-controls:hover,
+    .floating-top-right-controls:focus-within {
+        width: 220px !important; /* Mở rộng khi người dùng chạm vào */
+        padding: 12px !important;
+    }
+
+    /* Khung Playback 24h: Nằm sát ngay trên thanh Bottom Nav */
+    .floating-playback {
+        bottom: 12px !important;
+        left: 10px !important;
+        width: calc(100% - 20px) !important;
+        padding: 10px 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .time-main span {
+        font-size: 17px !important;
+    }
+
+    /* Ẩn bảng chú giải màu cố định ở góc dưới phải để không che khuất thao tác */
+    .floating-bottom-right {
+        display: none !important;
+    }
+
+    /* 6. TỐI ƯU CÁC VIEW DỰ BÁO AI & DSS TRÊN MOBILE */
+    .content-wrapper {
+        padding: 14px !important;
+    }
+
+    .forecast-kpi-grid,
+    .dss-grid,
+    #tab-dss div[style*="grid-template-columns: 1fr 1fr"],
+    #tab-dss div[style*="grid-template-columns: 1.4fr 1fr"] {
+        grid-template-columns: 1fr !important; /* Chuyển từ 3-4 cột sang 1 cột dọc */
+        gap: 14px !important;
+    }
+
+    .chart-container {
+        height: 250px !important;
+    }
+
+    .table-container {
+        max-height: 320px !important;
+    }
+}
+/* ============================================================================== */
+/* KHÓA KÍCH THƯỚC VĂN BẢN & BẢO VỆ BỐ CỤC KHI CO GIÃN CỬA SỔ TRÌNH DUYỆT           */
+/* ============================================================================== */
+
+/* 1. Khóa tỷ lệ văn bản tuyệt đối, ngăn trình duyệt tự động phóng to/thu nhỏ font */
+html, body {
+    -webkit-text-size-adjust: 100% !important;
+    -moz-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    font-size: 14px; /* Cố định đơn vị cơ sở */
+}
+
+/* 2. Cố định kích thước số liệu AQI trạm trung tâm - Không bị méo chữ khi resize */
+.aqi-circle span,
+.time-main span,
+.metric-item b {
+    font-variant-numeric: tabular-nums; /* Giữ chữ số thẳng hàng, chống giật lay-out */
+    white-space: nowrap;
+}
+
+/* 3. Chống tràn vỡ thanh Header (Topbar) khi thu nhỏ tab */
+.topbar {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    white-space: nowrap; /* Không cho chữ rớt dòng lung tung */
+}
+
+/* Khối tiêu đề bên trái tự động thu gọn dấu ba chấm nếu tab quá hẹp */
+.header-title {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.header-title h2 {
+    font-size: 14px !important;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.header-title p {
+    font-size: 11px !important;
+    margin: 2px 0 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Khối cụm nút chức năng bên phải: Cố định kích thước, không cho co rúm (flex-shrink: 0) */
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0 !important; /* Tuyệt đối không cho phép co nhỏ đè lên nhau */
+}
+
+.header-status .btn,
+.header-status .badge-realtime,
+.header-status div {
+    flex-shrink: 0 !important;
+}
+
+/* 4. Khung điều khiển trạm trung tâm và widget giữ nguyên kích cỡ chuẩn */
+.floating-top-left,
+.floating-playback,
+.floating-top-right-controls,
+.floating-bottom-right {
+    flex-shrink: 0;
+}
+.custom-table th, 
+.custom-table td {
+    white-space: nowrap;
+    font-size: 12.5px !important;
+}
+
+/* Cụm 3 nút tác vụ không bị ép vỡ khi co nhỏ tab */
+.panel-header div {
+    flex-shrink: 0;
+}
+

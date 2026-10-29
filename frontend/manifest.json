@@ -1,0 +1,24 @@
+{
+  "name": "Hệ thống WebGIS Dự báo AQI AirHCM",
+  "short_name": "AirHCM",
+  "description": "Dự báo nồng độ bụi mịn PM2.5 và cảnh báo sức khỏe TP.Hồ Chí Minh",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/img/Logo AirHCM.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/img/Logo AirHCM.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
