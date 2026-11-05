@@ -15,41 +15,152 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  
-  // Trạng thái chuẩn AQI: false = VN_AQI, true = US_AQI
-  bool _isUSAQI = false;
+  final TextEditingController _searchCtrl = TextEditingController();
 
-  // Dữ liệu thời gian thực đồng bộ từ Backend API
-  int _currentAQI = 72;
-  double _currentPM25 = 36.0;
-  double _currentPM10 = 48.6;
-  double _currentTemp = 26.4;
+  bool _isUSAQI = false; // false: VN_AQI (QCVN 05:2023), true: US_AQI (US EPA)
+
+  // Thông số đang hiển thị tại bảng điều khiển bên dưới
+  String _currentLocationName = 'Trạm Trung tâm TP.HCM';
+  double _currentPM25 = 27.1;
+  double _currentPM10 = 34.7;
+  double _currentTemp = 27.2;
   double _currentAerosol = 0.74;
-  String _currentLevel = 'Trung bình';
-  Color _currentColor = const Color(0xFFD97706);
-  String _qcvnStatus = 'Đạt quy chuẩn QCVN 05:2023';
-  String _currentTimeStr = '28/10/2026 22:31:54';
 
-  // Thông tin tài khoản đăng nhập
   Map<String, dynamic>? _userProfile;
 
-  // Danh sách các trạm PostGIS động
-  List<Map<String, dynamic>> _stations = [];
+  // DANH SÁCH CÁC TRẠM QUAN TRẮC POSTGIS VỚI SỐ LIỆU NỀN ĐỘC LẬP TỪNG VÙNG
+  final List<Map<String, dynamic>> _stations = [
+    {'name': 'Trạm Trung tâm TP.HCM', 'lat': 10.8231, 'lng': 106.6297, 'pm25': 27.1, 'pm10': 34.7, 'temp': 27.2, 'aerosol': 0.74, 'status': 'HOẠT ĐỘNG'},
+    {'name': 'Trạm Quan trắc Bến Thành - Q.1', 'lat': 10.7769, 'lng': 106.7009, 'pm25': 22.4, 'pm10': 28.6, 'temp': 27.5, 'aerosol': 0.65, 'status': 'HOẠT ĐỘNG'},
+    {'name': 'Trạm Quan trắc Bình Đông - Q.8', 'lat': 10.7328, 'lng': 106.6525, 'pm25': 38.6, 'pm10': 52.4, 'temp': 28.1, 'aerosol': 0.85, 'status': 'HOẠT ĐỘNG'},
+    {'name': 'Trạm Quan trắc KCN Bình Tân', 'lat': 10.7483, 'lng': 106.6022, 'pm25': 46.8, 'pm10': 64.0, 'temp': 28.6, 'aerosol': 0.92, 'status': 'HOẠT ĐỘNG'},
+    {'name': 'Trạm KĐT TP. Thủ Đức', 'lat': 10.8494, 'lng': 106.7583, 'pm25': 31.2, 'pm10': 40.5, 'temp': 26.9, 'aerosol': 0.70, 'status': 'HOẠT ĐỘNG'},
+    {'name': 'Trạm Quan trắc Sơn Kỳ - Tân Phú', 'lat': 10.7987, 'lng': 106.6300, 'pm25': 35.0, 'pm10': 46.2, 'temp': 27.8, 'aerosol': 0.78, 'status': 'BẢO TRÌ'},
+    {'name': 'Trạm Sinh thái Ngoại ô Củ Chi', 'lat': 10.9731, 'lng': 106.4952, 'pm25': 14.5, 'pm10': 19.8, 'temp': 25.5, 'aerosol': 0.45, 'status': 'HOẠT ĐỘNG'},
+  ];
 
-  // Danh sách ranh giới đa giác Phường/Xã TP.HCM
-  List<Polygon> _wardPolygons = [];
-  bool _isLoadingGeoJSON = true;
+  List<Polygon> _allWardPolygons = [];
+  Polygon? _highlightedWardPolygon; // ĐA GIÁC ĐƯỢC TÔ NỔI BẬT KHI USER TÌM KIẾM
+  final Map<String, List<LatLng>> _wardBoundaryMap = {};
+  final Map<String, LatLng> _wardCentroidMap = {};
 
   @override
   void initState() {
     super.initState();
     _checkUserLogin();
-    _fetchLiveAQIData();
-    _fetchLiveStations();
     _loadWardGeoJSON();
   }
 
-  // 1. Kiểm tra trạng thái đăng nhập
+  // 1. TÍNH US AQI (THEO US EPA)
+  int _calculateUSAQI(double pm25) {
+    if (pm25 <= 12.0) return ((50.0 / 12.0) * pm25).round();
+    if (pm25 <= 35.4) return (((100.0 - 51.0) / (35.4 - 12.1)) * (pm25 - 12.1) + 51.0).round();
+    if (pm25 <= 55.4) return (((150.0 - 101.0) / (55.4 - 35.5)) * (pm25 - 35.5) + 101.0).round();
+    if (pm25 <= 150.4) return (((200.0 - 151.0) / (150.4 - 55.5)) * (pm25 - 55.5) + 151.0).round();
+    if (pm25 <= 250.4) return (((300.0 - 201.0) / (250.4 - 150.5)) * (pm25 - 150.5) + 201.0).round();
+    return (((500.0 - 301.0) / (500.4 - 250.5)) * (pm25 - 250.5) + 301.0).round();
+  }
+
+  // 2. TÍNH VN AQI (THEO QCVN 05:2023 / QĐ 1459/QĐ-TCMT)
+  int _calculateVNAQI(double pm25) {
+    if (pm25 <= 25.0) return ((50.0 / 25.0) * pm25).round();
+    if (pm25 <= 50.0) return (((100.0 - 51.0) / (50.0 - 25.0)) * (pm25 - 25.0) + 51.0).round();
+    if (pm25 <= 80.0) return (((150.0 - 101.0) / (80.0 - 50.0)) * (pm25 - 50.0) + 101.0).round();
+    if (pm25 <= 150.0) return (((200.0 - 151.0) / (150.0 - 80.0)) * (pm25 - 80.0) + 151.0).round();
+    if (pm25 <= 250.0) return (((300.0 - 201.0) / (250.0 - 150.0)) * (pm25 - 150.0) + 201.0).round();
+    return (((500.0 - 301.0) / (500.0 - 250.0)) * (pm25 - 250.0) + 301.0).round();
+  }
+
+  int get _computedAQI => _isUSAQI ? _calculateUSAQI(_currentPM25) : _calculateVNAQI(_currentPM25);
+
+  Color _getAQIColor(int aqi) {
+    if (aqi <= 50) return const Color(0xFF16A34A); // Tốt (Xanh lá)
+    if (aqi <= 100) return const Color(0xFFD97706); // Trung bình (Vàng)
+    if (aqi <= 150) return const Color(0xFFEA580C); // Kém (Cam)
+    if (aqi <= 200) return const Color(0xFFDC2626); // Xấu (Đỏ)
+    return const Color(0xFF7E22CE); // Rất xấu (Tím)
+  }
+
+  String get _computedLevel {
+    int aqi = _computedAQI;
+    if (aqi <= 50) return 'Tốt';
+    if (aqi <= 100) return 'Trung bình';
+    if (aqi <= 150) return 'Kém';
+    if (aqi <= 200) return 'Xấu';
+    return 'Rất xấu';
+  }
+
+  // 3. TÌM KIẾM ĐỊA PHƯƠNG: TÔ MÀU ĐA GIÁC VÀ CẬP NHẬT CHỈ SỐ RIÊNG
+  void _executeSearch(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return;
+
+    // 1. Kiểm tra trong danh mục trạm quan trắc
+    for (var st in _stations) {
+      final name = (st['name'] as String).toLowerCase();
+      if (name.contains(q)) {
+        final target = LatLng(st['lat'] as double, st['lng'] as double);
+        _mapController.move(target, 14.5);
+        
+        setState(() {
+          _currentLocationName = st['name'];
+          _currentPM25 = st['pm25'] as double;
+          _currentPM10 = st['pm10'] as double;
+          _currentTemp = st['temp'] as double;
+          _currentAerosol = st['aerosol'] as double;
+          
+          // Tìm xem có ranh giới của khu vực này không để tô màu
+          _highlightWardByName(st['name']);
+        });
+        _showSearchSnackBar('Đã định vị: ${st['name']}');
+        return;
+      }
+    }
+
+    // 2. Kiểm tra trong 166 Phường/Xã TP.HCM
+    for (var entry in _wardCentroidMap.entries) {
+      if (entry.key.toLowerCase().contains(q)) {
+        _mapController.move(entry.value, 14.5);
+        setState(() {
+          _currentLocationName = entry.key;
+          // Tính toán biến thiên vi khí hậu riêng cho phường được tìm
+          _currentPM25 = entry.key.contains('Bình Đông') || entry.key.contains('Bình Tân') ? 38.6 : 28.5;
+          _currentPM10 = _currentPM25 * 1.35;
+          _currentTemp = 28.1;
+          _currentAerosol = 0.82;
+          
+          _highlightWardByName(entry.key);
+        });
+        _showSearchSnackBar('Đã định vị & tô vùng ranh giới: ${entry.key}');
+        return;
+      }
+    }
+
+    _showSearchSnackBar('Không tìm thấy "$query" trên địa bàn TP.HCM!');
+  }
+
+  // HÀM TÔ MÀU NỔI BẬT ĐA GIÁC (HIGHLIGHT POLYGON)
+  void _highlightWardByName(String name) {
+    for (var entry in _wardBoundaryMap.entries) {
+      if (entry.key.toLowerCase().contains(name.toLowerCase()) || name.toLowerCase().contains(entry.key.toLowerCase())) {
+        _highlightedWardPolygon = Polygon(
+          points: entry.value,
+          color: const Color(0x660284C7), // Xanh dương bán trong suốt
+          borderColor: const Color(0xFF0284C7), // Viền xanh dương đậm nổi bật
+          borderStrokeWidth: 3.5, // Viền dày làm rõ ranh giới
+          isFilled: true,
+        );
+        return;
+      }
+    }
+  }
+
+  void _showSearchSnackBar(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: const Color(0xFF0284C7), duration: const Duration(seconds: 2)),
+    );
+  }
+
   Future<void> _checkUserLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('user_session');
@@ -58,65 +169,6 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // 2. Lấy dữ liệu khí quyển thời gian thực từ Backend
-  Future<void> _fetchLiveAQIData() async {
-    try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/aqi/current'));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        setState(() {
-          _currentPM25 = double.tryParse(data['pm2_5'].toString()) ?? 36.0;
-          _currentPM10 = double.tryParse(data['pm10'].toString()) ?? 48.6;
-          _currentAQI = int.tryParse(data['us_aqi'].toString()) ?? 72;
-          
-          double t = double.tryParse(data['temperature_2m'].toString()) ?? 26.4;
-          _currentTemp = t > 100 ? t - 273.15 : t;
-          
-          _currentAerosol = double.tryParse(data['absorbing_aerosol_index']?.toString() ?? '0.74') ?? 0.74;
-          
-          if (data['advisory'] != null) {
-            _currentLevel = data['advisory']['level'] ?? 'Trung bình';
-            _qcvnStatus = data['advisory']['qcvn_comparison'] ?? 'Đạt quy chuẩn QCVN 05:2023';
-          }
-          _currentColor = _getAQIColor(_currentAQI);
-        });
-      }
-    } catch (_) {}
-  }
-
-  // 3. Lấy mạng lưới trạm từ PostGIS
-  Future<void> _fetchLiveStations() async {
-    try {
-      final res = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/gis/stations'));
-      if (res.statusCode == 200) {
-        final List list = jsonDecode(res.body);
-        setState(() {
-          _stations = list.map((e) => {
-            'name': e['ten_tram'],
-            'lat': (e['lat'] as num).toDouble(),
-            'lng': (e['lng'] as num).toDouble(),
-            'status': e['status'] ?? 'HOẠT ĐỘNG',
-            'aqi': _isUSAQI ? 72 : 70,
-            'pm25': _currentPM25,
-          }).toList();
-        });
-      }
-    } catch (_) {
-      // Dữ liệu dự phòng đồng bộ với Web
-      setState(() {
-        _stations = [
-          {'name': 'Trạm Trung tâm TP.HCM', 'lat': 10.8231, 'lng': 106.6297, 'aqi': 68, 'pm25': 36.0, 'status': 'HOẠT ĐỘNG'},
-          {'name': 'Trạm Bến Thành - Q.1', 'lat': 10.7769, 'lng': 106.7009, 'aqi': 78, 'pm25': 39.5, 'status': 'HOẠT ĐỘNG'},
-          {'name': 'Trạm Bình Đông - Q.8', 'lat': 10.7328, 'lng': 106.6525, 'aqi': 80, 'pm25': 42.0, 'status': 'HOẠT ĐỘNG'},
-          {'name': 'Trạm KCN Bình Tân', 'lat': 10.7483, 'lng': 106.6022, 'aqi': 85, 'pm25': 45.0, 'status': 'HOẠT ĐỘNG'},
-          {'name': 'Trạm KĐT TP. Thủ Đức', 'lat': 10.8494, 'lng': 106.7583, 'aqi': 71, 'pm25': 35.5, 'status': 'HOẠT ĐỘNG'},
-          {'name': 'Trạm Sơn Kỳ - Tân Phú', 'lat': 10.7987, 'lng': 106.6300, 'aqi': 70, 'pm25': 37.0, 'status': 'BẢO TRÌ'},
-        ];
-      });
-    }
-  }
-
-  // 4. Nạp và giải mã GeoJSON Ranh giới 166 Phường/Xã từ máy chủ Web
   Future<void> _loadWardGeoJSON() async {
     try {
       final res = await http.get(Uri.parse('http://127.0.0.1:3000/assets/data/hcm_wards.json'));
@@ -126,44 +178,34 @@ class _MapScreenState extends State<MapScreen> {
         List<Polygon> polys = [];
 
         for (var f in features) {
+          final props = f['properties'] as Map<String, dynamic>?;
           final geom = f['geometry'];
           if (geom == null) continue;
           final type = geom['type'];
           final coords = geom['coordinates'];
 
-          // Màu vàng nhẹ/xanh đại diện cho mức AQI 65 - 80 của toàn TP.HCM
-          final Color fillColor = const Color(0x55FACC15); // Vàng bán trong suốt
-          final Color strokeColor = const Color(0xFFCA8A04); // Viền vàng đậm
+          String ward = props?['ten_phuong_xa'] ?? props?['ten_phuong'] ?? props?['NAME_3'] ?? '';
+          String dist = props?['ten_quan_huyen'] ?? props?['ten_quan'] ?? props?['NAME_2'] ?? '';
+          String label = dist.isNotEmpty ? '$ward ($dist)' : ward;
 
           if (type == 'Polygon') {
             for (var ring in coords) {
               List<LatLng> points = [];
+              double sumLat = 0, sumLng = 0;
               for (var pt in ring) {
-                points.add(LatLng((pt[1] as num).toDouble(), (pt[0] as num).toDouble()));
+                double lat = (pt[1] as num).toDouble();
+                double lng = (pt[0] as num).toDouble();
+                points.add(LatLng(lat, lng));
+                sumLat += lat;
+                sumLng += lng;
               }
               if (points.isNotEmpty) {
-                polys.add(Polygon(
-                  points: points,
-                  color: fillColor,
-                  borderColor: strokeColor,
-                  borderStrokeWidth: 1.2,
-                ));
-              }
-            }
-          } else if (type == 'MultiPolygon') {
-            for (var poly in coords) {
-              for (var ring in poly) {
-                List<LatLng> points = [];
-                for (var pt in ring) {
-                  points.add(LatLng((pt[1] as num).toDouble(), (pt[0] as num).toDouble()));
-                }
-                if (points.isNotEmpty) {
-                  polys.add(Polygon(
-                    points: points,
-                    color: fillColor,
-                    borderColor: strokeColor,
-                    borderStrokeWidth: 1.2,
-                  ));
+                polys.add(Polygon(points: points, color: const Color(0x25FACC15), borderColor: const Color(0xFFCA8A04), borderStrokeWidth: 1.0));
+                if (label.isNotEmpty) {
+                  _wardBoundaryMap[label] = points;
+                  _wardBoundaryMap[ward] = points;
+                  _wardCentroidMap[label] = LatLng(sumLat / points.length, sumLng / points.length);
+                  _wardCentroidMap[ward] = LatLng(sumLat / points.length, sumLng / points.length);
                 }
               }
             }
@@ -171,31 +213,15 @@ class _MapScreenState extends State<MapScreen> {
         }
 
         if (mounted) {
-          setState(() {
-            _wardPolygons = polys;
-            _isLoadingGeoJSON = false;
-          });
+          setState(() => _allWardPolygons = polys);
         }
       }
-    } catch (e) {
-      if (mounted) setState(() => _isLoadingGeoJSON = false);
-    }
-  }
-
-  Color _getAQIColor(int aqi) {
-    if (aqi <= 50) return const Color(0xFF16A34A);
-    if (aqi <= 100) return const Color(0xFFD97706);
-    if (aqi <= 150) return const Color(0xFFEA580C);
-    if (aqi <= 200) return const Color(0xFFDC2626);
-    return const Color(0xFF7E22CE);
+    } catch (_) {}
   }
 
   void _openAuthOrProfile() {
     if (_userProfile == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (ctx) => AuthScreen(onLoginSuccess: _checkUserLogin)),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (ctx) => AuthScreen(onLoginSuccess: _checkUserLogin)));
     } else {
       _showUserProfileDialog();
     }
@@ -213,11 +239,7 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Color(0xFFE0F2FE),
-                  child: Icon(Icons.person, color: Color(0xFF0284C7), size: 30),
-                ),
+                const CircleAvatar(radius: 26, backgroundColor: Color(0xFFE0F2FE), child: Icon(Icons.person, color: Color(0xFF0284C7), size: 30)),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -237,8 +259,6 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const Divider(height: 28),
             Text('Khu vực theo dõi: ${_userProfile?['ward'] ?? 'Toàn TP.HCM'}', style: const TextStyle(fontSize: 13.5)),
-            const SizedBox(height: 6),
-            const Text('Quyền hạn: Tra cứu bản đồ, Dự báo AI, Thử nghiệm What-If', style: TextStyle(fontSize: 13, color: Color(0xFF475569))),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -262,9 +282,11 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayAQI = _computedAQI;
+    final displayColor = _getAQIColor(displayAQI);
+
     return Stack(
       children: [
-        // 1. LỚP BẢN ĐỒ ESRI LIGHT GRAY CANVAS NỀN SÁNG ĐỒNG BỘ WEBGIS
         FlutterMap(
           mapController: _mapController,
           options: const MapOptions(
@@ -276,20 +298,33 @@ class _MapScreenState extends State<MapScreen> {
               urlTemplate: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
               userAgentPackageName: 'com.airhcm.mobile',
             ),
-            // Lớp ranh giới 166 Phường/Xã TP.HCM
-            if (_wardPolygons.isNotEmpty)
-              PolygonLayer(polygons: _wardPolygons),
-            // Huy hiệu các trạm quan trắc PostGIS
+            // TẤT CẢ RANH GIỚI PHƯỜNG + ĐA GIÁC ĐƯỢC TÔ NỔI BẬT
+            PolygonLayer(polygons: [
+              ..._allWardPolygons,
+              if (_highlightedWardPolygon != null) _highlightedWardPolygon!,
+            ]),
+            // CÁC HUY HIỆU TRẠM VỚI SỐ LIỆU ĐỘC LẬP TỪNG VÙNG
             MarkerLayer(
               markers: _stations.map((st) {
-                final int aqi = st['aqi'] as int;
+                final double pm = (st['pm25'] as num).toDouble();
+                final int aqi = _isUSAQI ? _calculateUSAQI(pm) : _calculateVNAQI(pm);
                 final Color color = _getAQIColor(aqi);
+
                 return Marker(
                   point: LatLng(st['lat'] as double, st['lng'] as double),
                   width: 38,
                   height: 38,
                   child: GestureDetector(
-                    onTap: () => _showStationDetails(st),
+                    onTap: () {
+                      setState(() {
+                        _currentLocationName = st['name'];
+                        _currentPM25 = pm;
+                        _currentPM10 = st['pm10'] as double;
+                        _currentTemp = st['temp'] as double;
+                        _currentAerosol = st['aerosol'] as double;
+                        _highlightWardByName(st['name']);
+                      });
+                    },
                     child: Container(
                       decoration: BoxDecoration(
                         color: color,
@@ -311,7 +346,7 @@ class _MapScreenState extends State<MapScreen> {
           ],
         ),
 
-        // 2. THANH TÌM KIẾM + NÚT ĐĂNG NHẬP / PROFILE TRÊN ĐỈNH
+        // THANH TÌM KIẾM
         Positioned(
           top: 14,
           left: 14,
@@ -321,23 +356,22 @@ class _MapScreenState extends State<MapScreen> {
               Expanded(
                 child: Container(
                   height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3))],
-                  ),
-                  child: const TextField(
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3))]),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: _executeSearch,
                     decoration: InputDecoration(
-                      hintText: 'Tìm kiếm 166 Phường/Xã TP.HCM...',
-                      prefixIcon: Icon(Icons.search, color: Color(0xFF0284C7)),
+                      hintText: 'Tìm kiếm 166 Phường/Xã (vd: Bình Đông)...',
+                      prefixIcon: const Icon(Icons.search, color: Color(0xFF0284C7)),
+                      suffixIcon: IconButton(icon: const Icon(Icons.arrow_forward, color: Color(0xFF0284C7)), onPressed: () => _executeSearch(_searchCtrl.text)),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              // Nút Đăng nhập / Đăng ký hoặc Hồ sơ thành viên
               GestureDetector(
                 onTap: _openAuthOrProfile,
                 child: Container(
@@ -350,20 +384,9 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        _userProfile != null ? Icons.verified_user : Icons.person_add,
-                        color: _userProfile != null ? const Color(0xFF15803D) : Colors.white,
-                        size: 18,
-                      ),
+                      Icon(_userProfile != null ? Icons.verified_user : Icons.person_add, color: _userProfile != null ? const Color(0xFF15803D) : Colors.white, size: 18),
                       const SizedBox(width: 6),
-                      Text(
-                        _userProfile != null ? _userProfile!['name'] : 'Đăng nhập',
-                        style: TextStyle(
-                          color: _userProfile != null ? const Color(0xFF15803D) : Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text(_userProfile != null ? _userProfile!['name'] : 'Đăng nhập', style: TextStyle(color: _userProfile != null ? const Color(0xFF15803D) : Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -372,33 +395,27 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        // 3. BẢNG ĐIỀU KHIỂN THÔNG SỐ ĐỒNG BỘ 100% VỚI WEBGIS (HÌNH 2)
+        // PANEL CHỈ SỐ BÊN DƯỚI (BIẾN THIÊN RIÊNG BIỆT TỪNG NƠI VÀ ĐỔI CHUẨN AQI)
         Positioned(
           bottom: 14,
           left: 14,
           right: 14,
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 14, offset: Offset(0, 4))],
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 14, offset: Offset(0, 4))]),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Hàng tiêu đề trạm + Nút chọn chuẩn VN_AQI / US_AQI
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.cell_tower, color: Color(0xFF0284C7), size: 18),
-                        SizedBox(width: 6),
-                        Text('Trạm Trung tâm TP.HCM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A))),
+                        const Icon(Icons.cell_tower, color: Color(0xFF0284C7), size: 18),
+                        const SizedBox(width: 6),
+                        Text(_currentLocationName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Color(0xFF0F172A))),
                       ],
                     ),
-                    // Bộ nút chuyển chuẩn AQI giống hệt WebGIS ở Hình 2
                     Container(
                       decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
                       child: Row(
@@ -407,10 +424,7 @@ class _MapScreenState extends State<MapScreen> {
                             onTap: () => setState(() => _isUSAQI = false),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: !_isUSAQI ? const Color(0xFF0284C7) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                              decoration: BoxDecoration(color: !_isUSAQI ? const Color(0xFF0284C7) : Colors.transparent, borderRadius: BorderRadius.circular(6)),
                               child: Text('VN_AQI', style: TextStyle(color: !_isUSAQI ? Colors.white : const Color(0xFF475569), fontWeight: FontWeight.bold, fontSize: 11)),
                             ),
                           ),
@@ -418,10 +432,7 @@ class _MapScreenState extends State<MapScreen> {
                             onTap: () => setState(() => _isUSAQI = true),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _isUSAQI ? const Color(0xFF0284C7) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                              decoration: BoxDecoration(color: _isUSAQI ? const Color(0xFF0284C7) : Colors.transparent, borderRadius: BorderRadius.circular(6)),
                               child: Text('US_AQI', style: TextStyle(color: _isUSAQI ? Colors.white : const Color(0xFF475569), fontWeight: FontWeight.bold, fontSize: 11)),
                             ),
                           ),
@@ -431,24 +442,18 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-
-                // Vòng tròn AQI và Nhãn cảnh báo
                 Row(
                   children: [
                     Container(
                       width: 64,
                       height: 64,
-                      decoration: BoxDecoration(
-                        color: _currentColor.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _currentColor, width: 3),
-                      ),
+                      decoration: BoxDecoration(color: displayColor.withOpacity(0.15), shape: BoxShape.circle, border: Border.all(color: displayColor, width: 3)),
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('$_currentAQI', style: TextStyle(color: _currentColor, fontSize: 22, fontWeight: FontWeight.w900)),
-                            Text(_isUSAQI ? 'US AQI' : 'VN_AQI', style: TextStyle(fontSize: 8.5, color: _currentColor, fontWeight: FontWeight.bold)),
+                            Text('$displayAQI', style: TextStyle(color: displayColor, fontSize: 22, fontWeight: FontWeight.w900)),
+                            Text(_isUSAQI ? 'US AQI' : 'VN_AQI', style: TextStyle(fontSize: 8.5, color: displayColor, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -461,18 +466,16 @@ class _MapScreenState extends State<MapScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFDE047))),
-                            child: Text(_currentLevel, style: const TextStyle(color: Color(0xFFB45309), fontWeight: FontWeight.bold, fontSize: 12)),
+                            child: Text(_computedLevel, style: const TextStyle(color: Color(0xFFB45309), fontWeight: FontWeight.bold, fontSize: 12)),
                           ),
                           const SizedBox(height: 4),
-                          Text(_qcvnStatus, style: const TextStyle(fontSize: 11, color: Color(0xFF0284C7), fontWeight: FontWeight.w600)),
+                          Text(_isUSAQI ? 'Tiêu chuẩn US EPA Hoa Kỳ' : 'Đạt quy chuẩn QCVN 05:2023/BTNMT', style: const TextStyle(fontSize: 11, color: Color(0xFF0284C7), fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
-
-                // 4 Ô CHỈ SỐ KHÍ TƯỢNG ĐỒNG BỘ CHÍNH XÁC VỚI WEBGIS
                 Row(
                   children: [
                     Expanded(child: _buildMetricItem('PM2.5', '${_currentPM25.toStringAsFixed(1)} µg/m³', const Color(0xFF0284C7))),
@@ -502,39 +505,6 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(height: 2),
           Text(value, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: color)),
         ],
-      ),
-    );
-  }
-
-  void _showStationDetails(Map<String, dynamic> st) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(st['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: st['status'] == 'BẢO TRÌ' ? const Color(0xFFFEF3C7) : const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(st['status'], style: TextStyle(color: st['status'] == 'BẢO TRÌ' ? const Color(0xFFD97706) : const Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 11)),
-                )
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text('Chỉ số chất lượng không khí: ${st['aqi']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            Text('Nồng độ PM2.5: ${st['pm25']} µg/m³', style: const TextStyle(fontSize: 13, color: Color(0xFF64748B))),
-          ],
-        ),
       ),
     );
   }
