@@ -63,8 +63,17 @@ class AIForecastService:
 
         results = []
 
+        # Backend tắt nhiều giờ -> bản ghi quan trắc cuối đã cũ: vẫn cuộn dự báo qua khoảng trống
+        # (giữ đúng chuỗi trễ lag_1h/lag_24h) nhưng chỉ trả về các giờ TƯƠNG LAI tính từ hiện tại
+        current_hour = now.replace(minute=0, second=0, microsecond=0)
+        try:
+            gap_hours = int((current_hour - last_recorded_time).total_seconds() // 3600)
+        except Exception:
+            gap_hours = 0
+        gap_hours = min(max(gap_hours, 0), 72)
+
         # 2. Vòng lặp dự báo cuốn chiếu từng mốc giờ kế tiếp
-        for step in range(1, hours_ahead + 1):
+        for step in range(1, hours_ahead + gap_hours + 1):
             next_time = last_recorded_time + datetime.timedelta(hours=step)
             hour = next_time.hour
             day_of_week = next_time.weekday()
@@ -136,4 +145,5 @@ class AIForecastService:
                     'absorbing_aerosol_index': aerosol_idx
                 }
 
-        return results
+        now_label = current_hour.strftime("%Y-%m-%d %H:00")
+        return [r for r in results if r["time"] > now_label][:hours_ahead]

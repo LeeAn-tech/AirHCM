@@ -5,7 +5,11 @@
 // ==============================================================================
 
 // Tự động lấy localhost khi mở trên PC và tự động lấy IP LAN (192.168.1.X) khi mở trên Điện thoại
-const API_BASE = `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`;
+// Backend phục vụ luôn WebGIS (cùng nguồn) -> dùng chính địa chỉ đang mở (LAN, tên miền, HTTPS);
+// chỉ khi mở bằng server tĩnh cổng 3000 / file:// mới gọi Backend ở cổng 8000
+const API_BASE = (location.port === "3000" || location.protocol === "file:")
+    ? `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`
+    : `${location.origin}/api/v1`;
 
 let map = null;
 let wardsLayer = null;
@@ -14,7 +18,6 @@ let selectedWardFeature = null;
 let stationMarkers = [];
 let stationDataList = [];
 let heatLayer = null;
-let userLocationMarker = null;
 let forecastChartInstance = null;
 let allWardsData = [];
 let cachedForecastData = null;
@@ -32,7 +35,6 @@ let windCtx = null;
 let windAnimationId = null;
 let windParticles = [];
 let currentAQIStandard = 'VN';
-const NUM_WIND_PARTICLES = 160; // Số lượng vệt gió lướt trên bản đồ
 
 // Hệ số biến thiên PM2.5 theo 24 giờ tại TP.HCM (Cao điểm sáng 7-8h, chiều 17-18h)
 const DIURNAL_FACTORS = {
@@ -87,6 +89,28 @@ function getDynamicAQI(pm) {
 function setSafeText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
+}
+
+// Tô màu vòng AQI trạm trung tâm (viền + hiệu ứng phát sáng theo cấp độ ô nhiễm)
+function paintAQIIndicator(aqi, color) {
+    const ringColor = (aqi > 50 && aqi <= 100) ? "#eab308" : color;
+    const circle = document.getElementById("aqi-indicator-circle");
+    if (circle) {
+        circle.style.borderColor = ringColor;
+        circle.style.setProperty("--aqi", ringColor);
+    }
+    const panel = document.getElementById("panel-station");
+    if (panel) panel.style.setProperty("--aqi", ringColor);
+}
+
+// Trả về cấp độ 1-6 theo thang AQI (dùng cho class màu lvl-* / t-* trong CSS)
+function getAQILevelIndex(aqi) {
+    if (aqi <= 50) return 1;
+    if (aqi <= 100) return 2;
+    if (aqi <= 150) return 3;
+    if (aqi <= 200) return 4;
+    if (aqi <= 300) return 5;
+    return 6;
 }
 
 // 1. ĐỊNH DẠNG NGÀY/THÁNG/NĂM GIỜ:PHÚT:GIÂY CHUẨN VIỆT NAM
@@ -220,8 +244,45 @@ function populateWardDropdown(geojsonData) {
     });
 }
 
-// THUẬT TOÁN TÍNH TOÁN PM2.5 & AQI ĐỒNG BỘ GIỮA BẢN ĐỒ VÀ TRẠM TRUNG TÂM
+// ==============================================================================
+// NGUỒN SỐ LIỆU DUY NHẤT CHO PHƯỜNG & TRẠM
+// PM2.5 hiện tại của từng phường lấy từ /aqi/spatial-summary (cùng nguồn với trang Điểm nóng,
+// bảng phân tích địa điểm, Trợ lý AI và app di động); của từng trạm lấy từ /gis/heatmap.
+// Khi xem giờ khác trên thanh mô phỏng: nhân tỉ lệ chu kỳ ngày đêm SO VỚI GIỜ HIỆN TẠI
+// -> ở giờ hiện tại, số trên bản đồ trùng khớp tuyệt đối với trang Điểm nóng.
+// ==============================================================================
+let wardPmByCode = {};      // mã phường -> PM2.5 hiện tại (µg/m³)
+let stationPmByCode = {};   // mã trạm -> PM2.5 hiện tại (µg/m³)
+
+function diurnalRatio(hour) {
+    const now = DIURNAL_FACTORS[new Date().getHours()] || 1.0;
+    return (DIURNAL_FACTORS[hour] || 1.0) / now;
+}
+
+function wardCodeOf(feature) {
+    const p = (feature && feature.properties) || {};
+    return String(p.ma_xa || p.ma_phuong_xa || "");
+}
+
+// Tên phường đầy đủ như trên bản đồ (VD: "Phường Bình Đông")
+function wardDisplayName(feature) {
+    const p = (feature && feature.properties) || {};
+    const ward = extractWardDetails(p).ward;
+    return `${p.loai && !String(ward).startsWith(p.loai) ? p.loai + " " : ""}${ward}`;
+}
+
 function calculateWardAirStats(feature, hour) {
+    const known = wardPmByCode[wardCodeOf(feature)];
+    if (known !== undefined) {
+        const pm25 = parseFloat((known * diurnalRatio(hour)).toFixed(1));
+        const aqi = getDynamicAQI(pm25);
+        return { pm25, aqi, color: getAQIColor(aqi), advisory: getAdvisoryForAQI(aqi, pm25) };
+    }
+    return estimateWardAirStats(feature, hour);
+}
+
+// Dự phòng khi chưa kết nối được máy chủ: ước tính theo đặc thù khu vực
+function estimateWardAirStats(feature, hour) {
     const props = feature.properties || {};
     const info = extractWardDetails(props);
     const textKey = (info.ward + " " + info.district).toLowerCase();
@@ -247,14 +308,24 @@ function calculateWardAirStats(feature, hour) {
     const microVariation = 0.94 + ((Math.abs(charHash) % 13) / 100);
 
     const basePM = latestBasePM25 > 0 ? latestBasePM25 : 22.0;
-    const diurnal = DIURNAL_FACTORS[hour] || 1.0;
 
-    const pm25 = parseFloat((basePM * diurnal * zoneMultiplier * microVariation).toFixed(1));
+    const pm25 = parseFloat((basePM * diurnalRatio(hour) * zoneMultiplier * microVariation).toFixed(1));
     const aqi = getDynamicAQI(pm25);
     const color = getAQIColor(aqi);
     const advisory = getAdvisoryForAQI(aqi, pm25);
 
     return { pm25, aqi, color, advisory };
+}
+
+// Tô lại màu 166 phường + popup đang mở sau khi có số liệu mới
+function refreshWardStyles() {
+    if (!wardsLayer) return;
+    wardsLayer.eachLayer(layer => {
+        if (layer.feature && layer !== selectedWardLayer) layer.setStyle(getWardStyleByAQI(layer.feature, currentHourSimulated));
+    });
+    if (selectedWardLayer && selectedWardLayer.isPopupOpen && selectedWardLayer.isPopupOpen()) {
+        updateSelectedWardPopup(currentHourSimulated);
+    }
 }
 
 function getWardStyleByAQI(feature, hour = currentHourSimulated) {
@@ -274,7 +345,7 @@ function createIQAirStationIcon(aqi) {
     return L.divIcon({
         className: 'iqair-station-wrapper',
         html: `
-            <div class="iqair-station-badge" style="background-color: ${color}; color: ${textColor};" title="US AQI: ${aqi}">
+            <div class="iqair-station-badge" style="background-color: ${color}; color: ${textColor}; --c: ${color};" title="AQI: ${aqi}">
                 ${aqi}
             </div>
         `,
@@ -288,12 +359,13 @@ function getStationAirStats(st, hour) {
     if (!st) return { pm25: 18.5, aqi: getDynamicAQI(18.5), color: "#FFFF00", advisory: { level: "Trung bình" } };
     const lat = parseFloat(st.lat) || 10.8231;
     const lng = parseFloat(st.lng) || 106.6297;
-    const stationHash = Math.abs(Math.sin(lat * 120 + lng * 60)) * 0.20 + 0.90;
+    const known = stationPmByCode[String(st.ma_tram)];
+    // Số liệu máy chủ (= PM2.5 của phường chứa trạm); dự phòng khi mất kết nối: ước tính quanh trạm trung tâm
+    const pmNow = known !== undefined
+        ? known
+        : (latestBasePM25 > 0 ? latestBasePM25 : 22.0) * (Math.abs(Math.sin(lat * 120 + lng * 60)) * 0.20 + 0.90);
 
-    const basePM = latestBasePM25 > 0 ? latestBasePM25 : 22.0;
-    const diurnal = DIURNAL_FACTORS[hour] || 1.0;
-
-    const pm25 = parseFloat((basePM * diurnal * stationHash).toFixed(1));
+    const pm25 = parseFloat((pmNow * diurnalRatio(hour)).toFixed(1));
     const aqi = getDynamicAQI(pm25);
     const color = getAQIColor(aqi);
     const advisory = getAdvisoryForAQI(aqi, pm25);
@@ -318,6 +390,15 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWardsGeoJSON();
     fetchHourlyForecast(24);
     fetchHotspotsSummary();
+    fetchHeatmapPoints();
+    fetchActiveAlert();
+    // Làm mới số liệu quan trắc, phường/trạm, cảnh báo DSS & bản đồ nhiệt mỗi 5 phút (giữ đồng bộ với máy chủ)
+    setInterval(() => {
+        fetchCurrentAQI();
+        fetchHotspotsSummary();
+        fetchActiveAlert();
+        fetchHeatmapPoints();
+    }, 5 * 60 * 1000);
 
     // 3. Khởi tạo tính năng tương tác
     initGPSFeature();
@@ -443,8 +524,10 @@ function fetchCurrentAQI() {
             setSafeText("current-temp", `${tempC} °C`);
             setSafeText("current-aerosol", `${HOURLY_AEROSOL_S5P[currentHourSimulated] || 0.75} AAI`);
 
-            const aqiColor = data.advisory ? data.advisory.color : getAQIColor(aqi);
-            const levelText = data.advisory ? data.advisory.level : (aqi <= 50 ? "Tốt" : aqi <= 100 ? "Trung bình" : "Kém");
+            // Mức độ tính theo chuẩn đang chọn (VN_AQI / US AQI) để khớp với con số hiển thị và thẻ DSS
+            const localAdvisory = getAdvisoryForAQI(aqi, pm25);
+            const aqiColor = localAdvisory.color;
+            const levelText = localAdvisory.level;
 
             const badge = document.getElementById("current-aqi-level");
             if (badge) {
@@ -458,16 +541,21 @@ function fetchCurrentAQI() {
                 }
             }
 
-            const aqiCircle = document.getElementById("aqi-indicator-circle");
-            if (aqiCircle) aqiCircle.style.borderColor = (aqi > 50 && aqi <= 100) ? "#eab308" : aqiColor;
+            paintAQIIndicator(aqi, aqiColor);
 
             const qcvnTag = document.getElementById("qcvn-tag");
             if (qcvnTag) qcvnTag.textContent = data.advisory ? data.advisory.qcvn_comparison : (pm25 <= 50 ? "Đạt quy chuẩn QCVN 05:2023" : "Vượt ngưỡng QCVN 05:2023");
+
+            // Đồng bộ 3 thẻ khuyến nghị DSS theo số liệu thực tế
+            updateDSSOverview(aqi, pm25);
 
             // Cập nhật thông số gió thật
             if (data.wind_speed) currentWindSpeed = parseFloat(data.wind_speed);
             if (data.wind_direction) currentWindDeg = parseFloat(data.wind_direction);
             startWindAnimation();
+
+            // Đang xem giờ mô phỏng khác giờ hiện tại -> giữ nguyên chế độ mô phỏng với số liệu mới
+            if (currentHourSimulated !== new Date().getHours()) applyTimeStep(currentHourSimulated);
         })
         .catch(err => {
             console.error("Lỗi nạp current AQI:", err);
@@ -483,12 +571,23 @@ function fetchCurrentAQI() {
                 badge.style.backgroundColor = "#fef08a";
                 badge.style.color = "#854d0e";
             }
+            paintAQIIndicator(68, "#FFFF00");
+            updateDSSOverview(getDynamicAQI(latestBasePM25), latestBasePM25);
         });
 }
 
+let stationFetchRetries = 0;
 function fetchStations() {
     fetch(`${API_BASE}/gis/stations`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi API trạm: " + res.status);
+            return res.json();
+        })
+        .then(stations => {
+            if (!Array.isArray(stations)) throw new Error("Dữ liệu trạm không phải dạng mảng");
+            stationFetchRetries = 0;
+            return stations;
+        })
         .then(stations => {
             stationDataList = stations;
             stationMarkers.forEach(item => {
@@ -506,20 +605,22 @@ function fetchStations() {
                     icon: createIQAirStationIcon(stats.aqi)
                 }).addTo(map);
 
+                const lvl = getAQILevelIndex(stats.aqi);
                 marker.bindPopup(`
-                    <div style="color: #0f172a; font-size: 13px; min-width: 200px; font-family:'Plus Jakarta Sans',sans-serif;">
-                        <h4 style="margin:0 0 4px 0; color:#0284c7;"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
-                        <p style="margin:2px 0;"><b>Mã trạm:</b> ${st.ma_tram}</p>
-                        <p style="margin:2px 0;"><b>Đơn vị:</b> ${st.don_vi_quan_ly}</p>
-                        <p style="margin:2px 0;"><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</p>
-                        <hr style="margin:6px 0; border:0; border-top:1px solid #e2e8f0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>Chỉ số US AQI:</span>
-                            <b style="color:${stats.color}; font-size:15px;">${stats.aqi} (${stats.advisory.level})</b>
+                    <div class="pop-card">
+                        <h4 class="pop-title"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
+                        <div class="pop-sub">Mã trạm: ${st.ma_tram}</div>
+                        <div class="pop-meta">
+                            <span><b>Đơn vị:</b> ${st.don_vi_quan_ly}</span>
+                            <span><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-                            <span>Bụi mịn PM2.5:</span>
-                            <b style="color:#0284c7;">${stats.pm25} µg/m³</b>
+                        <div class="pop-row">
+                            <span>Chỉ số ${currentAQIStandard === 'VN' ? 'VN_AQI' : 'US AQI'}</span>
+                            <span class="aqi-pill lvl-${lvl}">${stats.aqi} · ${stats.advisory.level}</span>
+                        </div>
+                        <div class="pop-row">
+                            <span>Bụi mịn PM2.5</span>
+                            <b class="text-blue">${stats.pm25} µg/m³</b>
                         </div>
                     </div>
                 `);
@@ -531,6 +632,11 @@ function fetchStations() {
         })
         .catch(err => {
             console.error("Lỗi nạp trạm từ API:", err);
+            // Backend có thể chưa sẵn sàng lúc mở trang -> tự thử lại (tối đa 6 lần, cách nhau 5 giây)
+            if (stationFetchRetries < 6) {
+                stationFetchRetries++;
+                setTimeout(fetchStations, 5000);
+            }
         });
 }
 
@@ -594,6 +700,11 @@ function fetchWardsGeoJSON() {
 
                             selectedWardLayer = layer;
                             selectedWardFeature = feature;
+                            // Vị trí Trợ lý AI tư vấn = phường vừa chọn (theo mã phường, không đoán theo tọa độ)
+                            setMapSelection({
+                                kind: "ward", code: wardCodeOf(feature), name: wardDisplayName(feature),
+                                lat: e.latlng.lat, lng: e.latlng.lng
+                            });
 
                             layer.setStyle({
                                 color: "#facc15",
@@ -621,9 +732,10 @@ function fetchWardsGeoJSON() {
 }
 
 window.loadForecast = function (hours, evt) {
-    if (evt && evt.target) {
+    const clicked = evt && evt.target ? evt.target.closest('.btn-forecast') : null;
+    if (clicked) {
         document.querySelectorAll('.forecast-controls .btn-forecast').forEach(btn => btn.classList.remove('active'));
-        evt.target.classList.add('active');
+        clicked.classList.add('active');
     }
     fetchHourlyForecast(hours);
 };
@@ -715,57 +827,27 @@ function renderForecastView(forecastData, hours) {
     const tbody = document.getElementById("forecast-table-body");
     if (tbody) {
         tbody.innerHTML = "";
+        let rowsHtml = "";
         forecastData.forEach(item => {
-            const aqiVal = parseInt(item.aqi);
-
-            let aqiTextColor = "#16a34a";
-            let badgeBg = "#dcfce7";
-            let badgeBorder = "#86efac";
-            let badgeText = "#166534";
-
-            if (aqiVal > 50 && aqiVal <= 100) {
-                aqiTextColor = "#b45309";
-                badgeBg = "#fef3c7";
-                badgeBorder = "#fde047";
-                badgeText = "#854d0e";
-            } else if (aqiVal > 100 && aqiVal <= 150) {
-                aqiTextColor = "#c2410c";
-                badgeBg = "#ffedd5";
-                badgeBorder = "#fdba74";
-                badgeText = "#9a3412";
-            } else if (aqiVal > 150 && aqiVal <= 200) {
-                aqiTextColor = "#dc2626";
-                badgeBg = "#fee2e2";
-                badgeBorder = "#fca5a5";
-                badgeText = "#991b1b";
-            } else if (aqiVal > 200) {
-                aqiTextColor = "#7e22ce";
-                badgeBg = "#f3e8ff";
-                badgeBorder = "#d8b4fe";
-                badgeText = "#6b21a8";
-            }
+            const lvl = getAQILevelIndex(parseInt(item.aqi));
 
             const isStandard = item.pm2_5 <= 50;
             const qcvnBadge = isStandard
-                ? `<span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;"><i class="fa-solid fa-check"></i> Dưới ngưỡng 24h</span>`
-                : `<span style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;"><i class="fa-solid fa-triangle-exclamation"></i> Trên ngưỡng 24h</span>`;
+                ? `<span class="chip chip-success"><i class="fa-solid fa-check"></i> Dưới ngưỡng 24h</span>`
+                : `<span class="chip chip-danger"><i class="fa-solid fa-triangle-exclamation"></i> Trên ngưỡng 24h</span>`;
 
-            const row = `
+            rowsHtml += `
                 <tr>
-                    <td style="font-weight: 600; color: #0f172a;">${item.time}</td>
-                    <td style="color: #0284c7; font-weight: 700; text-align: center;">${item.pm2_5.toFixed(2)} µg/m³</td>
-                    <td style="color: #475569; font-weight: 600; text-align: center;">${item.pm10 ? parseFloat(item.pm10).toFixed(2) : (item.pm2_5 * 1.35).toFixed(2)} µg/m³</td>
-                    <td style="text-align: center;"><b style="color: ${aqiTextColor}; font-size: 15px; font-weight: 800;">${item.aqi}</b></td>
-                    <td style="text-align: center;">
-                        <span style="background: ${badgeBg}; color: ${badgeText}; border: 1px solid ${badgeBorder}; padding: 4px 10px; border-radius: 12px; font-weight: 700; font-size: 11.5px; display: inline-block;">
-                            ${item.level || 'Bình thường'}
-                        </span>
-                    </td>
-                    <td style="text-align: center;">${qcvnBadge}</td>
+                    <td class="cell-strong nowrap">${item.time}</td>
+                    <td class="center cell-brand nowrap">${item.pm2_5.toFixed(2)} µg/m³</td>
+                    <td class="center cell-muted nowrap">${item.pm10 ? parseFloat(item.pm10).toFixed(2) : (item.pm2_5 * 1.35).toFixed(2)} µg/m³</td>
+                    <td class="center"><b class="aqi-num t-${lvl}">${item.aqi}</b></td>
+                    <td class="center"><span class="aqi-pill lvl-${lvl}">${item.level || 'Bình thường'}</span></td>
+                    <td class="center">${qcvnBadge}</td>
                 </tr>
             `;
-            tbody.innerHTML += row;
         });
+        tbody.innerHTML = rowsHtml;
     }
 
     // 4. Định dạng nhãn trục hoành X
@@ -791,6 +873,15 @@ function renderForecastView(forecastData, hours) {
     const aqiDatasetLabel = currentAQIStandard === 'VN' ? "Chỉ số VN_AQI (QĐ 1459)" : "Chỉ số US AQI (EPA)";
     const aqiAxisTitle = currentAQIStandard === 'VN' ? "Chỉ số VN_AQI" : "Chỉ số US AQI";
 
+    // Dải màu chuyển sắc cho vùng tô PM2.5 (đậm phía trên, mờ dần xuống trục hoành)
+    const chartHeight = canvas.parentElement ? canvas.parentElement.clientHeight : 340;
+    const pmGradient = ctx.createLinearGradient(0, 0, 0, chartHeight || 340);
+    pmGradient.addColorStop(0, "rgba(6, 182, 212, 0.35)");
+    pmGradient.addColorStop(0.55, "rgba(2, 132, 199, 0.10)");
+    pmGradient.addColorStop(1, "rgba(2, 132, 199, 0)");
+
+    const chartFont = { family: "'Plus Jakarta Sans', sans-serif" };
+
     forecastChartInstance = new Chart(ctx, {
         type: "line",
         data: {
@@ -801,23 +892,32 @@ function renderForecastView(forecastData, hours) {
                     data: pm25Values,
                     yAxisID: "yPM",
                     borderColor: "#0284c7",
-                    backgroundColor: "rgba(2, 132, 199, 0.12)",
-                    borderWidth: 2.5,
+                    backgroundColor: pmGradient,
+                    borderWidth: 3,
                     fill: true,
-                    tension: 0.35,
-                    pointRadius: hours <= 24 ? 3 : 1.5
+                    tension: 0.4,
+                    pointRadius: hours <= 24 ? 2.5 : 0,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#ffffff",
+                    pointBorderColor: "#0284c7",
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: "#0284c7",
+                    pointHoverBorderColor: "#ffffff"
                 },
                 {
                     label: aqiDatasetLabel, // ĐỔI ĐỘNG TÊN LABEL DATASET
                     data: aqiValues,
                     yAxisID: "yAQI",
-                    borderColor: "#d97706",
+                    borderColor: "#f59e0b",
                     backgroundColor: "transparent",
                     borderWidth: 2,
-                    borderDash: [5, 4],
-                    tension: 0.35,
-                    pointRadius: hours <= 24 ? 3.5 : 2,
-                    pointBackgroundColor: "#d97706"
+                    borderDash: [6, 5],
+                    tension: 0.4,
+                    pointRadius: hours <= 24 ? 2.5 : 0,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#f59e0b",
+                    pointBorderColor: "#ffffff",
+                    pointBorderWidth: 1.5
                 }
             ]
         },
@@ -825,30 +925,45 @@ function renderForecastView(forecastData, hours) {
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
+            animation: { duration: 900, easing: "easeOutQuart" },
             plugins: {
                 legend: {
+                    position: "top",
+                    align: "end",
                     labels: {
-                        color: "#1e293b",
-                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '700' }
+                        color: "#334155",
+                        usePointStyle: true,
+                        pointStyle: "circle",
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        padding: 16,
+                        font: { ...chartFont, size: 12, weight: '700' }
                     }
                 },
                 tooltip: {
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    titleColor: "#38bdf8",
+                    backgroundColor: "rgba(15, 23, 42, 0.92)",
+                    titleColor: "#67e8f9",
                     bodyColor: "#ffffff",
-                    borderColor: "#cbd5e1",
-                    borderWidth: 1
+                    titleFont: { ...chartFont, weight: '800' },
+                    bodyFont: { ...chartFont, weight: '600' },
+                    padding: 12,
+                    cornerRadius: 12,
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    borderWidth: 0
                 }
             },
             scales: {
                 x: {
                     ticks: {
-                        color: "#475569",
-                        maxRotation: 45,
+                        color: "#64748b",
+                        maxRotation: 0,
                         autoSkip: true,
-                        maxTicksLimit: hours <= 24 ? 12 : 18
+                        maxTicksLimit: hours <= 24 ? 12 : 10,
+                        font: { ...chartFont, size: 11, weight: '600' }
                     },
-                    grid: { color: "rgba(0, 0, 0, 0.05)" }
+                    grid: { display: false },
+                    border: { display: false }
                 },
                 yAQI: {
                     type: 'linear',
@@ -857,21 +972,23 @@ function renderForecastView(forecastData, hours) {
                         display: true,
                         text: aqiAxisTitle, // ĐỔI ĐỘNG TIÊU ĐỀ TRỤC Y BÊN TRÁI
                         color: '#d97706',
-                        font: { weight: 'bold', size: 12 }
+                        font: { ...chartFont, weight: '800', size: 11.5 }
                     },
-                    ticks: { color: "#d97706" },
+                    ticks: { color: "#d97706", font: { ...chartFont, size: 11, weight: '600' } },
                     suggestedMin: 0,
                     suggestedMax: 160,
-                    grid: { color: "rgba(0, 0, 0, 0.06)" }
+                    grid: { color: "rgba(148, 163, 184, 0.18)", drawTicks: false },
+                    border: { display: false, dash: [4, 4] }
                 },
                 yPM: {
                     type: 'linear',
                     position: 'right',
-                    title: { display: true, text: 'PM2.5 (µg/m³)', color: '#0284c7', font: { weight: 'bold', size: 12 } },
-                    ticks: { color: "#0284c7" },
+                    title: { display: true, text: 'PM2.5 (µg/m³)', color: '#0284c7', font: { ...chartFont, weight: '800', size: 11.5 } },
+                    ticks: { color: "#0284c7", font: { ...chartFont, size: 11, weight: '600' } },
                     suggestedMin: 0,
                     suggestedMax: 45,
-                    grid: { drawOnChartArea: false }
+                    grid: { drawOnChartArea: false },
+                    border: { display: false }
                 }
             }
         }
@@ -880,10 +997,19 @@ function renderForecastView(forecastData, hours) {
 
 function fetchHotspotsSummary() {
     fetch(`${API_BASE}/aqi/spatial-summary`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi: " + res.status);
+            return res.json();
+        })
         .then(wards => {
             allWardsData = wards;
+            // Nguồn số liệu chung cho màu phường + popup trên bản đồ
+            wardPmByCode = {};
+            wards.forEach(w => { wardPmByCode[String(w.ma_phuong_xa)] = parseFloat(w.pm2_5_trung_binh); });
+            refreshWardStyles();
             renderHotspotsTable(wards);
+            const note = document.getElementById("hotspots-updated");
+            if (note) note.textContent = `Số liệu hiện tại · cập nhật ${new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} · trùng khớp với bản đồ ở giờ hiện tại`;
         })
         .catch(err => {
             const mockWards = [
@@ -906,32 +1032,33 @@ function fetchHotspotsSummary() {
 function renderHotspotsTable(data) {
     const tbody = document.getElementById("hotspots-table-body");
     if (!tbody) return;
-    tbody.innerHTML = "";
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="table-empty"><i class="fa-solid fa-magnifying-glass"></i> Không tìm thấy Phường/Xã phù hợp.</td></tr>`;
+        return;
+    }
 
+    let rowsHtml = "";
     data.forEach((w, index) => {
         const pm = parseFloat(w.pm2_5_trung_binh);
         const aqi = getDynamicAQI(pm);
-        const color = getAQIColor(aqi);
         const advisory = getAdvisoryForAQI(aqi, pm);
+        const lvl = getAQILevelIndex(aqi);
+        const rankCls = index < 3 ? ` r${index + 1}` : "";
 
-        const row = `
+        rowsHtml += `
             <tr>
-                <td>${index + 1}</td>
+                <td class="center"><span class="rank-badge${rankCls}">${index + 1}</span></td>
                 <td><b>${w.ma_phuong_xa}</b></td>
-                <td>${w.ten_phuong_xa}</td>
-                <td>${w.dien_tich_km2} km²</td>
-                <td><span style="background: rgba(56,189,248,0.15); color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-weight:600;">${w.so_luong_tram || 1} trạm</span></td>
-                <td style="color: #38bdf8; font-weight: 700;">${pm} µg/m³</td>
-                <td><b style="color: ${color}; font-size: 15px;">${aqi}</b></td>
-                <td>
-                    <span style="background: ${color}; color: ${aqi > 150 ? '#fff' : '#000'}; padding: 4px 10px; border-radius: 12px; font-weight: 700; font-size: 11px;">
-                        ${advisory.level}
-                    </span>
-                </td>
+                <td class="cell-strong">${w.ten_phuong_xa}</td>
+                <td class="nowrap">${w.dien_tich_km2} km²</td>
+                <td><span class="chip chip-info"><i class="fa-solid fa-tower-broadcast"></i> ${w.so_luong_tram || 1} trạm</span></td>
+                <td class="cell-brand nowrap">${pm} µg/m³</td>
+                <td class="center"><b class="aqi-num t-${lvl}">${aqi}</b></td>
+                <td><span class="aqi-pill lvl-${lvl}">${advisory.level}</span></td>
             </tr>
         `;
-        tbody.innerHTML += row;
     });
+    tbody.innerHTML = rowsHtml;
 }
 
 window.filterWards = function () {
@@ -1067,8 +1194,8 @@ function applyTimeStep(hour) {
     setSafeText("playback-badge", periodName);
     setSafeText("playback-period-desc", periodText);
 
-    const factor = DIURNAL_FACTORS[hour] || 1.0;
-    const simPM25 = parseFloat((latestBasePM25 * factor).toFixed(1));
+    // Ở giờ hiện tại = đúng số đo trạm trung tâm; giờ khác = nhân tỉ lệ chu kỳ ngày đêm so với hiện tại
+    const simPM25 = parseFloat((latestBasePM25 * diurnalRatio(hour)).toFixed(1));
     const simAQI = getDynamicAQI(simPM25); // Tự động tính theo VN_AQI hoặc US AQI
     const aqiColor = getAQIColor(simAQI);
     const advisory = getAdvisoryForAQI(simAQI, simPM25);
@@ -1100,9 +1227,11 @@ function applyTimeStep(hour) {
         }
     }
 
-    const aqiCircle = document.getElementById("aqi-indicator-circle");
-    if (aqiCircle) {
-        aqiCircle.style.borderColor = (simAQI > 50 && simAQI <= 100) ? "#eab308" : aqiColor;
+    paintAQIIndicator(simAQI, aqiColor);
+
+    // Tô màu phần đã chạy của thanh thời gian (khi phát tự động)
+    if (typeof window.syncRangeFill === "function") {
+        window.syncRangeFill(document.getElementById("time-slider"));
     }
 
     const aqiSmallLabel = document.querySelector("#aqi-indicator-circle small");
@@ -1146,39 +1275,88 @@ function applyTimeStep(hour) {
     } catch (err) {
         console.warn("Cảnh báo render heatmap:", err);
     }
+
+    // 5. Trường gió theo giờ mô phỏng
+    if (typeof refreshWindForHour === "function") refreshWindForHour();
 } // Dấu đóng ngoặc kết thúc hàm applyTimeStep
 
+
+// Điểm bản đồ nhiệt lấy từ API PostGIS (/gis/heatmap): tâm 166 phường + trạm quan trắc
+let heatmapApiPoints = null;
+
+function fetchHeatmapPoints() {
+    fetch(`${API_BASE}/gis/heatmap`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi heatmap: " + res.status);
+            return res.json();
+        })
+        .then(geo => {
+            // PM2.5 của từng trạm (cùng nguồn máy chủ với app di động)
+            (geo.features || []).forEach(f => {
+                const p = f.properties || {};
+                if (p.type === "station" && p.code != null) stationPmByCode[String(p.code)] = parseFloat(p.pm2_5);
+            });
+            updateStationMarkersHour(currentHourSimulated);
+
+            const pts = (geo.features || [])
+                .filter(f => f.geometry && Array.isArray(f.geometry.coordinates))
+                .map(f => ({
+                    lat: f.geometry.coordinates[1],
+                    lng: f.geometry.coordinates[0],
+                    weight: Number(f.properties && f.properties.weight) || 0.3
+                }));
+            if (pts.length > 0) {
+                heatmapApiPoints = pts;
+                updateHeatmapLayer(currentHourSimulated);
+            }
+        })
+        .catch(err => console.warn("Bản đồ nhiệt dùng dữ liệu dự phòng:", err.message));
+}
 
 function updateHeatmapLayer(hour) {
     if (!map) return;
     try {
         const factor = DIURNAL_FACTORS[hour] || 1.0;
-        const heatPoints = [];
+        let heatPoints = [];
+        const useApi = Array.isArray(heatmapApiPoints) && heatmapApiPoints.length > 0;
 
-        stationMarkers.forEach(item => {
-            if (item && item.marker) {
-                const pos = item.marker.getLatLng();
-                heatPoints.push([pos.lat, pos.lng, Math.min(1.0, 0.5 * factor)]);
-            }
-        });
+        if (useApi) {
+            // Trọng số API là của giờ hiện tại -> quy đổi tương đối theo giờ đang mô phỏng
+            const nowFactor = DIURNAL_FACTORS[new Date().getHours()] || 1.0;
+            const relative = factor / nowFactor;
+            heatPoints = heatmapApiPoints.map(p => [p.lat, p.lng, Math.min(1.0, p.weight * relative)]);
+        } else {
+            stationMarkers.forEach(item => {
+                if (item && item.marker) {
+                    const pos = item.marker.getLatLng();
+                    heatPoints.push([pos.lat, pos.lng, Math.min(1.0, 0.5 * factor)]);
+                }
+            });
+            [
+                [10.7769, 106.7009, 0.60 * factor],
+                [10.7540, 106.6634, 0.75 * factor],
+                [10.7483, 106.6022, 0.90 * factor],
+                [10.8494, 106.7583, 0.70 * factor],
+                [10.8231, 106.6297, 0.65 * factor]
+            ].forEach(pt => heatPoints.push(pt));
+        }
 
-        const hotspots = [
-            [10.7769, 106.7009, 0.60 * factor],
-            [10.7540, 106.6634, 0.75 * factor],
-            [10.7483, 106.6022, 0.90 * factor],
-            [10.8494, 106.7583, 0.70 * factor],
-            [10.8231, 106.6297, 0.65 * factor]
-        ];
+        // Dữ liệu API dày đặc hơn -> bán kính nhỏ & ngưỡng bão hòa cao để không bị "đỏ rực" toàn vùng
+        const heatOptions = useApi
+            ? { radius: 32, blur: 24, maxZoom: 14, max: 2.2 }
+            : { radius: 55, blur: 35, maxZoom: 14, max: 1.0 };
 
-        hotspots.forEach(pt => heatPoints.push(pt));
-
-        if (heatLayer && map.hasLayer(heatLayer)) {
+        if (heatLayer) {
+            // Cập nhật dữ liệu kể cả khi lớp đang tắt (không tự bật lại lớp người dùng đã tắt)
+            heatLayer.setOptions(heatOptions);
             heatLayer.setLatLngs(heatPoints);
         } else if (typeof L.heatLayer !== 'undefined') {
+            const chkHeat = document.getElementById("chk-heatmap");
             heatLayer = L.heatLayer(heatPoints, {
-                radius: 55, blur: 35, maxZoom: 14, max: 1.0,
+                ...heatOptions,
                 gradient: { 0.20: '#00E400', 0.40: '#FFFF00', 0.60: '#FF7E00', 0.80: '#FF0000', 1.00: '#8F3F97' }
-            }).addTo(map);
+            });
+            if (!chkHeat || chkHeat.checked) heatLayer.addTo(map);
         }
     } catch (err) {
         console.warn("Tự phục hồi Heatmap sau khi Wake-up:", err);
@@ -1191,50 +1369,816 @@ function updateHeatmapLayer(hour) {
 
 function initGPSFeature() {
     const btnLocate = document.getElementById("btn-locate");
-    if (!btnLocate) return;
+    if (btnLocate) {
+        btnLocate.addEventListener("click", e => {
+            e.preventDefault();
+            locateMe({ openPanel: true });
+        });
+    }
 
-    btnLocate.addEventListener("click", e => {
-        e.preventDefault();
-        btnLocate.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...';
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-
-                    if (userLocationMarker) map.removeLayer(userLocationMarker);
-                    map.flyTo([lat, lng], 14, { duration: 1.5 });
-
-                    userLocationMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'user-gps-marker',
-                            html: '<div style="background:#ef4444;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 12px #ef4444;"></div>',
-                            iconSize: [20, 20]
-                        })
-                    }).addTo(map);
-
-                    userLocationMarker.bindPopup(`
-                        <div style="font-size:13px; color:#0f172a;">
-                            <b><i class="fa-solid fa-location-dot"></i> Vị trí của bạn</b><br>
-                            Tọa độ: ${lat.toFixed(4)}N, ${lng.toFixed(4)}E<br>
-                            <span style="display:inline-block; margin-top:5px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:600;">
-                                Khuyến nghị: Đeo khẩu trang khi đi đường lớn
-                            </span>
-                        </div>
-                    `).openPopup();
-
-                    btnLocate.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Vị trí của tôi';
-                },
-                err => {
-                    alert("Tự động chọn vị trí trung tâm Q.1.");
-                    map.flyTo([10.7769, 106.7009], 14);
-                    btnLocate.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Vị trí của tôi';
+    // Chuột phải (máy tính) hoặc nhấn giữ (điện thoại) lên bản đồ -> phân tích điểm đó
+    if (map) {
+        map.on("contextmenu", e => {
+            const { lat, lng } = e.latlng;
+            openPlacePanel({ lat, lng, name: "Điểm đã chọn trên bản đồ", address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, kind: "point" });
+            reverseGeocode(lat, lng).then(info => {
+                if (info && currentPlace && currentPlace.lat === lat && currentPlace.lng === lng) {
+                    currentPlace.name = info.name;
+                    currentPlace.address = info.address;
+                    setSafeText("pp-name", info.name);
+                    setSafeText("pp-address", info.address);
                 }
-            );
+            });
+        });
+    }
+
+    initPlaceSearch();
+}
+
+// ==============================================================================
+// TÌM KIẾM ĐỊA ĐIỂM - ĐỊNH VỊ - KHOẢNG CÁCH & ĐƯỜNG ĐI - AQI & DSS TẠI ĐIỂM
+// (Sequence Diagram: Frontend gửi tọa độ -> Backend -> AI Engine + PostGIS -> JSON)
+// ==============================================================================
+const HCM_BBOX = { minLng: 106.0, minLat: 10.0, maxLng: 107.9, maxLat: 11.9 };
+let currentPlace = null;
+let myLocation = null;             // {lat, lng, accuracy}
+let myLocationLayer = null;
+let placeMarker = null;
+let routeLayer = null;
+let placeSearchTimer = null;
+let placeSearchSeq = 0;
+let suggestItems = [];
+let suggestActive = -1;
+
+function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function normalizeVi(str) {
+    return String(str || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().trim();
+}
+
+function formatDistance(m) {
+    if (m == null || isNaN(m)) return "--";
+    return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0).replace(".", ",")} km`;
+}
+
+function formatDuration(s) {
+    const min = Math.max(1, Math.round(s / 60));
+    if (min < 60) return `${min} phút`;
+    return `${Math.floor(min / 60)} giờ ${min % 60 ? (min % 60) + " phút" : ""}`.trim();
+}
+
+function initPlaceSearch() {
+    const input = document.getElementById("place-search-input");
+    const clearBtn = document.getElementById("place-search-clear");
+    const locateBtn = document.getElementById("place-locate-btn");
+    const box = document.getElementById("place-search");
+    if (!input || !box) return;
+
+    if (typeof L !== "undefined" && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(box);
+        L.DomEvent.disableScrollPropagation(box);
+    }
+
+    input.addEventListener("input", () => {
+        const q = input.value.trim();
+        if (clearBtn) clearBtn.hidden = q.length === 0;
+        clearTimeout(placeSearchTimer);
+        if (q.length < 2) {
+            hideSuggest();
+            return;
+        }
+        // Gợi ý tức thì từ phường/xã & trạm, sau đó bổ sung địa chỉ thật (OpenStreetMap)
+        renderSuggest(localPlaceSearch(q), true);
+        placeSearchTimer = setTimeout(() => geocodeSearch(q), 350);
+    });
+
+    input.addEventListener("keydown", e => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!suggestItems.length) return;
+            suggestActive = (suggestActive + (e.key === "ArrowDown" ? 1 : -1) + suggestItems.length) % suggestItems.length;
+            highlightSuggest();
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (suggestItems.length) {
+                selectSuggest(suggestActive >= 0 ? suggestActive : 0);
+            } else if (input.value.trim().length >= 2) {
+                geocodeSearch(input.value.trim(), true);
+            }
+        } else if (e.key === "Escape") {
+            hideSuggest();
+            input.blur();
         }
     });
+
+    input.addEventListener("focus", () => {
+        if (suggestItems.length) document.getElementById("place-suggest").hidden = false;
+    });
+
+    document.addEventListener("click", e => {
+        if (!e.target.closest("#place-search")) hideSuggest();
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            input.value = "";
+            clearBtn.hidden = true;
+            hideSuggest();
+            input.focus();
+        });
+    }
+
+    if (locateBtn) locateBtn.addEventListener("click", () => locateMe({ openPanel: true }));
 }
+
+function localPlaceSearch(q) {
+    const nq = normalizeVi(q);
+    const results = [];
+
+    if (wardsLayer) {
+        wardsLayer.eachLayer(layer => {
+            if (results.length >= 4 || !layer.feature) return;
+            const info = extractWardDetails(layer.feature.properties);
+            if (normalizeVi(info.ward).includes(nq)) {
+                const c = layer.getBounds().getCenter();
+                const p = layer.feature.properties || {};
+                results.push({
+                    kind: "ward", code: wardCodeOf(layer.feature), lat: c.lat, lng: c.lng,
+                    name: `${p.loai && !String(info.ward).startsWith(p.loai) ? p.loai + " " : ""}${info.ward}`,
+                    address: "Ranh giới hành chính · TP. Hồ Chí Minh",
+                    bounds: layer.getBounds()
+                });
+            }
+        });
+    }
+
+    (stationDataList || []).forEach(st => {
+        if (results.length >= 6) return;
+        if (normalizeVi(st.ten_tram).includes(nq) || normalizeVi(st.ma_tram).includes(nq)) {
+            results.push({ kind: "station", lat: Number(st.lat), lng: Number(st.lng), name: st.ten_tram, address: `Trạm quan trắc ${st.ma_tram}` });
+        }
+    });
+    return results;
+}
+
+function photonToPlace(f) {
+    const p = f.properties || {};
+    const [lng, lat] = f.geometry.coordinates;
+    const name = p.name || [p.housenumber, p.street].filter(Boolean).join(" ") || p.district || p.city || "Địa điểm";
+    const address = [
+        p.name && p.street ? [p.housenumber, p.street].filter(Boolean).join(" ") : null,
+        p.district, p.city, p.state
+    ].filter((v, i, arr) => v && v !== name && arr.indexOf(v) === i).join(", ");
+    return { kind: "geo", lat, lng, name, address: address || "TP. Hồ Chí Minh", type: p.osm_value || p.type };
+}
+
+function geocodeSearch(q, pickFirst = false) {
+    const seq = ++placeSearchSeq;
+    const params = new URLSearchParams({
+        q, limit: "8", lat: "10.80", lon: "106.70", lang: "default",
+        bbox: `${HCM_BBOX.minLng},${HCM_BBOX.minLat},${HCM_BBOX.maxLng},${HCM_BBOX.maxLat}`
+    });
+    const box = document.getElementById("place-suggest");
+    if (box && !box.hidden) box.classList.add("is-loading");
+
+    fetch(`https://photon.komoot.io/api/?${params}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Photon " + res.status);
+            return res.json();
+        })
+        .then(data => (data.features || []).filter(f => f.geometry).map(photonToPlace))
+        .catch(() => {
+            // Dự phòng: Nominatim (chỉ gọi 1 lần khi người dùng nhấn Enter)
+            if (!pickFirst) return [];
+            const nParams = new URLSearchParams({
+                q, format: "jsonv2", limit: "5", countrycodes: "vn", "accept-language": "vi",
+                viewbox: `${HCM_BBOX.minLng},${HCM_BBOX.maxLat},${HCM_BBOX.maxLng},${HCM_BBOX.minLat}`, bounded: "1"
+            });
+            return fetch(`https://nominatim.openstreetmap.org/search?${nParams}`)
+                .then(r => r.json())
+                .then(list => list.map(it => ({
+                    kind: "geo", lat: Number(it.lat), lng: Number(it.lon),
+                    name: it.name || String(it.display_name).split(",")[0],
+                    address: String(it.display_name).split(",").slice(1, 4).join(",").trim()
+                })))
+                .catch(() => []);
+        })
+        .then(geoResults => {
+            if (seq !== placeSearchSeq) return;   // Kết quả cũ -> bỏ qua
+            if (box) box.classList.remove("is-loading");
+            // Gộp kết quả, bỏ trùng tên ở gần nhau (< 300 m)
+            const merged = [];
+            [...localPlaceSearch(q), ...geoResults].forEach(it => {
+                const dup = merged.some(m => normalizeVi(m.name) === normalizeVi(it.name) && haversineMeters(m, it) < 300);
+                if (!dup && merged.length < 9) merged.push(it);
+            });
+            renderSuggest(merged, false, q);
+            if (pickFirst && merged.length) selectSuggest(0);
+        });
+}
+
+function renderSuggest(items, loading, query) {
+    const box = document.getElementById("place-suggest");
+    if (!box) return;
+    suggestItems = items;
+    suggestActive = items.length ? 0 : -1;
+    const icons = { ward: "fa-map", station: "fa-tower-broadcast", geo: "fa-location-dot" };
+    const labels = { ward: "Phường/Xã", station: "Trạm", geo: "Địa điểm" };
+
+    if (!items.length) {
+        box.innerHTML = loading
+            ? `<div class="ps-empty"><span class="loader-dots"></span> Đang tìm địa điểm...</div>`
+            : `<div class="ps-empty"><i class="fa-solid fa-circle-info"></i> Không tìm thấy "${escapeHtml(query || "")}" trong khu vực TP.HCM</div>`;
+    } else {
+        box.innerHTML = items.map((it, i) => `
+            <button type="button" class="ps-item${i === suggestActive ? " active" : ""}" data-idx="${i}">
+                <span class="ps-item-icon ps-${it.kind}"><i class="fa-solid ${icons[it.kind]}"></i></span>
+                <span class="ps-item-text"><b>${escapeHtml(it.name)}</b><small>${escapeHtml(it.address || "")}</small></span>
+                <span class="ps-item-tag">${labels[it.kind]}</span>
+            </button>
+        `).join("") + (loading ? `<div class="ps-empty ps-more"><span class="loader-dots"></span> Đang tìm thêm địa chỉ...</div>` : "");
+        box.querySelectorAll(".ps-item").forEach(btn => {
+            btn.addEventListener("click", () => selectSuggest(Number(btn.dataset.idx)));
+        });
+    }
+    box.hidden = false;
+}
+
+function highlightSuggest() {
+    document.querySelectorAll("#place-suggest .ps-item").forEach((el, i) => el.classList.toggle("active", i === suggestActive));
+}
+
+function hideSuggest() {
+    const box = document.getElementById("place-suggest");
+    if (box) box.hidden = true;
+}
+
+function selectSuggest(i) {
+    const item = suggestItems[i];
+    if (!item) return;
+    const input = document.getElementById("place-search-input");
+    if (input) input.value = item.name;
+    hideSuggest();
+    openPlacePanel(item);
+}
+
+function reverseGeocode(lat, lng) {
+    return fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=default`)
+        .then(r => r.json())
+        .then(d => {
+            const f = (d.features || [])[0];
+            return f ? photonToPlace(f) : null;
+        })
+        .catch(() => null);
+}
+
+// Định vị GPS của người dùng (chấm xanh + vòng sai số như bản đồ thật)
+function locateMe({ openPanel = false } = {}) {
+    const btns = [document.getElementById("place-locate-btn"), document.getElementById("btn-locate")].filter(Boolean);
+    btns.forEach(b => b.classList.add("is-locating"));
+
+    const done = () => btns.forEach(b => b.classList.remove("is-locating"));
+    const onPosition = (lat, lng, accuracy, approximate) => {
+        done();
+        myLocation = { lat, lng, accuracy };
+        if (myLocationLayer) map.removeLayer(myLocationLayer);
+        myLocationLayer = L.layerGroup([
+            L.circle([lat, lng], { radius: Math.min(accuracy || 60, 1500), color: "#2563eb", weight: 1, fillColor: "#3b82f6", fillOpacity: 0.12, interactive: false }),
+            L.marker([lat, lng], {
+                icon: L.divIcon({ className: "my-location-wrapper", html: '<div class="my-location-dot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
+                zIndexOffset: 1000
+            }).bindTooltip(approximate ? "Vị trí mặc định (không lấy được GPS)" : "Vị trí của bạn", { direction: "top", offset: [0, -10] })
+        ]).addTo(map);
+
+        if (currentPlace && currentPlace.kind !== "me" && !openPanel) {
+            updateRoute();
+        } else if (openPanel) {
+            openPlacePanel({ lat, lng, name: approximate ? "Trung tâm TP.HCM (mặc định)" : "Vị trí của bạn", address: approximate ? "Trình duyệt chưa cấp quyền vị trí" : `Sai số ±${Math.round(accuracy || 0)} m`, kind: "me" });
+            reverseGeocode(lat, lng).then(info => {
+                if (info && currentPlace && currentPlace.kind === "me") {
+                    currentPlace.address = [info.name, info.address].filter(Boolean).join(", ");
+                    setSafeText("pp-address", currentPlace.address);
+                }
+            });
+        }
+    };
+
+    if (!navigator.geolocation) {
+        onPosition(10.7769, 106.7009, 0, true);
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        pos => onPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, false),
+        () => onPosition(10.7769, 106.7009, 0, true),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+function placeFitPadding() {
+    const mobile = window.innerWidth <= 768;
+    return mobile
+        ? { paddingTopLeft: [30, 90], paddingBottomRight: [30, Math.round(window.innerHeight * 0.5)] }
+        : { paddingTopLeft: [430, 90], paddingBottomRight: [320, 40] };
+}
+
+// Địa điểm người dùng đang xem gần nhất (phường bấm trên bản đồ / địa điểm tìm kiếm / GPS)
+// -> Trợ lý AI tư vấn đúng vị trí này. key thay đổi mỗi lần chọn mới.
+window.airhcmSelection = null;
+function setMapSelection(sel) {
+    window.airhcmSelection = sel ? { ...sel, key: `${sel.kind}:${sel.code || ""}:${Number(sel.lat).toFixed(5)},${Number(sel.lng).toFixed(5)}` } : null;
+}
+
+function openPlacePanel(place) {
+    if (!map) return;
+    currentPlace = { ...place };
+    setMapSelection({
+        kind: place.kind, code: place.code || null, lat: place.lat, lng: place.lng,
+        name: place.kind === "me" ? "Vị trí của bạn" : place.name
+    });
+    const tabMap = document.getElementById("tab-map");
+    if (tabMap) tabMap.classList.add("place-open");
+
+    // Ghim địa điểm (không ghim khi là vị trí của chính người dùng)
+    if (placeMarker) map.removeLayer(placeMarker);
+    placeMarker = null;
+    if (place.kind !== "me") {
+        placeMarker = L.marker([place.lat, place.lng], {
+            icon: L.divIcon({ className: "insight-pin-wrapper", html: '<div class="insight-pin"><i class="fa-solid fa-location-dot"></i></div>', iconSize: [30, 38], iconAnchor: [15, 36] }),
+            zIndexOffset: 900
+        }).addTo(map);
+    }
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+    }
+
+    if (place.bounds) map.flyToBounds(place.bounds, { ...placeFitPadding(), duration: 0.9, maxZoom: 15 });
+    else map.flyTo([place.lat, place.lng], Math.max(map.getZoom(), 14), { duration: 0.9 });
+
+    renderPlacePanel(null);
+    const seq = currentPlace;
+    fetch(`${API_BASE}/gis/location-insight?lat=${place.lat.toFixed(6)}&lng=${place.lng.toFixed(6)}${place.code ? `&ward_code=${encodeURIComponent(place.code)}` : ""}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi: " + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (seq !== currentPlace) return;
+            currentPlace.insight = data;
+            renderPlacePanel(data);
+        })
+        .catch(err => {
+            if (seq !== currentPlace) return;
+            renderPlacePanel({ error: err.message });
+        });
+
+    if (place.kind !== "me" && myLocation) updateRoute();
+}
+
+function closePlacePanel() {
+    // Đóng bảng địa điểm -> Trợ lý AI quay về phường đang chọn trên bản đồ (nếu còn) hoặc tư vấn chung
+    if (currentPlace && window.airhcmSelection && window.airhcmSelection.kind === currentPlace.kind
+        && window.airhcmSelection.lat === currentPlace.lat && window.airhcmSelection.lng === currentPlace.lng) {
+        setMapSelection(selectedWardLayer && selectedWardFeature ? {
+            kind: "ward", code: wardCodeOf(selectedWardFeature), name: wardDisplayName(selectedWardFeature),
+            ...selectedWardLayer.getBounds().getCenter()
+        } : null);
+    }
+    currentPlace = null;
+    const panel = document.getElementById("panel-place");
+    if (panel) panel.hidden = true;
+    const tabMap = document.getElementById("tab-map");
+    if (tabMap) tabMap.classList.remove("place-open");
+    if (placeMarker) map.removeLayer(placeMarker);
+    if (routeLayer) map.removeLayer(routeLayer);
+    placeMarker = null;
+    routeLayer = null;
+}
+window.closePlacePanel = closePlacePanel;
+window.locateMeForRoute = () => locateMe({ openPanel: false });
+
+function haversineMeters(a, b) {
+    const R = 6371000, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// ==============================================================================
+// CHỈ ĐƯỜNG THEO PHƯƠNG TIỆN: Ô TÔ · XE MÁY · XE ĐẠP · ĐI BỘ
+// OSRM của FOSSGIS (routing.openstreetmap.de - máy chủ chỉ đường của openstreetmap.org)
+// với 3 hồ sơ car / bike / foot. Không có hồ sơ xe máy nên:
+//   - chọn tuyến ô tô KHÔNG đi đường cao tốc (số hiệu CT.xx / tên "cao tốc" - cấm xe máy);
+//   - nếu mọi tuyến ô tô đều đi cao tốc thì dùng hình học tuyến xe đạp (vốn tránh cao tốc).
+// Lỗi mạng -> ước tính theo đường chim bay.
+// ==============================================================================
+const OSRM_BASE = "https://routing.openstreetmap.de";
+const TRAVEL_MODES = {
+    car: { label: "Ô tô", icon: "fa-car-side", color: "#2563eb", kmh: 30 },
+    moto: { label: "Xe máy", icon: "fa-motorcycle", color: "#ea580c", kmh: 28 },
+    bike: { label: "Xe đạp", icon: "fa-bicycle", color: "#16a34a", kmh: 13 },
+    foot: { label: "Đi bộ", icon: "fa-person-walking", color: "#0891b2", kmh: 4.8, dash: "1 10" },
+};
+const MOTO_SLOWER_FACTOR = 1.1;   // Xe máy thường chạy chậm hơn ô tô một chút trên các trục đường lớn
+let travelMode = (() => {
+    try {
+        const saved = localStorage.getItem("airhcm_travel_mode");
+        return TRAVEL_MODES[saved] ? saved : "moto";   // Mặc định xe máy - phương tiện phổ biến nhất ở TP.HCM
+    } catch (_) {
+        return "moto";
+    }
+})();
+
+function osrmRoutes(profile, from, to, extra = "") {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const url = `${OSRM_BASE}/${profile}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson${extra}`;
+    return fetch(url, { signal: ctrl.signal })
+        .then(r => {
+            if (!r.ok) throw new Error("OSRM " + r.status);
+            return r.json();
+        })
+        .then(d => {
+            if (d.code !== "Ok" || !d.routes || !d.routes.length) throw new Error(d.message || "Không có tuyến đường");
+            return d.routes;
+        })
+        .finally(() => clearTimeout(timer));
+}
+
+// Đường cao tốc Việt Nam: số hiệu CT.xx hoặc tên chứa "cao tốc" (gồm cả đường dẫn cao tốc)
+function usesExpressway(route) {
+    return (route.legs || []).some(leg => (leg.steps || []).some(s =>
+        /^CT[.\s-]?\d/i.test(s.ref || "") || /cao tốc/i.test(s.name || "")));
+}
+
+function toRoute(r, extra = {}) {
+    return {
+        distance: r.distance, duration: r.duration, road: true,
+        coords: r.geometry.coordinates.map(c => [c[1], c[0]]),
+        ...extra
+    };
+}
+
+// Lấy tuyến cho cả 4 phương tiện song song (3 lời gọi OSRM), phương tiện nào xong trước hiện trước
+function updateRoute() {
+    if (!currentPlace || !myLocation || currentPlace.kind === "me") return;
+    const from = { lat: myLocation.lat, lng: myLocation.lng };
+    const to = { lat: currentPlace.lat, lng: currentPlace.lng };
+    const target = currentPlace;
+    const straight = haversineMeters(from, to);
+    target.route = { loading: true, straight, modes: {} };
+    renderRouteBlock();
+
+    const fallback = mode => ({
+        distance: straight, duration: straight / (TRAVEL_MODES[mode].kmh / 3.6), road: false,
+        coords: [[from.lat, from.lng], [to.lat, to.lng]]
+    });
+    const car = osrmRoutes("routed-car", from, to, "&alternatives=3&steps=true");
+    const bike = osrmRoutes("routed-bike", from, to);
+    const foot = osrmRoutes("routed-foot", from, to);
+
+    const motoRoute = async () => {
+        try {
+            const list = await car;
+            const allowed = list.find(r => !usesExpressway(r));
+            if (allowed) return toRoute(allowed, { duration: allowed.duration * MOTO_SLOWER_FACTOR, avoided: allowed !== list[0] });
+        } catch (_) { /* thử tuyến xe đạp */ }
+        const b = (await bike)[0];
+        return toRoute(b, { duration: b.distance / (TRAVEL_MODES.moto.kmh / 3.6), avoided: true });
+    };
+
+    const jobs = {
+        car: car.then(list => toRoute(list[0])),
+        moto: motoRoute(),
+        bike: bike.then(list => toRoute(list[0])),
+        foot: foot.then(list => toRoute(list[0])),
+    };
+    Object.entries(jobs).forEach(([mode, job]) => {
+        job.catch(() => fallback(mode)).then(route => {
+            if (target !== currentPlace) return;
+            target.route.modes[mode] = route;
+            target.route.loading = Object.keys(target.route.modes).length < 4;
+            if (mode === travelMode) drawRoute(route, mode);
+            renderRouteBlock();
+        });
+    });
+}
+
+window.setTravelMode = function (mode) {
+    if (!TRAVEL_MODES[mode]) return;
+    travelMode = mode;
+    try { localStorage.setItem("airhcm_travel_mode", mode); } catch (_) { /* bộ nhớ trình duyệt bị chặn */ }
+    const route = currentPlace && currentPlace.route && currentPlace.route.modes && currentPlace.route.modes[mode];
+    if (route) drawRoute(route, mode);
+    renderRouteBlock();
+};
+
+function drawRoute(route, mode = travelMode) {
+    if (routeLayer) map.removeLayer(routeLayer);
+    const m = TRAVEL_MODES[mode];
+    const casing = L.polyline(route.coords, { color: "#ffffff", weight: m.dash ? 9 : 10, opacity: 0.95, lineCap: "round", lineJoin: "round", interactive: false });
+    const line = L.polyline(route.coords, {
+        color: m.color, weight: m.dash ? 6 : 5.5, opacity: 0.95, lineCap: "round", lineJoin: "round",
+        dashArray: route.road ? (m.dash || null) : "2 10", interactive: false
+    });
+    const mid = route.coords[Math.floor(route.coords.length / 2)];
+    const label = L.marker(mid, {
+        icon: L.divIcon({
+            className: "route-label-wrapper",
+            html: `<div class="route-label" style="--route: ${m.color};"><i class="fa-solid ${m.icon}"></i> ${formatDistance(route.distance)} · ${formatDuration(route.duration)}</div>`,
+            iconSize: null
+        }),
+        interactive: false
+    });
+    routeLayer = L.layerGroup([casing, line, label]).addTo(map);
+    map.flyToBounds(L.latLngBounds(route.coords), { ...placeFitPadding(), duration: 0.9, maxZoom: 16 });
+}
+
+// Lời khuyên sức khỏe theo phương tiện (dựa trên AQI tại điểm đến & cảnh báo DSS)
+function routeHealthTip(mode) {
+    const insight = currentPlace && currentPlace.insight;
+    const aqi = insight && insight.current ? Number(insight.current.us_aqi) : NaN;
+    // Cảnh báo dự báo chỉ tính khi hiện tại nằm TRONG khung giờ vượt QCVN (không áp cho cảnh báo của ngày mai)
+    const alert = insight && insight.alert;
+    const toDate = s => new Date(String(s).replace(" ", "T"));
+    const now = new Date();
+    const inWarning = !!(alert && alert.status === "WARNING" && alert.window_start && alert.window_end
+        && toDate(alert.window_start) <= now && now <= new Date(toDate(alert.window_end).getTime() + 3600 * 1000));
+    const bad = (!isNaN(aqi) && aqi > 100) || inWarning;
+    const tips = bad ? {
+        car: "Đóng kính và bật chế độ lấy gió trong xe khi đi qua đoạn đông xe.",
+        moto: "Đeo khẩu trang N95/KN95: người đi xe máy hít trực tiếp khói xe ngay tại làn đường.",
+        bike: "Đạp xe làm hít thở nhiều hơn: chọn đường ít xe, tránh giờ cao điểm hoặc cân nhắc phương tiện khác.",
+        foot: "Đi bộ ngoài trời lâu khi ô nhiễm: đeo khẩu trang N95, ưu tiên đường nội khu thay vì trục chính.",
+    } : {
+        car: "Không khí khá tốt. Khi kẹt xe nên bật chế độ lấy gió trong xe.",
+        moto: "Nên đeo khẩu trang chống bụi khi đi xe máy vào giờ cao điểm.",
+        bike: "Ưu tiên tuyến nhiều cây xanh, ít xe tải và xe buýt.",
+        foot: "Phù hợp đi bộ: chọn vỉa hè xa làn xe, nhiều bóng cây.",
+    };
+    return { text: tips[mode], bad };
+}
+
+function renderRouteBlock() {
+    const el = document.getElementById("pp-route");
+    if (!el || !currentPlace) return;
+    if (currentPlace.kind === "me") {
+        el.innerHTML = "";
+        return;
+    }
+    if (!myLocation) {
+        el.innerHTML = `
+            <button type="button" class="btn btn-soft btn-block pp-locate" onclick="locateMeForRoute()">
+                <i class="fa-solid fa-location-crosshairs"></i> Định vị để xem khoảng cách & đường đi
+            </button>`;
+        return;
+    }
+
+    const r = currentPlace.route || { loading: true, straight: haversineMeters(myLocation, currentPlace), modes: {} };
+    const modes = r.modes || {};
+    const tabs = Object.entries(TRAVEL_MODES).map(([key, m]) => `
+        <button type="button" class="pp-mode ${key === travelMode ? "active" : ""}" style="--mode: ${m.color};"
+            onclick="setTravelMode('${key}')" aria-pressed="${key === travelMode}" title="Chỉ đường ${m.label.toLowerCase()}">
+            <i class="fa-solid ${m.icon}"></i>
+            <span>${m.label}</span>
+            <small>${modes[key] ? formatDuration(modes[key].duration) : "···"}</small>
+        </button>`).join("");
+
+    const m = TRAVEL_MODES[travelMode];
+    const cur = modes[travelMode];
+    let card;
+    if (!cur) {
+        card = `<div class="pp-route-card" style="--mode: ${m.color};"><span class="loader-dots"></span> Đang tìm đường ${m.label.toLowerCase()}...
+                <small>Đường chim bay ${formatDistance(r.straight)}</small></div>`;
+    } else {
+        const notes = [];
+        if (!cur.road) notes.push("chưa lấy được tuyến đường, ước tính theo đường chim bay");
+        else if (travelMode === "moto" && cur.avoided) notes.push("đã tránh đường cao tốc (cấm xe máy)");
+        if (cur.road && (travelMode === "car" || travelMode === "moto")) notes.push("chưa tính ùn tắc");
+        card = `
+            <div class="pp-route-card" style="--mode: ${m.color};">
+                <span class="pp-route-icon"><i class="fa-solid ${m.icon}"></i></span>
+                <div>
+                    <b>${formatDistance(cur.distance)} <span>· ${formatDuration(cur.duration)}</span></b>
+                    <small>${m.label} từ vị trí của bạn · chim bay ${formatDistance(r.straight)}${notes.length ? " · " + notes.join(" · ") : ""}</small>
+                </div>
+            </div>`;
+    }
+    const tip = routeHealthTip(travelMode);
+    el.innerHTML = `
+        <div class="pp-modes" role="group" aria-label="Chọn phương tiện">${tabs}</div>
+        ${card}
+        <div class="pp-route-tip ${tip.bad ? "warn" : ""}"><i class="fa-solid ${tip.bad ? "fa-mask-face" : "fa-leaf"}"></i> <span>${tip.text}</span></div>`;
+}
+
+function renderPlacePanel(data) {
+    const panel = document.getElementById("panel-place");
+    if (!panel || !currentPlace) return;
+    panel.hidden = false;
+    const place = currentPlace;
+    const kindIcon = { me: "fa-street-view", ward: "fa-map", station: "fa-tower-broadcast", geo: "fa-location-dot", point: "fa-map-pin" }[place.kind] || "fa-location-dot";
+
+    const head = `
+        <div class="pp-head">
+            <span class="icon-chip"><i class="fa-solid ${kindIcon}"></i></span>
+            <div class="pp-title">
+                <h3 id="pp-name">${escapeHtml(place.name)}</h3>
+                <p id="pp-address">${escapeHtml(place.address || "")}</p>
+            </div>
+            <button type="button" class="btn-modal-close" onclick="closePlacePanel()" aria-label="Đóng">&times;</button>
+        </div>
+        <div id="pp-route" class="pp-route"></div>`;
+
+    if (!data) {
+        panel.innerHTML = head + `
+            <div class="pp-loading">
+                <div class="skeleton" style="height: 92px; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 64px; border-radius: 14px;"></div>
+                <div class="skeleton" style="height: 120px; border-radius: 14px;"></div>
+                <p><span class="loader-dots"></span> Đang truy vấn PostGIS & AI Engine...</p>
+            </div>`;
+        renderRouteBlock();
+        return;
+    }
+    if (data.error) {
+        panel.innerHTML = head + `<div class="pop-note" style="margin-top: 12px;">Không thể phân tích chất lượng không khí tại đây (${escapeHtml(data.error)}).</div>`;
+        renderRouteBlock();
+        return;
+    }
+
+    const pm = data.current ? Number(data.current.pm2_5) : latestBasePM25;
+    const pm10 = data.current && data.current.pm10 ? Number(data.current.pm10) : pm * 1.35;
+    const aqi = getDynamicAQI(pm);
+    const lvl = getAQILevelIndex(aqi);
+    const adv = getAdvisoryForAQI(aqi, pm);
+    const ringColor = (aqi > 50 && aqi <= 100) ? "#eab308" : adv.color;
+    const fs = data.forecast_summary || {};
+    const ward = data.ward;
+    const st = data.nearest_station;
+    const alert = data.alert || {};
+    const isWarning = alert.status === "WARNING";
+    const stdLabel = currentAQIStandard === "VN" ? "VN_AQI" : "US AQI";
+    const nowHour = new Date().getHours();
+    const placeTemp = getTemperatureAt(place.lat, place.lng, nowHour);
+    const placeWind = getWindInfoAt(place.lat, place.lng, nowHour);
+
+    const wardLine = ward
+        ? `${escapeHtml(ward.loai_don_vi || "")} ${escapeHtml(ward.ten_phuong_xa)}${ward.inside ? "" : ` (gần nhất, ${formatDistance(ward.distance_m)})`}`
+        : "Ngoài ranh giới 166 phường/xã TP.HCM";
+
+    panel.innerHTML = head + `
+        <div class="pp-aqi" style="--aqi: ${ringColor};">
+            <div class="pp-ring"><b>${aqi}</b><small>${stdLabel}</small></div>
+            <div class="pp-aqi-info">
+                <span class="aqi-pill lvl-${lvl}">${escapeHtml(adv.level)}</span>
+                <div class="pp-metrics">
+                    <div><span>PM2.5</span><b>${pm.toFixed(1)} <small>µg/m³</small></b></div>
+                    <div><span>PM10</span><b>${pm10.toFixed(1)} <small>µg/m³</small></b></div>
+                    <div><span>NHIỆT ĐỘ</span><b class="pp-temp">${placeTemp.toFixed(1)} <small>°C</small></b></div>
+                </div>
+                <p class="pp-wind"><i class="fa-solid fa-wind"></i> Gió ${placeWind.speed.toFixed(1)} m/s (${(placeWind.speed * 3.6).toFixed(0)} km/h) · hướng ${placeWind.dir}</p>
+                <p class="pp-qcvn ${pm > 50 ? "is-bad" : ""}"><i class="fa-solid fa-scale-balanced"></i> ${pm > 50 ? "Vượt" : "Đạt"} QCVN 05:2023 (50 µg/m³)</p>
+            </div>
+        </div>
+        <div class="pp-meta">
+            <span><i class="fa-solid fa-map"></i> ${wardLine}</span>
+            ${st ? `<span><i class="fa-solid fa-tower-broadcast"></i> ${escapeHtml(st.ten_tram)} · ${formatDistance(st.distance_m)}</span>` : ""}
+        </div>
+
+        <div class="pp-section-title"><i class="fa-solid fa-notes-medical"></i> Hỗ trợ ra quyết định (DSS)</div>
+        ${alert.status ? `
+        <div class="pp-alert ${isWarning ? "is-warning" : "is-normal"}">
+            <span class="pp-alert-icon"><i class="fa-solid ${isWarning ? "fa-triangle-exclamation" : "fa-shield-heart"}"></i></span>
+            <div>
+                <b>${isWarning ? "Cảnh báo: PM2.5 dự báo vượt QCVN 05:2023" : "Không khí 24h tới trong ngưỡng an toàn"}</b>
+                <small>${fs.peak ? `Đỉnh tại đây ${fs.peak.pm2_5} µg/m³ lúc ${fs.peak.label}` : ""}${isWarning && fs.exceed_hours ? ` · ${fs.exceed_hours} giờ vượt 50 µg/m³` : ""}</small>
+            </div>
+        </div>` : ""}
+        ${fs.best_window && fs.worst_window ? `
+        <div class="pp-windows">
+            <div class="pp-win good"><span><i class="fa-solid fa-sun"></i> Nên ra ngoài</span><b>${fs.best_window.label}</b><small>PM2.5 ≈ ${fs.best_window.avg_pm25} µg/m³</small></div>
+            <div class="pp-win bad"><span><i class="fa-solid fa-mask-face"></i> Nên tránh</span><b>${fs.worst_window.label}</b><small>PM2.5 ≈ ${fs.worst_window.avg_pm25} µg/m³</small></div>
+        </div>` : ""}
+        <div class="pp-advice">
+            <div class="pp-adv"><span class="pp-adv-icon blue"><i class="fa-solid fa-users"></i></span><div><b>Cộng đồng dân cư</b><p>${escapeHtml(adv.general_population)}</p></div></div>
+            <div class="pp-adv"><span class="pp-adv-icon amber"><i class="fa-solid fa-person-breastfeeding"></i></span><div><b>Nhóm nhạy cảm</b><p>${escapeHtml(adv.sensitive_groups)}</p></div></div>
+            <div class="pp-adv"><span class="pp-adv-icon rose"><i class="fa-solid fa-city"></i></span><div><b>Cơ quan quản lý đô thị</b><p>${escapeHtml(adv.action_plan)}</p></div></div>
+        </div>
+        <button type="button" class="btn btn-ai btn-block pp-ask-ai" onclick="askAirAIAboutPlace()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Hỏi Trợ lý AI về địa điểm này
+        </button>
+        <button type="button" class="btn btn-gradient btn-block" onclick="switchTab('tab-dss'); history.pushState(null, null, '#dss');">
+            <i class="fa-solid fa-notes-medical"></i> Xem đầy đủ khuyến nghị y tế
+        </button>
+    `;
+    renderRouteBlock();
+}
+
+// ==============================================================================
+// CẢNH BÁO TỰ ĐỘNG TỪ DSS ENGINE (ACTIVITY DIAGRAM)
+// Dự báo AI -> Đối chiếu QCVN 05:2023 -> [>50] Warning_NhayCam / [<=50] Bình thường -> Xuất bản lên WebGIS
+// ==============================================================================
+let latestActiveAlert = null;
+
+function fetchActiveAlert() {
+    fetch(`${API_BASE}/alerts/active`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi cảnh báo: " + res.status);
+            return res.json();
+        })
+        .then(alert => {
+            latestActiveAlert = alert;
+            renderAlertBanner(alert);
+            renderDssAlertCard(alert);
+        })
+        .catch(err => console.warn("Chưa nạp được trạng thái cảnh báo DSS:", err.message));
+}
+
+function formatEvaluatedTime(str) {
+    if (!str) return "--";
+    const parts = String(str).split(" ");
+    if (parts.length < 2) return str;
+    const [y, m, d] = parts[0].split("-");
+    return `${parts[1].slice(0, 5)} ${d}/${m}/${y}`;
+}
+
+function renderAlertBanner(alert) {
+    const banner = document.getElementById("aqi-alert-banner");
+    if (!banner || !alert || !alert.status || alert.status === "UNKNOWN") return;
+
+    const isWarning = alert.status === "WARNING";
+    banner.classList.toggle("is-warning", isWarning);
+    banner.classList.toggle("is-normal", !isWarning);
+    banner.hidden = false;
+
+    // Màn hình vừa (laptop nhỏ, máy tính bảng): mặc định thu gọn để không che các khung điều khiển
+    if (!banner.dataset.ready) {
+        banner.dataset.ready = "1";
+        if (window.innerWidth > 768 && window.innerWidth <= 1280) banner.classList.add("collapsed");
+    }
+
+    setSafeText("ab-title", isWarning ? "Cảnh báo sức khỏe: PM2.5 dự báo vượt QCVN 05:2023" : "Không khí 24 giờ tới trong ngưỡng an toàn");
+    setSafeText("ab-message", isWarning
+        ? `Đỉnh ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · ${alert.exceed_hours} giờ vượt 50 µg/m³. Nhóm nhạy cảm hạn chế ra ngoài.`
+        : `Đỉnh dự báo ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · dưới ngưỡng 50 µg/m³.`);
+    setSafeText("ab-short", isWarning ? "Cảnh báo PM2.5" : "An toàn 24h");
+
+    const icon = document.getElementById("ab-icon");
+    if (icon) icon.className = isWarning ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-shield-heart";
+}
+
+function renderDssAlertCard(alert) {
+    const card = document.getElementById("dss-alert-card");
+    if (!card || !alert || !alert.status || alert.status === "UNKNOWN") return;
+
+    const isWarning = alert.status === "WARNING";
+    card.classList.toggle("is-warning", isWarning);
+    card.classList.toggle("is-normal", !isWarning);
+    card.hidden = false;
+
+    const best = alert.best_window ? alert.best_window.label : "--";
+    const worst = alert.worst_window ? alert.worst_window.label : "--";
+    card.innerHTML = `
+        <div class="dac-head">
+            <span class="dac-icon"><i class="fa-solid ${isWarning ? 'fa-triangle-exclamation' : 'fa-shield-heart'}"></i></span>
+            <div class="dac-title">
+                <span class="dac-eyebrow">${isWarning ? 'Trigger Warning_NhayCam đang kích hoạt' : 'Trạng thái không khí bình thường'} · ${alert.standard || 'QCVN 05:2023/BTNMT'}</span>
+                <h3>${alert.title}</h3>
+            </div>
+            <span class="chip ${isWarning ? 'chip-danger' : 'chip-success'}"><span class="pulse-dot"></span> ${isWarning ? 'CẢNH BÁO' : 'AN TOÀN'}</span>
+        </div>
+        <p class="dac-message">${alert.message}</p>
+        <div class="dac-stats">
+            <div><span>Đỉnh PM2.5 dự báo</span><b>${alert.peak_pm25} µg/m³</b><small>${alert.peak_label || ''}</small></div>
+            <div><span>Số giờ vượt 50 µg/m³</span><b>${alert.exceed_hours} giờ</b><small>trong 24 giờ tới</small></div>
+            <div><span>Khung giờ nên ra ngoài</span><b>${best}</b><small>PM2.5 thấp nhất</small></div>
+            <div><span>Khung giờ nên tránh</span><b>${worst}</b><small>PM2.5 cao nhất</small></div>
+        </div>
+        <div class="dac-foot"><i class="fa-solid fa-robot"></i> AI Engine đánh giá lúc ${formatEvaluatedTime(alert.evaluated_at)} · tự động làm mới 30 phút/lần</div>
+    `;
+
+    // Đồng bộ khung giờ khuyến nghị bên dưới theo dự báo thật
+    if (alert.best_window) setSafeText("best-hours-text", `${alert.best_window.label} (PM2.5 trung bình ≈ ${alert.best_window.avg_pm25} µg/m³ - thời điểm không khí sạch nhất)`);
+    if (alert.worst_window) setSafeText("worst-hours-text", `${alert.worst_window.label} (PM2.5 trung bình ≈ ${alert.worst_window.avg_pm25} µg/m³ - nên hạn chế ra đường)`);
+}
+
+window.toggleAlertBanner = function (evt) {
+    const banner = document.getElementById("aqi-alert-banner");
+    if (!banner) return;
+    // Trên điện thoại: chạm vào thông báo -> mở tab Khuyến nghị Y tế
+    if (window.innerWidth <= 768) {
+        switchTab("tab-dss");
+        history.pushState(null, null, "#dss");
+        return;
+    }
+    if (evt && evt.target.closest(".ab-close")) {
+        banner.classList.add("collapsed");
+    } else if (banner.classList.contains("collapsed")) {
+        banner.classList.remove("collapsed");
+    }
+};
 
 function initLayerControls() {
     const chkStations = document.getElementById("chk-stations");
@@ -1377,8 +2321,7 @@ function initSubscribeForm() {
 
         if (toast) {
             toast.style.display = "block";
-            toast.style.color = "#4ade80";
-            toast.innerText = `Đăng ký nhận cảnh báo thành công cho email ${email}. Hệ thống sẽ tự động gửi thông báo khi AQI vượt mức ${threshold}!`;
+            toast.innerText = `✅ Đăng ký nhận cảnh báo thành công cho email ${email}. Hệ thống sẽ tự động gửi thông báo khi AQI vượt mức ${threshold}!`;
             form.reset();
             setTimeout(() => { toast.style.display = "none"; }, 6000);
         }
@@ -1390,24 +2333,44 @@ function updateSelectedWardPopup(hour) {
 
     const info = extractWardDetails(selectedWardFeature.properties);
     const stats = calculateWardAirStats(selectedWardFeature, hour);
+    const center = selectedWardLayer.getBounds().getCenter();
+    const temp = getTemperatureAt(center.lat, center.lng, hour);
+    const wind = getWindInfoAt(center.lat, center.lng, hour);
+    const lvl = getAQILevelIndex(stats.aqi);
+    const ring = (stats.aqi > 50 && stats.aqi <= 100) ? "#eab308" : stats.color;
+    const stdLabel = currentAQIStandard === 'VN' ? 'VN_AQI' : 'US AQI';
+    const alert = latestActiveAlert;
+    const hh = `${String(hour).padStart(2, "0")}:00`;
 
     const popupContent = `
-        <div style="min-width: 220px; font-family: 'Plus Jakarta Sans', sans-serif;">
-            <h4 style="margin: 0 0 4px 0; color: #38bdf8; font-size: 15px;">
-                <i class="fa-solid fa-location-dot"></i> ${info.ward}
-            </h4>
-            ${info.district ? `<p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 12px;">${info.district}</p>` : ''}
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 6px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 12px; color: #cbd5e1;">Nồng độ PM2.5:</span>
-                <b style="color: #38bdf8;">${stats.pm25} µg/m³</b>
+        <div class="wp-card">
+            <div class="wp-head">
+                <div class="wp-ring" style="--aqi: ${ring};"><b>${stats.aqi}</b><small>${stdLabel}</small></div>
+                <div class="wp-title">
+                    <h4>${escapeHtml(info.ward)}</h4>
+                    <p>${info.district ? escapeHtml(info.district) + " · " : ""}lúc ${hh}${hour === new Date().getHours() ? " · hiện tại" : " · mô phỏng"}</p>
+                    <span class="aqi-pill lvl-${lvl}">${stats.advisory.level}</span>
+                </div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 12px; color: #cbd5e1;">Chỉ số US AQI:</span>
-                <b style="color: ${stats.color}; font-size: 15px;">${stats.aqi} (${stats.advisory.level})</b>
+            <div class="wp-metrics">
+                <div><i class="fa-solid fa-smog"></i><span>PM2.5</span><b>${stats.pm25}<small> µg/m³</small></b></div>
+                <div><i class="fa-solid fa-temperature-half"></i><span>Nhiệt độ</span><b>${temp.toFixed(1)}<small> °C</small></b></div>
+                <div><i class="fa-solid fa-wind"></i><span>Gió</span><b>${wind.speed.toFixed(1)}<small> m/s</small></b><em>${wind.dir}</em></div>
             </div>
-            <div style="background: rgba(255,255,255,0.06); padding: 6px 8px; border-radius: 6px; font-size: 11px; border-left: 3px solid ${stats.color};">
-                ${stats.advisory.sensitive_groups}
+            <div class="wp-dss">
+                <div class="wp-dss-title"><i class="fa-solid fa-notes-medical"></i> Hỗ trợ ra quyết định</div>
+                <p><b>Cộng đồng:</b> ${escapeHtml(stats.advisory.general_population)}</p>
+                <p><b>Nhóm nhạy cảm:</b> ${escapeHtml(stats.advisory.sensitive_groups)}</p>
+                ${alert && alert.status === "WARNING" && alert.best_window ? `
+                <p class="wp-window"><i class="fa-solid fa-sun"></i> Nên ra ngoài: <b>${alert.best_window.label}</b></p>` : ""}
+            </div>
+            <div class="wp-actions">
+                <button type="button" class="wp-btn" onclick="openWardDetail()">
+                    <i class="fa-solid fa-route"></i> Chi tiết & chỉ đường
+                </button>
+                <button type="button" class="wp-btn wp-btn-ai" onclick="askAirAIAboutWard()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Hỏi AI
+                </button>
             </div>
         </div>
     `;
@@ -1415,9 +2378,30 @@ function updateSelectedWardPopup(hour) {
     if (selectedWardLayer.getPopup()) {
         selectedWardLayer.setPopupContent(popupContent);
     } else {
-        selectedWardLayer.bindPopup(popupContent, { className: 'ward-popup' });
+        selectedWardLayer.bindPopup(popupContent, {
+            className: 'ward-popup', maxWidth: 320, minWidth: 290,
+            // Chừa chỗ cho thanh tìm kiếm + banner cảnh báo phía trên và các khung nổi hai bên
+            autoPanPaddingTopLeft: L.point(window.innerWidth <= 768 ? 10 : 380, window.innerWidth <= 768 ? 130 : 200),
+            autoPanPaddingBottomRight: L.point(window.innerWidth <= 768 ? 10 : 320, 40)
+        });
     }
 }
+
+// Mở bảng chi tiết (AQI, đường đi, DSS đầy đủ) cho phường đang chọn
+window.openWardDetail = function () {
+    if (!selectedWardLayer || !selectedWardFeature) return;
+    const info = extractWardDetails(selectedWardFeature.properties);
+    // Điểm đã bấm trên phường (luôn nằm trong ranh giới); dự phòng: tâm khung bao
+    const sel = window.airhcmSelection;
+    const c = sel && sel.code === wardCodeOf(selectedWardFeature) ? sel : selectedWardLayer.getBounds().getCenter();
+    map.closePopup();
+    openPlacePanel({
+        kind: "ward", code: wardCodeOf(selectedWardFeature), lat: c.lat, lng: c.lng, name: wardDisplayName(selectedWardFeature),
+        address: info.district || "Ranh giới hành chính · TP. Hồ Chí Minh",
+        bounds: selectedWardLayer.getBounds()
+    });
+};
+
 // ==============================================================================
 // 6. XỬ LÝ MÔ PHỎNG KỊCH BẢN DỰ BÁO WHAT-IF (KHI THAY ĐỔI CÁC YẾU TỐ ĐẦU VÀO)
 // ==============================================================================
@@ -1547,113 +2531,330 @@ window.updatePersonalAdvisory = function () {
 // 8. ĐỘNG CƠ DÒNG CHẢY GIÓ TỰ ĐỘNG ĐỔI MÀU TƯƠNG PHẢN THEO NỀN BẢN ĐỒ
 // ==============================================================================
 
+// Mô phỏng hạt kiểu Windy: hạt trôi theo TRƯỜNG GIÓ 10m THỰC TẾ (lưới 7x7 Open-Meteo, theo giờ),
+// nội suy song tuyến tại từng vị trí, màu theo tốc độ gió, đuôi mờ dần, gắn chặt tọa độ bản đồ.
+let windField = null;          // Dữ liệu /weather/wind-field
+let windGrid = null;           // Lưới vận tốc theo pixel màn hình (dựng lại khi bản đồ di chuyển / đổi giờ)
+let windGridTimeIndex = -1;
+let windMoving = false;
+const WIND_CELL = 10;          // Kích thước ô lưới màn hình (px)
+const WIND_MIN_VISUAL = 1.2;   // Tốc độ hiển thị tối thiểu (m/s) khi gió lặng
+const WIND_SPEED_STEPS = [1, 2, 3, 4.5, 6, 8, 10, Infinity];   // ngưỡng màu theo m/s
+const WIND_COLORS_LIGHT = ["rgba(30,64,175,0.45)", "rgba(3,105,161,0.52)", "rgba(14,116,144,0.58)", "rgba(15,118,110,0.62)", "rgba(77,124,15,0.66)", "rgba(161,98,7,0.7)", "rgba(194,65,12,0.72)", "rgba(190,18,60,0.74)"];
+const WIND_COLORS_DARK = ["rgba(255,255,255,0.4)", "rgba(255,255,255,0.55)", "rgba(224,242,254,0.65)", "rgba(165,243,252,0.7)", "rgba(187,247,208,0.72)", "rgba(253,230,138,0.75)", "rgba(253,186,116,0.78)", "rgba(252,165,165,0.8)"];
+let windSpawnRect = null;      // Vùng màn hình có dữ liệu gió (hạt chỉ sinh ra trong vùng này)
+
 function initWindLayer() {
     if (!map) return;
-
-    // Gắn trực tiếp Canvas vào container chính của bản đồ để chống lệch tọa độ khi kéo map
     const mapContainer = map.getContainer();
 
-    // Nếu đã có canvas cũ thì xóa đi
     const oldCanvas = document.getElementById("leaflet-wind-canvas");
     if (oldCanvas) oldCanvas.remove();
 
+    // Pane riêng z-index 450: trên ranh giới phường (400), DƯỚI trạm (600), tooltip (650) & popup (700)
+    const windPane = map.getPane("windPane") || map.createPane("windPane");
+    windPane.style.zIndex = "450";
+    windPane.style.pointerEvents = "none";
+
     windCanvas = document.createElement("canvas");
     windCanvas.id = "leaflet-wind-canvas";
-    windCanvas.style.position = "absolute";
-    windCanvas.style.top = "0";
-    windCanvas.style.left = "0";
-    windCanvas.style.width = "100%";
-    windCanvas.style.height = "100%";
-    windCanvas.style.pointerEvents = "none";
-    windCanvas.style.zIndex = "450"; // Nằm trên ranh giới nhưng dưới các huy hiệu trạm
-    mapContainer.appendChild(windCanvas);
-
+    Object.assign(windCanvas.style, { position: "absolute", top: "0", left: "0", pointerEvents: "none" });
+    windPane.appendChild(windCanvas);
     windCtx = windCanvas.getContext("2d");
 
-    function resizeWind() {
-        if (!windCanvas || !mapContainer) return;
-        windCanvas.width = mapContainer.clientWidth;
-        windCanvas.height = mapContainer.clientHeight;
-        resetWindParticles();
+    const pause = () => {
+        windMoving = true;
+        if (windCtx) windCtx.clearRect(0, 0, windCanvas.width, windCanvas.height);
+    };
+    const resume = () => {
+        windMoving = false;
+        resizeWindCanvas();
+        rebuildWindGrid(true);
+    };
+    map.on("movestart zoomstart", pause);
+    map.on("moveend resize", resume);
+
+    resizeWindCanvas();
+    fetchWindField();
+    setInterval(fetchWindField, 30 * 60 * 1000);
+    startWindAnimation();
+}
+
+function resizeWindCanvas() {
+    if (!windCanvas || !map) return;
+    const c = map.getContainer();
+    if (windCanvas.width !== c.clientWidth || windCanvas.height !== c.clientHeight) {
+        windCanvas.width = c.clientWidth;
+        windCanvas.height = c.clientHeight;
+        windCanvas.style.width = `${c.clientWidth}px`;
+        windCanvas.style.height = `${c.clientHeight}px`;
     }
+    // Pane di chuyển theo bản đồ -> đặt canvas trùng góc trên-trái khung nhìn
+    L.DomUtil.setPosition(windCanvas, map.containerPointToLayerPoint([0, 0]));
+}
 
-    function resetWindParticles() {
-        windParticles = [];
-        const width = windCanvas.width || 800;
-        const height = windCanvas.height || 600;
+function fetchWindField() {
+    fetch(`${API_BASE}/weather/wind-field`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi trường gió: " + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (Array.isArray(data.times) && Array.isArray(data.u) && data.u.length) {
+                windField = data;
+                rebuildWindGrid(true);
+            }
+        })
+        .catch(err => {
+            console.warn("Dòng chảy gió dùng hướng gió trạm trung tâm:", err.message);
+            rebuildWindGrid(true);
+        });
+}
 
-        for (let i = 0; i < NUM_WIND_PARTICLES; i++) {
-            windParticles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                age: Math.floor(Math.random() * 70),
-                maxAge: 50 + Math.floor(Math.random() * 40),
-                speedMultiplier: 0.85 + Math.random() * 0.45
-            });
+// Chỉ số mốc giờ trong dữ liệu ứng với giờ đang mô phỏng (trong 24h tới tính từ hiện tại)
+function windTimeIndex(hour) {
+    if (!windField) return -1;
+    const now = new Date();
+    const target = new Date(now);
+    if (hour < now.getHours()) target.setDate(target.getDate() + 1);
+    const pad = n => String(n).padStart(2, "0");
+    const key = `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}T${pad(hour)}:00`;
+    let idx = windField.times.indexOf(key);
+    if (idx < 0) idx = windField.times.findIndex(t => t.endsWith(`T${pad(hour)}:00`));
+    return idx;
+}
+
+// Nội suy song tuyến vận tốc gió (m/s) tại một tọa độ; ngoài lưới thì lấy giá trị biên gần nhất
+function sampleWind(lat, lng, t) {
+    return { u: sampleField("u", lat, lng, t), v: sampleField("v", lat, lng, t) };
+}
+
+// Nội suy song tuyến trên một lưới (ngoài lưới -> lấy giá trị biên gần nhất)
+function sampleGrid(g, name, lat, lng, t) {
+    const arr = g && g[name];
+    if (!arr || !arr[t]) return NaN;
+    const clamp = (x, max) => Math.max(0, Math.min(max, x));
+    const fi = clamp((lat - g.lat0) / g.dlat, g.ny - 1);
+    const fj = clamp((lng - g.lng0) / g.dlng, g.nx - 1);
+    const i0 = Math.floor(fi), j0 = Math.floor(fj);
+    const i1 = Math.min(i0 + 1, g.ny - 1), j1 = Math.min(j0 + 1, g.nx - 1);
+    const di = fi - i0, dj = fj - j0;
+    const a = arr[t][i0 * g.nx + j0], b = arr[t][i0 * g.nx + j1];
+    const c = arr[t][i1 * g.nx + j0], d = arr[t][i1 * g.nx + j1];
+    if (a == null || b == null || c == null || d == null) return NaN;
+    return a * (1 - di) * (1 - dj) + b * (1 - di) * dj + c * di * (1 - dj) + d * di * dj;
+}
+
+function gridBounds(g) {
+    return { s: g.lat0, n: g.lat0 + (g.ny - 1) * g.dlat, w: g.lng0, e: g.lng0 + (g.nx - 1) * g.dlng };
+}
+
+// Trộn 2 lưới: chi tiết TP.HCM (0.25°) ở lõi, khu vực Nam Bộ (1°) bên ngoài,
+// pha trộn tuyến tính trong dải 0.3° sát biên lưới chi tiết để không có đường nối
+const WIND_BLEND_DEG = 0.3;
+function sampleField(name, lat, lng, t) {
+    const fine = windField;
+    const region = windField && windField.regional;
+    const fb = gridBounds(fine);
+    const inside = Math.min(lat - fb.s, fb.n - lat, lng - fb.w, fb.e - lng);
+    if (!region || inside >= WIND_BLEND_DEG) {
+        return sampleGrid(fine, name, lat, lng, t);
+    }
+    const rv = sampleGrid(region, name, lat, lng, t);
+    if (inside <= 0) return rv;
+    const fv = sampleGrid(fine, name, lat, lng, t);
+    if (isNaN(fv)) return rv;
+    if (isNaN(rv)) return fv;
+    const w = inside / WIND_BLEND_DEG;
+    return fv * w + rv * (1 - w);
+}
+
+// Vùng có dữ liệu gió: lưới khu vực (nếu có) hoặc lưới TP.HCM; ngoài vùng không vẽ hạt
+function windDataBounds() {
+    const f = windField;
+    if (!f) return { s: 10.2, n: 11.7, w: 106.2, e: 107.7 };
+    const g = gridBounds(f.regional || f);
+    const pad = f.regional ? 0.5 : 0.15;
+    return { s: g.s - pad, n: g.n + pad, w: g.w - pad, e: g.e + pad };
+}
+
+// Nhiệt độ 2m (°C) tại một điểm theo giờ mô phỏng: lưới Open-Meteo, dự phòng chu kỳ ERA5
+function getTemperatureAt(lat, lng, hour = currentHourSimulated) {
+    const t = windTimeIndex(hour);
+    if (windField && windField.temp && t >= 0) {
+        const v = sampleField("temp", lat, lng, t);
+        if (!isNaN(v)) return v;
+    }
+    return HOURLY_TEMP_ERA5[hour] || 28.5;
+}
+
+// Gió tại một điểm: tốc độ (m/s) & hướng
+function getWindInfoAt(lat, lng, hour = currentHourSimulated) {
+    const t = windTimeIndex(hour);
+    let u, v;
+    if (t >= 0) {
+        ({ u, v } = sampleWind(lat, lng, t));
+    } else {
+        const sp = (currentWindSpeed || 10) / 3.6, rad = (currentWindDeg || 150) * Math.PI / 180;
+        u = -sp * Math.sin(rad);
+        v = -sp * Math.cos(rad);
+    }
+    return { speed: Math.hypot(u, v), dir: windDirectionName(u, v) };
+}
+
+function windDirectionName(u, v) {
+    // Hướng khí tượng (gió thổi TỪ hướng nào)
+    const from = (Math.atan2(-u, -v) * 180 / Math.PI + 360) % 360;
+    const names = ["Bắc", "Đông Bắc", "Đông", "Đông Nam", "Nam", "Tây Nam", "Tây", "Tây Bắc"];
+    return names[Math.round(from / 45) % 8];
+}
+
+function rebuildWindGrid(force = false) {
+    if (!windCanvas || !map) return;
+    const t = windTimeIndex(currentHourSimulated);
+    if (!force && windGrid && t === windGridTimeIndex) return;
+    windGridTimeIndex = t;
+
+    // Dự phòng: gió đồng nhất theo trạm trung tâm (km/h -> m/s)
+    const fbSpeed = (currentWindSpeed || 10) / 3.6;
+    const fbRad = (currentWindDeg || 150) * Math.PI / 180;
+    const fallback = { u: -fbSpeed * Math.sin(fbRad), v: -fbSpeed * Math.cos(fbRad) };
+
+    const cols = Math.ceil(windCanvas.width / WIND_CELL) + 1;
+    const rows = Math.ceil(windCanvas.height / WIND_CELL) + 1;
+    const data = new Float32Array(cols * rows * 3);
+    const bb = windDataBounds();
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const ll = map.containerPointToLatLng([c * WIND_CELL, r * WIND_CELL]);
+            const k0 = (r * cols + c) * 3;
+            if (ll.lat < bb.s || ll.lat > bb.n || ll.lng < bb.w || ll.lng > bb.e) {
+                data[k0] = NaN;
+                continue;
+            }
+            const w = t >= 0 ? sampleWind(ll.lat, ll.lng, t) : fallback;
+            const speed = Math.hypot(w.u, w.v);
+            // Gió gần như lặng vẫn cho hạt trôi chậm theo hướng gió để thấy được dòng chảy
+            // (màu vẫn phản ánh tốc độ thật)
+            let du = w.u, dv = w.v;
+            if (speed < WIND_MIN_VISUAL) {
+                const ref = speed > 0.02 ? { u: w.u / speed, v: w.v / speed } : { u: fallback.u / (Math.hypot(fallback.u, fallback.v) || 1), v: fallback.v / (Math.hypot(fallback.u, fallback.v) || 1) };
+                du = ref.u * WIND_MIN_VISUAL;
+                dv = ref.v * WIND_MIN_VISUAL;
+            }
+            const k = (r * cols + c) * 3;
+            data[k] = du;
+            data[k + 1] = -dv;                // trục y màn hình hướng xuống
+            data[k + 2] = speed;
         }
     }
+    windGrid = { cols, rows, data };
 
-    resizeWind();
-    map.on("resize", resizeWind);
-    startWindAnimation();
+    // Hạt chỉ sinh trong phần màn hình có dữ liệu; mật độ vừa phải cho dễ nhìn
+    const p1 = map.latLngToContainerPoint([bb.n, bb.w]), p2 = map.latLngToContainerPoint([bb.s, bb.e]);
+    windSpawnRect = {
+        x0: Math.max(0, p1.x), y0: Math.max(0, p1.y),
+        x1: Math.min(windCanvas.width, p2.x), y1: Math.min(windCanvas.height, p2.y)
+    };
+    const area = Math.max(0, windSpawnRect.x1 - windSpawnRect.x0) * Math.max(0, windSpawnRect.y1 - windSpawnRect.y0);
+    const count = Math.min(2200, Math.round(area / 600));
+    windParticles = Array.from({ length: count }, () => spawnWindParticle(true));
+    if (windCtx) windCtx.clearRect(0, 0, windCanvas.width, windCanvas.height);
+
+    // Cập nhật chú giải gió tại trung tâm TP.HCM
+    const center = t >= 0 ? sampleWind(10.80, 106.70, t) : fallback;
+    const speed = Math.hypot(center.u, center.v);
+    setSafeText("wind-legend-text",
+        `Gió 10m: ${speed.toFixed(1)} m/s (${(speed * 3.6).toFixed(0)} km/h) · hướng ${windDirectionName(center.u, center.v)}` +
+        (windField ? (windField.source === "open-meteo" ? " · Open-Meteo" : " · mô phỏng") : " · trạm trung tâm"));
+}
+
+function spawnWindParticle(randomAge) {
+    const maxAge = 40 + Math.floor(Math.random() * 60);
+    return {
+        x: windSpawnRect ? windSpawnRect.x0 + Math.random() * (windSpawnRect.x1 - windSpawnRect.x0) : Math.random() * 800,
+        y: windSpawnRect ? windSpawnRect.y0 + Math.random() * (windSpawnRect.y1 - windSpawnRect.y0) : Math.random() * 600,
+        age: randomAge ? Math.floor(Math.random() * maxAge) : 0,
+        maxAge
+    };
+}
+
+function windVelocityAt(x, y) {
+    const g = windGrid;
+    const c = Math.round(x / WIND_CELL), r = Math.round(y / WIND_CELL);
+    if (c < 0 || r < 0 || c >= g.cols || r >= g.rows) return null;
+    const k = (r * g.cols + c) * 3;
+    if (isNaN(g.data[k])) return null;
+    return [g.data[k], g.data[k + 1], g.data[k + 2]];
+}
+
+// Được gọi khi đổi giờ mô phỏng: dựng lại trường gió nếu mốc giờ thay đổi
+function refreshWindForHour() {
+    if (windCanvas && !windMoving) rebuildWindGrid(false);
+}
+
+function stopWindAnimation() {
+    if (windAnimationId) cancelAnimationFrame(windAnimationId);
+    windAnimationId = null;
+    if (windCtx && windCanvas) windCtx.clearRect(0, 0, windCanvas.width, windCanvas.height);
 }
 
 function startWindAnimation() {
     if (windAnimationId) cancelAnimationFrame(windAnimationId);
+    const chkWind = document.getElementById("chk-wind");
+    if (chkWind && !chkWind.checked) return;
+    if (!windGrid) rebuildWindGrid(true);
 
-    const baseDx = -Math.sin(currentWindDeg * (Math.PI / 180));
-    const baseDy = Math.cos(currentWindDeg * (Math.PI / 180));
-    const baseSpeed = Math.max(1.3, currentWindSpeed * 0.16);
-
-    let frame = 0;
+    const buckets = WIND_SPEED_STEPS.map(() => []);
 
     function renderFrame() {
-        if (!windCanvas || !windCtx) return;
+        windAnimationId = requestAnimationFrame(renderFrame);
+        if (!windCanvas || !windCtx || !windGrid || windMoving || document.hidden) return;
+        const mapTab = document.getElementById("tab-map");
+        if (mapTab && !mapTab.classList.contains("active")) return;
 
-        // Kiểm tra loại nền bản đồ đang chọn để phối màu vệt gió tương phản rõ nét
-        const selectBasemap = document.getElementById("select-basemap");
-        const currentTile = selectBasemap ? selectBasemap.value : "light";
-        const isLightMode = (currentTile === "light" || currentTile === "osm");
+        const basemap = document.getElementById("select-basemap");
+        const isLight = !basemap || basemap.value === "light" || basemap.value === "osm";
+        const colors = isLight ? WIND_COLORS_LIGHT : WIND_COLORS_DARK;
+        // Tốc độ hạt trên màn hình tăng nhẹ theo mức zoom
+        const scale = 0.42 * Math.pow(1.15, map.getZoom() - 10);
 
-        // Tạo hiệu ứng đuôi mờ mượt mà
-        windCtx.globalCompositeOperation = "destination-out";
-        windCtx.fillStyle = "rgba(0, 0, 0, 0.08)";
+        // Làm mờ đuôi vệt cũ (giữ lại 93% độ đậm mỗi khung hình -> vệt dài, mượt)
+        windCtx.globalCompositeOperation = "destination-in";
+        windCtx.fillStyle = "rgba(0, 0, 0, 0.92)";
         windCtx.fillRect(0, 0, windCanvas.width, windCanvas.height);
         windCtx.globalCompositeOperation = "source-over";
 
-        // TỰ ĐỘNG ĐỔI MÀU VỆT GIÓ:
-        // - Nền sáng: Vệt gió màu xanh dương đậm (#0284c7) nổi bật trên nền trắng
-        // - Nền tối / Vệ tinh: Vệt gió màu trắng phát sáng (rgba(255,255,255,0.9))
-        windCtx.strokeStyle = isLightMode ? "rgba(2, 132, 199, 0.75)" : "rgba(255, 255, 255, 0.90)";
-        windCtx.lineWidth = isLightMode ? 2.0 : 1.6;
-        windCtx.lineCap = "round";
-
-        frame++;
-
-        windParticles.forEach(p => {
-            const organicWave = Math.sin(p.y * 0.015 + frame * 0.025) * 0.35;
-            const stepX = (baseDx + organicWave) * baseSpeed * p.speedMultiplier;
-            const stepY = (baseDy + organicWave) * baseSpeed * p.speedMultiplier;
-
-            windCtx.beginPath();
-            windCtx.moveTo(p.x, p.y);
-            const nextX = p.x + stepX;
-            const nextY = p.y + stepY;
-            windCtx.lineTo(nextX, nextY);
-            windCtx.stroke();
-
-            p.x = nextX;
-            p.y = nextY;
-            p.age++;
-
-            if (p.age > p.maxAge || p.x < 0 || p.x > windCanvas.width || p.y < 0 || p.y > windCanvas.height) {
-                p.x = Math.random() * windCanvas.width;
-                p.y = Math.random() * windCanvas.height;
-                p.age = 0;
+        buckets.forEach(b => { b.length = 0; });
+        for (const p of windParticles) {
+            const vel = p.age < p.maxAge ? windVelocityAt(p.x, p.y) : null;
+            if (!vel) {
+                Object.assign(p, spawnWindParticle(false));
+                continue;
             }
-        });
+            const nx = p.x + vel[0] * scale;
+            const ny = p.y + vel[1] * scale;
+            let b = 0;
+            while (vel[2] > WIND_SPEED_STEPS[b]) b++;
+            buckets[b].push(p.x, p.y, nx, ny);
+            p.x = nx;
+            p.y = ny;
+            p.age++;
+        }
 
-        windAnimationId = requestAnimationFrame(renderFrame);
+        // Vẽ theo nhóm màu để tối ưu hiệu năng
+        windCtx.lineWidth = isLight ? 1.1 : 1.0;
+        windCtx.lineCap = "round";
+        buckets.forEach((seg, i) => {
+            if (!seg.length) return;
+            windCtx.strokeStyle = colors[i];
+            windCtx.beginPath();
+            for (let k = 0; k < seg.length; k += 4) {
+                windCtx.moveTo(seg[k], seg[k + 1]);
+                windCtx.lineTo(seg[k + 2], seg[k + 3]);
+            }
+            windCtx.stroke();
+        });
     }
 
     renderFrame();
@@ -1675,11 +2876,13 @@ function updateAdminButtonState() {
 }
 // Xử lý khi nhấn nút Đăng nhập Quản trị
 window.handleAdminEntry = function () {
-    const authData = localStorage.getItem("airhcm_admin_auth");
-    if (authData) {
-        // Nếu đã đăng nhập trước đó thì chuyển thẳng vào trang Admin
+    let auth = null;
+    try { auth = JSON.parse(localStorage.getItem("airhcm_admin_auth") || "null"); } catch (_) { auth = null; }
+    // Chỉ vào thẳng trang Admin khi còn token máy chủ cấp & chưa hết hạn
+    if (auth && auth.token && auth.expiresAt * 1000 > Date.now()) {
         window.location.href = "admin.html";
     } else {
+        localStorage.removeItem("airhcm_admin_auth");
         // Nếu chưa đăng nhập thì mở popup đăng nhập
         openLoginModal();
     }
@@ -1701,31 +2904,42 @@ window.closeLoginModal = function () {
     if (errMsg) errMsg.style.display = "none";
 };
 
-// Xử lý xác thực tài khoản Quản trị viên
-window.submitAdminLogin = function (e) {
+// Xác thực Quản trị viên trên MÁY CHỦ (mật khẩu băm PBKDF2) -> nhận token vai trò admin có hạn 12 giờ.
+// Mọi API quản trị kiểm tra token này (RBAC), không còn kiểm tra mật khẩu bằng JavaScript phía trình duyệt.
+window.submitAdminLogin = async function (e) {
     e.preventDefault();
     const username = document.getElementById("login-username").value.trim();
-    const password = document.getElementById("login-password").value.trim();
+    const password = document.getElementById("login-password").value;
     const errMsg = document.getElementById("login-error-msg");
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (errMsg) errMsg.style.display = "none";
+    if (submitBtn) submitBtn.disabled = true;
 
-    // Tài khoản định danh dành cho quản trị viên và hội đồng kiểm thử
-    if ((username === "admin" && password === "admin123") ||
-        (username === "hcmunre" && password === "hcmunre2026")) {
+    try {
+        const res = await fetch(`${API_BASE}/auth/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || "Đăng nhập thất bại");
 
-        // Lưu phiên đăng nhập an toàn vào LocalStorage
         localStorage.setItem("airhcm_admin_auth", JSON.stringify({
-            username: username,
-            role: "ADMINISTRATOR",
-            loginTime: new Date().toISOString()
+            username: data.username,
+            fullname: data.fullname,
+            role: data.role,
+            token: data.token,
+            expiresAt: data.expires_at
         }));
-
         closeLoginModal();
         window.location.href = "admin.html";
-    } else {
+    } catch (err) {
         if (errMsg) {
             errMsg.style.display = "block";
-            errMsg.innerText = "❌ Tài khoản hoặc mật khẩu không chính xác! (Gợi ý: admin / admin123)";
+            errMsg.innerText = `❌ ${err.message === "Failed to fetch" ? "Không kết nối được máy chủ AirHCM." : err.message}`;
         }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
     }
 };
 // ==============================================================================
@@ -1919,9 +3133,10 @@ window.setAQIStandard = function (standard) {
         fetchHourlyForecast(24);
     }
 
-    // 6. Đồng bộ lại Bản đồ, Hotspots và What-If
+    // 6. Đồng bộ lại Bản đồ, Hotspots, thẻ DSS và What-If
     applyTimeStep(currentHourSimulated);
     fetchHotspotsSummary();
+    updateDSSOverview(getDynamicAQI(latestBasePM25), latestBasePM25);
     if (typeof window.runScenarioSimulation === "function") {
         window.runScenarioSimulation();
     }
@@ -2024,33 +3239,28 @@ function renderNewsUI(newsList) {
     // 1. Bài báo tiêu điểm (Bài đầu tiên)
     const featured = newsList[0];
     featuredContainer.innerHTML = `
-        <div class="panel" style="padding: 0; overflow: hidden; margin-bottom: 24px; display: grid; grid-template-columns: 1.2fr 1fr; border-radius: 14px;">
-            <div style="background: url('${featured.image}') center/cover no-repeat; min-height: 280px; position: relative;">
-                <span style="position: absolute; top: 16px; left: 16px; background: #dc2626; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase;">
-                    <i class="fa-solid fa-bolt"></i> Tin Tiêu Điểm Hôm Nay
-                </span>
+        <div class="panel news-featured">
+            <div class="nf-media">
+                <div class="nf-img" style="background-image: url('${featured.image}');"></div>
+                <span class="nf-flag"><i class="fa-solid fa-bolt"></i> Tin tiêu điểm hôm nay</span>
             </div>
-            <div style="padding: 28px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="nf-body">
                 <div>
-                    <div style="display: flex; gap: 10px; align-items: center; font-size: 12px; color: #64748b; margin-bottom: 10px;">
-                        <span style="font-weight: 700; color: #0284c7;"><i class="fa-solid fa-building-columns"></i> ${featured.source}</span>
+                    <div class="news-meta">
+                        <span class="news-source"><i class="fa-solid fa-building-columns"></i> ${featured.source}</span>
                         <span>•</span>
-                        <span>${featured.pub_date}</span>
+                        <span><i class="fa-regular fa-clock"></i> ${featured.pub_date}</span>
                     </div>
-                    <h3 style="font-size: 18px; line-height: 1.4; color: #0f172a; margin: 0 0 10px 0; font-weight: 800;">
-                        ${featured.title}
-                    </h3>
-                    <p style="font-size: 13.5px; line-height: 1.6; color: #334155; margin: 0; text-align: justify;">
-                        ${featured.summary}
-                    </p>
+                    <h3>${featured.title}</h3>
+                    <p>${featured.summary}</p>
                 </div>
-                <div style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; gap: 6px;">
+                <div class="nf-foot">
+                    <div class="tag-row">
                         <span class="news-tag">#PM2.5</span>
                         <span class="news-tag">#KhíTượng</span>
                         <span class="news-tag">#AirHCM</span>
                     </div>
-                    <a href="${featured.link}" target="_blank" rel="noopener noreferrer" class="btn" style="background: #0284c7; color: #fff; font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    <a href="${featured.link}" target="_blank" rel="noopener noreferrer" class="btn btn-gradient">
                         Đọc bài viết gốc <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </a>
                 </div>
@@ -2059,36 +3269,31 @@ function renderNewsUI(newsList) {
     `;
 
     // 2. Các bài báo còn lại (Hiển thị trong lưới 3 cột)
-    gridContainer.innerHTML = "";
     const regularNews = newsList.slice(1);
+    let cardsHtml = "";
 
     regularNews.forEach(item => {
-        const cardHtml = `
-            <div class="panel news-card" data-category="${item.category}" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-                <div style="height: 160px; background: url('${item.image}') center/cover no-repeat; position: relative;">
+        cardsHtml += `
+            <div class="panel news-card" data-category="${item.category}">
+                <div class="nc-media">
+                    <div class="nc-img" style="background-image: url('${item.image}');"></div>
                     <span class="news-source-badge" style="background: ${item.badge_color};">${item.source}</span>
                 </div>
-                <div style="padding: 18px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <small style="color: #64748b; font-size: 11.5px; font-weight: 600;">${item.pub_date}</small>
-                        <h4 style="font-size: 14.5px; color: #0f172a; margin: 6px 0 8px 0; font-weight: 700; line-height: 1.4;">
-                            ${item.title}
-                        </h4>
-                        <p style="font-size: 12.5px; color: #475569; line-height: 1.5; margin: 0;">
-                            ${item.summary}
-                        </p>
-                    </div>
-                    <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="nc-body">
+                    <small><i class="fa-regular fa-clock"></i> ${item.pub_date}</small>
+                    <h4>${item.title}</h4>
+                    <p>${item.summary}</p>
+                    <div class="nc-foot">
                         <span class="news-tag">#${item.category}</span>
-                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-size: 12px; font-weight: 700; text-decoration: none;">
-                            Xem chi tiết <i class="fa-solid fa-chevron-right"></i>
+                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="link-arrow">
+                            Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
                 </div>
             </div>
         `;
-        gridContainer.innerHTML += cardHtml;
     });
+    gridContainer.innerHTML = cardsHtml;
 }
 
 // Gọi nạp tin tức ngay khi người dùng mở trang web
@@ -2130,6 +3335,8 @@ window.openUserAuthModal = function (mode = 'login') {
     if (modal) {
         modal.classList.add("active");
         switchUserAuthMode(mode);
+        // Nạp sẵn thư viện đăng nhập để cửa sổ Google/Facebook/Apple mở ngay khi bấm
+        loadFirebaseAuth().catch(err => console.warn("Chưa tải được Firebase Auth:", err));
     }
 };
 
@@ -2207,112 +3414,143 @@ window.submitUserAuth = function (e) {
 };
 
 // ==============================================================================
-// XÁC THỰC OAUTH 2.0 CHÍNH CHỦ (GOOGLE, FACEBOOK, APPLE) DÀNH CHO HOÀNG ÂN
+// ĐĂNG NHẬP GOOGLE / FACEBOOK / APPLE THẬT QUA FIREBASE AUTHENTICATION
+// Cửa sổ đăng nhập do chính Google / Facebook / Apple cung cấp -> người dùng chọn tài khoản
+// đang đăng nhập trên trình duyệt -> Firebase ID token -> Backend xác minh rồi tạo phiên AirHCM.
 // ==============================================================================
-window.handleSocialAuth = function(provider) {
-    // 1. Cấu hình thông tin tài khoản chính chủ của bạn theo từng nền tảng
-    let realAccount = {};
+const FIREBASE_WEB_CONFIG = {
+    apiKey: "AIzaSyBGuEztWXMInz52uCdZcrKaujSgtgWGo2U",
+    authDomain: "airhcm.firebaseapp.com",
+    projectId: "airhcm",
+    messagingSenderId: "903722662342",
+    appId: "1:903722662342:web:3c931d833dd03934135ac7"
+};
+const FIREBASE_SDK_URL = "https://www.gstatic.com/firebasejs/10.12.2";
+let firebaseAuthPromise = null;
 
-    if (provider === 'Google') {
-        realAccount = {
-            provider: 'Google',
-            fullname: 'Hoàng Ân Lê',
-            email: 'hoanglean1005@gmail.com',
-            // Ảnh đại diện chữ H nền xanh chuẩn của tài khoản Google của bạn
-            avatar: 'https://ui-avatars.com/api/?name=Hoang+An+Le&background=0284c7&color=fff&size=128&bold=true'
-        };
-    } else if (provider === 'Facebook') {
-        realAccount = {
-            provider: 'Facebook',
-            fullname: 'Hoàng Ân Lê',
-            email: 'lehoangan200504@gmail.com', // Email tài khoản Facebook chính chủ
-            // Sử dụng avatar phong cách Facebook với tên thật Hoàng Ân
-            avatar: 'https://ui-avatars.com/api/?name=Hoang+An+Le&background=1877f2&color=fff&size=128&bold=true'
-        };
-    } else if (provider === 'Apple') {
-        realAccount = {
-            provider: 'Apple',
-            fullname: 'Hoàng Ân Lê',
-            email: 'hoangan.le@icloud.com',
-            avatar: 'https://ui-avatars.com/api/?name=Hoang+An+Le&background=000000&color=fff&size=128&bold=true'
-        };
+// Nạp Firebase Auth một lần (gọi sẵn khi mở hộp đăng nhập để cửa sổ popup không bị trình duyệt chặn)
+function loadFirebaseAuth() {
+    if (!firebaseAuthPromise) {
+        firebaseAuthPromise = Promise.all([
+            import(`${FIREBASE_SDK_URL}/firebase-app.js`),
+            import(`${FIREBASE_SDK_URL}/firebase-auth.js`)
+        ]).then(([appSdk, authSdk]) => {
+            const app = appSdk.getApps().length ? appSdk.getApp() : appSdk.initializeApp(FIREBASE_WEB_CONFIG);
+            const auth = authSdk.getAuth(app);
+            auth.languageCode = "vi";
+            return { auth, sdk: authSdk };
+        }).catch(err => {
+            firebaseAuthPromise = null; // Cho phép thử lại khi có mạng
+            throw err;
+        });
     }
+    return firebaseAuthPromise;
+}
 
-    // 2. Mở một cửa sổ popup tương tác mô phỏng quy trình cấp quyền OAuth 2.0 thực tế
-    const authWindow = window.open(
-        "",
-        `Xác thực ${provider}`,
-        "width=500,height=580,top=120,left=400,toolbar=no,menubar=no,location=no"
-    );
+function buildSocialProvider(sdk, provider) {
+    if (provider === "Google") {
+        const p = new sdk.GoogleAuthProvider();
+        // Luôn hiện trình chọn tài khoản Google đang đăng nhập trên trình duyệt
+        p.setCustomParameters({ prompt: "select_account" });
+        return p;
+    }
+    if (provider === "Facebook") {
+        const p = new sdk.FacebookAuthProvider();
+        p.addScope("email");
+        p.addScope("public_profile");
+        p.setCustomParameters({ display: "popup" });
+        return p;
+    }
+    const p = new sdk.OAuthProvider("apple.com");
+    p.addScope("email");
+    p.addScope("name");
+    p.setCustomParameters({ locale: "vi_VN" });
+    return p;
+}
 
-    if (authWindow) {
-        authWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="vi">
-            <head>
-                <meta charset="UTF-8">
-                <title>Đăng nhập bằng ${provider}</title>
-                <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #0f172a; text-align: center; }
-                    .card { background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 85%; max-width: 380px; }
-                    .avatar { width: 72px; height: 72px; border-radius: 50%; margin: 12px 0; object-fit: cover; border: 3px solid #e2e8f0; }
-                    .btn-confirm { background: #0284c7; color: #fff; border: none; padding: 11px 20px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 18px; font-size: 14px; }
-                    .btn-cancel { background: transparent; color: #64748b; border: none; padding: 8px; cursor: pointer; font-size: 13px; margin-top: 8px; width: 100%; }
-                </style>
-            </head>
-            <body>
-                <div class="card">
-                    <h3 style="margin: 0; font-size: 17px;">Cổng xác thực ${provider}</h3>
-                    <p style="font-size: 13px; color: #64748b; margin: 6px 0 16px 0;">Ứng dụng <b>AirHCM</b> yêu cầu quyền truy cập hồ sơ công khai của bạn.</p>
-                    <img src="${realAccount.avatar}" class="avatar" alt="Avatar">
-                    <h4 style="margin: 4px 0; font-size: 16px;">${realAccount.fullname}</h4>
-                    <p style="margin: 0; font-size: 13px; color: #64748b;">${realAccount.email}</p>
-                    <button class="btn-confirm" id="btn-agree">Tiếp tục dưới tên ${realAccount.fullname}</button>
-                    <button class="btn-cancel" onclick="window.close()">Hủy bỏ</button>
-                </div>
-            </body>
-            </html>
-        `);
+// Thông báo lỗi dễ hiểu; null = người dùng tự đóng cửa sổ, không cần báo
+function describeSocialError(err, provider) {
+    const code = err && err.code ? err.code : "";
+    switch (code) {
+        case "auth/popup-closed-by-user":
+        case "auth/cancelled-popup-request":
+        case "auth/user-cancelled":
+            return null;
+        case "auth/popup-blocked":
+            return "Trình duyệt đã chặn cửa sổ đăng nhập. Hãy cho phép cửa sổ bật lên (popup) cho trang này rồi thử lại.";
+        case "auth/configuration-not-found":
+            return `Dự án Firebase "airhcm" chưa kích hoạt Authentication. Quản trị viên cần vào Firebase Console → Authentication → Get started, rồi bật ${provider} trong Sign-in method.`;
+        case "auth/operation-not-allowed":
+            return `Đăng nhập bằng ${provider} chưa được bật. Quản trị viên cần bật ${provider} trong Firebase Console → Authentication → Sign-in method.`;
+        case "auth/unauthorized-domain":
+            return `Tên miền "${location.hostname}" chưa được phép đăng nhập. Hãy mở trang bằng http://localhost hoặc thêm tên miền vào Firebase Console → Authentication → Settings → Authorized domains.`;
+        case "auth/account-exists-with-different-credential":
+            return "Email của tài khoản này đã được dùng để đăng nhập bằng phương thức khác. Hãy đăng nhập bằng phương thức bạn đã dùng trước đó.";
+        case "auth/network-request-failed":
+            return "Không kết nối được máy chủ xác thực. Vui lòng kiểm tra mạng và thử lại.";
+        case "auth/invalid-credential":
+        case "auth/invalid-oauth-client-id":
+        case "auth/invalid-oauth-provider":
+            return `Cấu hình đăng nhập ${provider} trên Firebase chưa đúng (App ID / Secret / Service ID).`;
+        default:
+            return err && err.message ? err.message : `Đăng nhập bằng ${provider} thất bại.`;
+    }
+}
 
-        // Khi người dùng bấm đồng ý trên Popup xác thực
-        authWindow.document.getElementById("btn-agree").onclick = function() {
-            authWindow.close();
+function showUserAuthMsg(text, type = "error") {
+    const msg = document.getElementById("user-auth-msg");
+    if (!msg) return;
+    if (!text) {
+        msg.style.display = "none";
+        return;
+    }
+    msg.style.display = "block";
+    msg.style.background = type === "error" ? "#fee2e2" : "#e0f2fe";
+    msg.style.color = type === "error" ? "#991b1b" : "#075985";
+    msg.innerText = (type === "error" ? "❌ " : "⏳ ") + text;
+}
 
-            // 3. Gửi thông tin tài khoản chính chủ lên Backend lưu vào CSDL
-            fetch(`${API_BASE}/auth/user/oauth`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(realAccount)
-            })
-            .then(async res => {
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || "Xác thực thất bại");
-                return data;
-            })
-            .then(data => {
-                // Lưu phiên đăng nhập chính chủ vào LocalStorage
-                localStorage.setItem("airhcm_user_session", JSON.stringify(data.user));
-                closeUserAuthModal();
-                renderUserHeaderState();
-                alert(`🎉 Đăng nhập thành công! Chào mừng ${data.user.fullname} (${provider}).`);
-            })
-            .catch(err => alert("Lỗi OAuth: " + err.message));
-        };
-    } else {
-        // Dự phòng nếu trình duyệt chặn Popup (Fallback gửi trực tiếp)
-        fetch(`${API_BASE}/auth/user/oauth`, {
+window.handleSocialAuth = async function (provider) {
+    const btn = document.querySelector(`.btn-social-${provider.toLowerCase()}`);
+    const busyBtns = document.querySelectorAll(".btn-social");
+    busyBtns.forEach(b => (b.disabled = true));
+    if (btn) btn.classList.add("is-busy");
+    showUserAuthMsg(null);
+
+    let authCtx = null;
+    try {
+        authCtx = await loadFirebaseAuth();
+        const { auth, sdk } = authCtx;
+        const result = await sdk.signInWithPopup(auth, buildSocialProvider(sdk, provider));
+        showUserAuthMsg(`Đang xác minh tài khoản ${provider}...`, "info");
+
+        const idToken = await result.user.getIdToken();
+        const res = await fetch(`${API_BASE}/auth/user/social`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(realAccount)
-        })
-        .then(res => res.json())
-        .then(data => {
-            localStorage.setItem("airhcm_user_session", JSON.stringify(data.user));
-            closeUserAuthModal();
-            renderUserHeaderState();
-            alert(`🎉 Đăng nhập thành công với tài khoản ${data.user.fullname} (${provider})!`);
-        })
-        .catch(err => alert("Lỗi xác thực: " + err.message));
+            body: JSON.stringify({ id_token: idToken, fullname: result.user.displayName || null })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.detail || "Máy chủ AirHCM từ chối xác thực.");
+
+        // Phiên AirHCM lưu trong máy; phiên Firebase không cần giữ lại
+        localStorage.setItem("airhcm_user_session", JSON.stringify(data.user));
+        sdk.signOut(auth).catch(() => { });
+        showUserAuthMsg(null);
+        closeUserAuthModal();
+        renderUserHeaderState();
+        alert(`🎉 ${data.message} Chào mừng ${data.user.fullname}!`);
+    } catch (err) {
+        if (authCtx) authCtx.sdk.signOut(authCtx.auth).catch(() => { });
+        const text = err && err.code ? describeSocialError(err, provider)
+            : (err && /import|module|fetch dynamically/i.test(err.message || "")
+                ? "Không tải được thư viện đăng nhập. Vui lòng kiểm tra kết nối Internet."
+                : (err && err.message) || `Đăng nhập bằng ${provider} thất bại.`);
+        if (text) showUserAuthMsg(text);
+        console.warn(`Đăng nhập ${provider}:`, err);
+    } finally {
+        busyBtns.forEach(b => (b.disabled = false));
+        if (btn) btn.classList.remove("is-busy");
     }
 };
 
@@ -2321,23 +3559,32 @@ function renderUserHeaderState() {
     const slot = document.getElementById("user-auth-slot");
     if (!slot) return;
 
-    const userSession = JSON.parse(localStorage.getItem("airhcm_user_session"));
+    let userSession = null;
+    try {
+        userSession = JSON.parse(localStorage.getItem("airhcm_user_session"));
+    } catch (_) {
+        localStorage.removeItem("airhcm_user_session");
+    }
     if (userSession) {
+        // Họ tên / ảnh đến từ tài khoản Google, Facebook, Apple thật -> luôn escape khi chèn HTML
+        const name = escapeHtml(userSession.fullname || "Thành viên");
+        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.fullname || "U")}&background=0284c7&color=fff`;
         slot.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 20px;">
-                <img src="${userSession.avatar}" alt="Avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                <span style="font-size: 12px; font-weight: 700; color: #0f172a; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${userSession.fullname}
-                </span>
-                <button onclick="handleUserLogout()" title="Đăng xuất" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px 4px; font-size: 13px;">
+            <div class="user-chip" title="${escapeHtml(userSession.email || userSession.fullname || "")}">
+                <img src="${escapeHtml(userSession.avatar || fallbackAvatar)}" alt="Avatar" referrerpolicy="no-referrer">
+                <span class="user-name btn-label">${name}</span>
+                <button class="user-logout" onclick="handleUserLogout()" title="Đăng xuất">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
         `;
+        // Ảnh đại diện lỗi (hết hạn / bị chặn) -> dùng ảnh chữ cái đầu
+        const img = slot.querySelector(".user-chip img");
+        if (img) img.addEventListener("error", () => { img.src = fallbackAvatar; }, { once: true });
     } else {
         slot.innerHTML = `
-            <button onclick="openUserAuthModal('login')" class="btn" style="background: #0284c7; color: #ffffff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-user"></i> <span>Đăng nhập / Đăng ký</span>
+            <button onclick="openUserAuthModal('login')" class="btn btn-gradient" title="Đăng nhập / Đăng ký">
+                <i class="fa-solid fa-user"></i> <span class="btn-label">Đăng nhập / Đăng ký</span>
             </button>
         `;
     }

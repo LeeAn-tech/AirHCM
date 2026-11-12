@@ -74,7 +74,32 @@ psql -U postgres -d webgis_aqi_hcm -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 
 # Restore dữ liệu
 pg_restore -U postgres -d webgis_aqi_hcm -v "database_sql/webgis_hcm.backup"
+```
+
+### 2. Cấu hình bí mật (`backend/.env` – không commit)
+```ini
+GEMINI_API_KEY=...            # Trợ lý AI (Gemini) + embedding cho RAG
+SMTP_SENDER_EMAIL=...         # Gmail gửi email cảnh báo
+SMTP_APP_PASSWORD=...         # Gmail App Password
+AUTH_SECRET=...               # Khóa ký token đăng nhập (tự sinh nếu để trống)
+```
+
+### 3. Chạy hệ thống – 1 lệnh
+Bấm đúp `start_airhcm.bat` (hoặc `cd backend && python run.py`). Backend FastAPI phục vụ luôn WebGIS:
+* Máy tính: http://localhost:8000 · Tài liệu API: http://localhost:8000/docs
+* Điện thoại cùng Wi-Fi: bấm nút **QR** trên thanh tiêu đề WebGIS rồi quét mã.
+
+### 4. Tài khoản quản trị (RBAC)
+Mật khẩu quản trị được băm PBKDF2 trên máy chủ (`backend/auth_store.json`), mọi API `/admin/*` yêu cầu token vai trò admin. Đổi mật khẩu mặc định:
+```bash
+cd backend && python scripts/set_admin_password.py admin
+```
+
+### 5. Trợ lý AI có RAG
+Kho tri thức nằm trong `backend/knowledge/*.md` (QCVN 05:2023, VN_AQI 1459, WHO 2021, US EPA, khuyến cáo y tế…). Thêm tài liệu mới: tạo file Markdown, mỗi mục bắt đầu bằng `## `, khởi động lại Backend – embedding được tính và lưu cache tự động.
 
 ---
 
 ## 🏛️ Kiến Trúc Hệ Thống (3-Tier Architecture)
+
+# Ghi chú phát triển WebGis và Mobile AirHCM

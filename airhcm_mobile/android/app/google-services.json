@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "903722662342",
+    "project_id": "airhcm",
+    "storage_bucket": "airhcm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903722662342:android:955a61ec9c1c1d8b135ac7",
+        "android_client_info": {
+          "package_name": "com.example.airhcm_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQJR_UgJu8iz_O8lzFtD55SUkOqYesyv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

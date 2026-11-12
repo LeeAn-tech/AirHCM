@@ -39,6 +39,14 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   http: ^1.6.0
+  lottie: ^3.8.2
+  flutter_markdown: ^0.7.7+1
+  firebase_core: ^5.1.0
+  firebase_messaging: ^17.0.1
+  url_launcher: ^6.3.2       # Mở bài báo môi trường trên trình duyệt
+  geolocator: ^12.0.0        # GPS: gửi tọa độ người dùng để phân tích không khí theo vị trí
+  flutter_local_notifications: ^17.2.4  # Thông báo kèm tiếng còi khi AQI vượt ngưỡng
+  firebase_auth: ^7.0.1      # Đăng nhập Google / Facebook / Apple (Firebase Authentication)
 
 dev_dependencies:
   flutter_test:
@@ -63,7 +71,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+      - assets/animations/ai_loading.json
+      - assets/data/hcm_wards.json
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

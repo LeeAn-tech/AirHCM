@@ -1,0 +1,211 @@
+[
+  {
+    "time": "2026-11-12 22:27:38",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 75.9,
+    "peak_aqi": 162,
+    "peak_time": "2026-11-13 09:00",
+    "exceed_hours": 7,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-12 18:12:37",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 88.0,
+    "peak_aqi": 168,
+    "peak_time": "2026-11-13 09:00",
+    "exceed_hours": 7,
+    "trigger": "on-demand",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-12 09:54:37",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 90.8,
+    "peak_aqi": 169,
+    "peak_time": "2026-11-13 09:00",
+    "exceed_hours": 7,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-12 01:01:06",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 82.6,
+    "peak_aqi": 165,
+    "peak_time": "2026-11-12 09:00",
+    "exceed_hours": 11,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-12 00:48:07",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 123.1,
+    "peak_aqi": 186,
+    "peak_time": "2026-11-12 08:00",
+    "exceed_hours": 11,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 18:58:55",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 124.8,
+    "peak_aqi": 187,
+    "peak_time": "2026-11-12 08:00",
+    "exceed_hours": 11,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 18:40:02",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 126.0,
+    "peak_aqi": 187,
+    "peak_time": "2026-11-12 08:00",
+    "exceed_hours": 11,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 18:37:20",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 124.8,
+    "peak_aqi": 187,
+    "peak_time": "2026-11-12 08:00",
+    "exceed_hours": 12,
+    "trigger": "on-demand",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 18:26:36",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 122.2,
+    "peak_aqi": 185,
+    "peak_time": "2026-11-11 08:00",
+    "exceed_hours": 18,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 01:27:03",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 122.6,
+    "peak_aqi": 186,
+    "peak_time": "2026-11-11 08:00",
+    "exceed_hours": 18,
+    "trigger": "admin",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-11 01:24:24",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 122.5,
+    "peak_aqi": 186,
+    "peak_time": "2026-11-11 08:00",
+    "exceed_hours": 18,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 19:26:31",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 132.9,
+    "peak_aqi": 191,
+    "peak_time": "2026-11-11 07:00",
+    "exceed_hours": 15,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 19:11:40",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 138.9,
+    "peak_aqi": 194,
+    "peak_time": "2026-11-11 07:00",
+    "exceed_hours": 17,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 18:32:13",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 124.7,
+    "peak_aqi": 187,
+    "peak_time": "2026-11-11 08:00",
+    "exceed_hours": 14,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 18:05:02",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 124.7,
+    "peak_aqi": 187,
+    "peak_time": "2026-11-11 08:00",
+    "exceed_hours": 13,
+    "trigger": "admin",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 18:03:57",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 102.9,
+    "peak_aqi": 176,
+    "peak_time": "2026-11-11 09:00",
+    "exceed_hours": 14,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 10:59:25",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 111.8,
+    "peak_aqi": 180,
+    "peak_time": "2026-11-11 09:00",
+    "exceed_hours": 11,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 07:29:32",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 130.1,
+    "peak_aqi": 190,
+    "peak_time": "2026-11-10 08:00",
+    "exceed_hours": 14,
+    "trigger": "on-demand",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-10 07:29:25",
+    "status": "WARNING",
+    "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",
+    "peak_pm25": 130.1,
+    "peak_aqi": 190,
+    "peak_time": "2026-11-10 08:00",
+    "exceed_hours": 14,
+    "trigger": "scheduler",
+    "push_sent": 0
+  }
+]

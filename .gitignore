@@ -1,0 +1,6 @@
+# Bí mật của dự án - không đưa lên GitHub
+backend/.env
+backend/serviceAccountKey.json
+backend/auth_store.json
+backend/auth_store.json.tmp
+backend/knowledge/.embeddings_cache.json

@@ -4,7 +4,47 @@
 // SVTH: LÊ HOÀNG ÂN - 1250080001 | GVHD: TS. Dương Thị Thúy Nga
 // ==============================================================================
 
-const API_BASE = `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`;
+// Backend phục vụ luôn WebGIS (cùng nguồn) -> dùng chính địa chỉ đang mở (LAN, tên miền, HTTPS);
+// chỉ khi mở bằng server tĩnh cổng 3000 / file:// mới gọi Backend ở cổng 8000
+const API_BASE = (location.port === "3000" || location.protocol === "file:")
+    ? `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`
+    : `${location.origin}/api/v1`;
+
+// ------------------------------------------------------------------------------
+// PHIÊN QUẢN TRỊ (RBAC): token vai trò admin do máy chủ cấp khi đăng nhập
+// ------------------------------------------------------------------------------
+function getAdminSession() {
+    try {
+        const auth = JSON.parse(localStorage.getItem("airhcm_admin_auth") || "null");
+        if (auth && auth.token && auth.expiresAt * 1000 > Date.now()) return auth;
+    } catch (e) { /* phiên lỗi định dạng */ }
+    return null;
+}
+
+let adminSessionEnded = false;
+function endAdminSession(message) {
+    if (adminSessionEnded) return;   // Nhiều API cùng bị từ chối -> chỉ báo một lần
+    adminSessionEnded = true;
+    localStorage.removeItem("airhcm_admin_auth");
+    if (message) alert(message);
+    window.location.href = "index.html";
+}
+
+// Mọi lời gọi tới API AirHCM từ trang quản trị tự đính kèm token; máy chủ từ chối (401/403) -> đăng nhập lại
+const nativeFetch = window.fetch.bind(window);
+window.fetch = function (input, init = {}) {
+    const url = typeof input === "string" ? input : input.url;
+    if (!url.startsWith(API_BASE)) return nativeFetch(input, init);
+    const session = getAdminSession();
+    const headers = new Headers(init.headers || {});
+    if (session) headers.set("Authorization", `Bearer ${session.token}`);
+    return nativeFetch(input, { ...init, headers }).then(res => {
+        if (res.status === 401 || res.status === 403) {
+            endAdminSession("🔒 Phiên quản trị đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.");
+        }
+        return res;
+    });
+};
 
 let adminMap = null;
 let currentBaseTile = null;
@@ -18,6 +58,7 @@ let tempPickMarker = null;
 let bufferLayerGroup = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+    renderAdminIdentity();
     initAdminTabs();
     initAdminMap();
     loadAdminWards();
@@ -27,15 +68,141 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchSubscribers();
     initETLEvent();
     populateAdminWardDropdown();
+    fetchAlertEngineStatus();
+    fetchAlertHistory();
+    setInterval(() => { fetchAlertEngineStatus(); fetchAlertHistory(); }, 5 * 60 * 1000);
 });
+
+// ==============================================================================
+// ĐỘNG CƠ CẢNH BÁO TỰ ĐỘNG (ACTIVITY DIAGRAM) & NHẬT KÝ VẬN HÀNH THỰC TẾ
+// ==============================================================================
+function formatAdminTime(str) {
+    if (!str) return "--";
+    const [datePart, timePart] = String(str).split(" ");
+    if (!timePart) return str;
+    const [y, m, d] = datePart.split("-");
+    return `${timePart.slice(0, 5)} ${d}/${m}/${y}`;
+}
+
+function renderAlertEngine(alert) {
+    const box = document.getElementById("adm-alert-engine");
+    if (!box || !alert) return;
+    const isWarning = alert.status === "WARNING";
+    const isKnown = alert.status === "WARNING" || alert.status === "NORMAL";
+
+    box.classList.toggle("is-warning", isWarning);
+    box.classList.toggle("is-normal", alert.status === "NORMAL");
+    box.innerHTML = `
+        <span class="chip ${isWarning ? 'chip-danger' : (isKnown ? 'chip-success' : 'chip-neutral')}">
+            <i class="fa-solid ${isWarning ? 'fa-triangle-exclamation' : 'fa-shield-heart'}"></i>
+            ${isWarning ? 'WARNING' : (isKnown ? 'NORMAL' : 'CHƯA RÕ')}
+        </span>
+        <div><b>${alert.title || 'Chưa có dữ liệu dự báo'}</b><small>${alert.level ? 'Mức đỉnh: ' + alert.level : (alert.message || '')}</small></div>
+    `;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    setText("adm-alert-peak", alert.peak_pm25 != null ? `${alert.peak_pm25} µg/m³ · ${alert.peak_label || ''}` : "--");
+    setText("adm-alert-exceed", alert.exceed_hours != null ? `${alert.exceed_hours} giờ` : "--");
+    setText("adm-alert-time", formatAdminTime(alert.evaluated_at));
+    if (alert.push) {
+        setText("adm-alert-push", alert.push.fcm_enabled
+            ? `${alert.push.sent}/${alert.push.eligible} thiết bị`
+            : "FCM đang tắt");
+    } else {
+        setText("adm-alert-push", isWarning ? "Đang trong thời gian nghỉ" : "Không cần gửi");
+    }
+}
+
+function fetchAlertEngineStatus() {
+    fetch(`${API_BASE}/alerts/active`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi: " + res.status);
+            return res.json();
+        })
+        .then(renderAlertEngine)
+        .catch(err => renderAlertEngine({ status: "UNKNOWN", title: "Không kết nối được DSS Engine", message: err.message }));
+}
+
+window.evaluateAlertNow = function () {
+    const btn = document.getElementById("btn-evaluate-alert");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI Engine đang dự báo & đối chiếu QCVN...';
+    }
+    fetch(`${API_BASE}/admin/alerts/evaluate`, { method: "POST" })
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi: " + res.status);
+            return res.json();
+        })
+        .then(alert => {
+            renderAlertEngine(alert);
+            fetchAlertHistory();
+            showAdminToast(alert.status === "WARNING"
+                ? `⚠️ Kích hoạt Warning_NhayCam: PM2.5 dự báo đạt ${alert.peak_pm25} µg/m³`
+                : `✅ Không khí 24h tới trong ngưỡng QCVN (đỉnh ${alert.peak_pm25} µg/m³)`);
+        })
+        .catch(err => alert("Lỗi đánh giá cảnh báo: " + err.message))
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Chạy đánh giá cảnh báo ngay';
+            }
+        });
+};
+
+function fetchAlertHistory() {
+    fetch(`${API_BASE}/alerts/history?limit=8`)
+        .then(res => {
+            if (!res.ok) throw new Error("Mã phản hồi: " + res.status);
+            return res.json();
+        })
+        .then(history => {
+            const list = document.getElementById("admin-audit-log-list");
+            if (!list || !Array.isArray(history) || history.length === 0) return;
+
+            const triggerLabel = { scheduler: "Lịch tự động", admin: "Quản trị viên", "on-demand": "Theo yêu cầu" };
+            list.innerHTML = history.map(h => {
+                const isWarning = h.status === "WARNING";
+                return `
+                    <div class="tl-item" style="--c: ${isWarning ? '#dc2626' : '#16a34a'};">
+                        <p><b>DSS ${isWarning ? 'Warning_NhayCam' : 'Bình thường'}:</b> đỉnh PM2.5 ${h.peak_pm25} µg/m³${isWarning ? `, ${h.exceed_hours} giờ vượt QCVN` : ''}${h.push_sent ? ` · Push ${h.push_sent} thiết bị` : ''}</p>
+                        <small>${formatAdminTime(h.time)} · ${triggerLabel[h.trigger] || h.trigger}</small>
+                    </div>
+                `;
+            }).join("");
+        })
+        .catch(() => { /* Giữ nhật ký mẫu khi chưa có lịch sử */ });
+}
+
 // KIỂM TRA PHÂN QUYỀN TRUY CẬP (BẢO VỆ CỔNG ADMIN)
+// (Giao diện chỉ là lớp ngoài: máy chủ mới là nơi kiểm tra quyền thật sự qua token)
 (function enforceAdminAuth() {
-    const authData = localStorage.getItem("airhcm_admin_auth");
-    if (!authData) {
-        alert("🔒 TRUY CẬP BỊ TỪ CHỐI: Bạn cần đăng nhập tài khoản Quản trị viên để truy cập Trung tâm Điều hành DSS!");
-        window.location.href = "index.html";
+    if (!getAdminSession()) {
+        endAdminSession("🔒 TRUY CẬP BỊ TỪ CHỐI: Bạn cần đăng nhập tài khoản Quản trị viên để truy cập Trung tâm Điều hành DSS!");
     }
 })();
+// HIỂN THỊ TÊN TÀI KHOẢN QUẢN TRỊ ĐANG ĐĂNG NHẬP TRÊN THANH TIÊU ĐỀ
+function renderAdminIdentity() {
+    let username = "admin";
+    const auth = getAdminSession();
+    if (auth) username = auth.fullname || auth.username;
+
+    const nameEl = document.getElementById("adm-username");
+    const avatarEl = document.getElementById("adm-avatar");
+    if (nameEl) nameEl.textContent = username;
+    if (avatarEl) avatarEl.textContent = username.charAt(0).toUpperCase();
+}
+
+// Cấp độ 1-6 theo thang AQI (dùng cho class màu t-* trong CSS)
+function getAdminAQILevel(aqi) {
+    if (aqi <= 50) return 1;
+    if (aqi <= 100) return 2;
+    if (aqi <= 150) return 3;
+    if (aqi <= 200) return 4;
+    if (aqi <= 300) return 5;
+    return 6;
+}
+
 // TỰ ĐỘNG NẠP VÀ HIỂN THỊ RANH GIỚI 166 PHƯỜNG/XÃ LÊN BẢN ĐỒ ADMIN
 function loadAdminWards() {
     fetch('assets/data/hcm_wards.json')
@@ -247,36 +414,28 @@ function renderStationTableAndMap(stations) {
         // Trạng thái trạm cho phép click trực tiếp để chuyển đổi HOẠT ĐỘNG <-> BẢO TRÌ
         const isMaintenance = (st.status === 'BẢO TRÌ');
         const statusBadge = isMaintenance
-            ? `<span onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')" 
-                     style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block; cursor: pointer;"
-                     title="Bấm để chuyển sang HOẠT ĐỘNG">
-                <i class="fa-solid fa-wrench"></i> BẢO TRÌ
-               </span>`
-            : `<span onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')" 
-                     style="background: rgba(74, 222, 128, 0.15); color: #16a34a; border: 1px solid rgba(74, 222, 128, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block; cursor: pointer;"
-                     title="Bấm để chuyển sang BẢO TRÌ">
-                <i class="fa-solid fa-circle-check"></i> HOẠT ĐỘNG
-               </span>`;
+            ? `<span class="chip chip-warning clickable" onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')"
+                     title="Bấm để chuyển sang HOẠT ĐỘNG"><i class="fa-solid fa-wrench"></i> BẢO TRÌ</span>`
+            : `<span class="chip chip-success clickable" onclick="toggleStationStatus('${st.ma_tram}', '${st.status}')"
+                     title="Bấm để chuyển sang BẢO TRÌ"><i class="fa-solid fa-circle-check"></i> HOẠT ĐỘNG</span>`;
 
         if (tbody) {
             const row = `
                 <tr>
-                    <td><b>${st.ma_tram}</b></td>
-                    <td>${st.ten_tram}</td>
+                    <td><span class="chip chip-neutral">${st.ma_tram}</span></td>
+                    <td class="cell-strong">${st.ten_tram}</td>
                     <td>${st.don_vi_quan_ly}</td>
-                    <td>${lat.toFixed(4)}, ${lng.toFixed(4)}</td>
-                    <td style="text-align: center; white-space: nowrap;">
-                        ${statusBadge}
-                    </td>
-                    <td style="text-align: center; white-space: nowrap;">
-                        <div style="display: flex; gap: 6px; justify-content: center;">
-                            <button onclick="zoomToStation(${lat}, ${lng})" class="btn" style="background:#0284c7; color:#fff; border:none; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;" title="Xem vị trí">
+                    <td class="cell-muted nowrap">${lat.toFixed(4)}, ${lng.toFixed(4)}</td>
+                    <td class="center nowrap">${statusBadge}</td>
+                    <td class="center nowrap">
+                        <div class="act-group">
+                            <button onclick="zoomToStation(${lat}, ${lng})" class="btn-act act-view" title="Xem vị trí">
                                 <i class="fa-solid fa-eye"></i> Xem
                             </button>
-                            <button onclick="openEditStationModal('${st.ma_tram}')" class="btn" style="background:rgba(245,158,11,0.15); color:#d97706; border:1px solid #d97706; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;" title="Chỉnh sửa trạm">
+                            <button onclick="openEditStationModal('${st.ma_tram}')" class="btn-act act-edit" title="Chỉnh sửa trạm">
                                 <i class="fa-solid fa-pen-to-square"></i> Sửa
                             </button>
-                            <button onclick="deleteStation('${st.ma_tram}')" class="btn" style="background:rgba(239,68,68,0.15); color:#dc2626; border:1px solid #dc2626; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;" title="Xóa trạm">
+                            <button onclick="deleteStation('${st.ma_tram}')" class="btn-act act-del" title="Xóa trạm">
                                 <i class="fa-solid fa-trash"></i> Xóa
                             </button>
                         </div>
@@ -300,13 +459,16 @@ function renderStationTableAndMap(stations) {
             });
 
             const marker = L.marker([lat, lng], { icon: radarIcon }).addTo(adminMap);
+            const stStatus = st.status || 'HOẠT ĐỘNG';
             marker.bindPopup(`
-                <div style="font-family:'Plus Jakarta Sans',sans-serif; min-width: 190px;">
-                    <h4 style="margin: 0 0 5px 0; color: #0284c7;"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
-                    <p style="margin: 2px 0; font-size: 12px;"><b>Mã:</b> ${st.ma_tram}</p>
-                    <p style="margin: 2px 0; font-size: 12px;"><b>Đơn vị:</b> ${st.don_vi_quan_ly}</p>
-                    <p style="margin: 2px 0; font-size: 12px;"><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</p>
-                    <p style="margin: 2px 0; font-size: 12px; color: #16a34a;"><b>Trạng thái:</b> ${st.status || 'HOẠT ĐỘNG'}</p>
+                <div class="pop-card">
+                    <h4 class="pop-title"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
+                    <div class="pop-sub">Mã trạm: ${st.ma_tram}</div>
+                    <div class="pop-meta">
+                        <span><b>Đơn vị:</b> ${st.don_vi_quan_ly}</span>
+                        <span><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</span>
+                    </div>
+                    <span class="chip ${stStatus === 'BẢO TRÌ' ? 'chip-warning' : 'chip-success'}">${stStatus}</span>
                 </div>
             `);
             adminStationMarkers.push(marker);
@@ -495,37 +657,39 @@ function renderSubscribersTable(subs) {
     tbody.innerHTML = "";
 
     if (!subs || subs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: #94a3b8; padding: 20px;">Chưa có người đăng ký nào.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="table-empty"><i class="fa-regular fa-bell-slash"></i> Chưa có người đăng ký nào.</td></tr>`;
         return;
     }
 
+    let rowsHtml = "";
     subs.forEach((s, idx) => {
         const thresholdText = `AQI > ${s.threshold_aqi}`;
-        const thresholdColor = s.threshold_aqi <= 100 ? "#f59e0b" : s.threshold_aqi <= 150 ? "#ef4444" : "#a855f7";
+        const thresholdCls = s.threshold_aqi <= 100 ? "lvl-3" : s.threshold_aqi <= 150 ? "lvl-4" : "lvl-5";
 
-        const row = `
+        const stt = idx + 1;
+        rowsHtml += `
             <tr>
-                <td><b>#${s.id || idx + 1}</b></td>
-                <td><b>${s.fullname}</b></td>
-                <td><a href="mailto:${s.email}" style="color:#38bdf8; text-decoration:none;">${s.email}</a></td>
-                <td>${s.phone || 'N/A'}</td>
+                <td class="center"><span class="rank-badge">${stt}</span></td>
+                <td class="cell-strong">${s.fullname}</td>
+                <td><a href="mailto:${s.email}" class="link-mail">${s.email}</a></td>
+                <td class="nowrap">${s.phone || 'N/A'}</td>
                 <td>${s.ward_code}</td>
-                <td><span style="background:rgba(255,255,255,0.06); color:${thresholdColor}; border: 1px solid ${thresholdColor}; padding:3px 10px; border-radius:6px; font-weight:700; font-size:11px;">${thresholdText}</span></td>
-                <td>${s.created_at || 'Hôm nay'}</td>
-                <td>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="btn-action-sm btn-act-alert" style="background: rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="openSendAlertModal('${s.fullname}', '${s.email}')">
+                <td><span class="aqi-pill ${thresholdCls}">${thresholdText}</span></td>
+                <td class="cell-muted nowrap">${s.created_at || 'Hôm nay'}</td>
+                <td class="center nowrap">
+                    <div class="act-group">
+                        <button class="btn-act act-send" onclick="openSendAlertModal('${s.fullname}', '${s.email}')">
                             <i class="fa-solid fa-paper-plane"></i> Gửi cảnh báo
                         </button>
-                        <button class="btn-action-sm btn-act-delete" style="background: rgba(239,68,68,0.15); color:#ef4444; border:1px solid #ef4444; padding:4px 8px; border-radius:6px; cursor:pointer;" onclick="deleteSubscriber(${s.id})">
+                        <button class="btn-act act-del" onclick="deleteSubscriber('${s.id || s.email}')">
                             <i class="fa-solid fa-trash"></i> Xóa
                         </button>
                     </div>
                 </td>
             </tr>
         `;
-        tbody.innerHTML += row;
     });
+    tbody.innerHTML = rowsHtml;
 }
 
 window.filterSubscribers = function () {
@@ -567,13 +731,25 @@ window.submitNewSubscriber = function (e) {
 };
 
 window.deleteSubscriber = function (subId) {
+    if (!subId || subId === "undefined") {
+        alert("⚠️ Không tìm thấy ID hoặc Email hợp lệ để xóa!");
+        return;
+    }
+
     if (confirm("Bạn có chắc chắn muốn xóa đăng ký nhận cảnh báo này?")) {
-        fetch(`${API_BASE}/admin/subscriptions/${subId}`, { method: "DELETE" })
+        fetch(`${API_BASE}/admin/subscriptions/${encodeURIComponent(subId)}`, { method: "DELETE" })
+            .then(res => {
+                if (!res.ok) throw new Error("Máy chủ phản hồi lỗi khi xóa.");
+                return res.json();
+            })
             .then(() => {
                 fetchSubscribers();
                 showAdminToast("🗑️ Đã xóa thông tin đăng ký nhận cảnh báo.");
             })
-            .catch(err => console.error("Lỗi xóa subscriber:", err));
+            .catch(err => {
+                console.error("Lỗi xóa subscriber:", err);
+                alert("Lỗi: " + err.message);
+            });
     }
 };
 
@@ -659,26 +835,23 @@ function renderAdminHotspots(wards) {
     tbody.innerHTML = "";
 
     // Lấy đúng Top 5 điểm nóng ô nhiễm nhất
+    let rowsHtml = "";
     wards.slice(0, 5).forEach((w, idx) => {
         const pm = parseFloat(w.pm2_5_trung_binh);
         const aqi = parseInt(w.aqi_trung_binh);
+        const lvl = getAdminAQILevel(aqi);
+        const rankCls = idx < 3 ? ` r${idx + 1}` : "";
 
-        // Màu chữ hiển thị tương ứng theo bậc AQI trên nền sáng
-        let aqiColor = "#16a34a"; // Xanh
-        if (aqi > 50 && aqi <= 100) aqiColor = "#b45309"; // Vàng hổ phách
-        else if (aqi > 100 && aqi <= 150) aqiColor = "#c2410c"; // Cam
-        else if (aqi > 150) aqiColor = "#dc2626"; // Đỏ
-
-        const row = `
+        rowsHtml += `
             <tr>
-                <td style="font-weight: 700; color: #64748b; text-align: center;">#${idx + 1}</td>
-                <td style="font-weight: 600; color: #0f172a;">${w.ten_phuong_xa}</td>
-                <td style="color: #0284c7; font-weight: 700; text-align: center;">${pm.toFixed(1)} µg/m³</td>
-                <td style="text-align: center;"><b style="color: ${aqiColor}; font-size: 14px; font-weight: 800;">${aqi}</b></td>
+                <td class="center"><span class="rank-badge${rankCls}">${idx + 1}</span></td>
+                <td class="cell-strong">${w.ten_phuong_xa}</td>
+                <td class="center cell-brand nowrap">${pm.toFixed(1)} µg/m³</td>
+                <td class="center"><b class="aqi-num t-${lvl}">${aqi}</b></td>
             </tr>
         `;
-        tbody.innerHTML += row;
     });
+    tbody.innerHTML = rowsHtml;
 }
 
 function initETLEvent() {
@@ -712,12 +885,17 @@ function initETLEvent() {
     });
 }
 
+let adminToastTimer = null;
 function showAdminToast(msg) {
     const toast = document.getElementById("toast-admin-notification");
     if (!toast) return;
     toast.innerText = msg;
-    toast.style.display = "block";
-    setTimeout(() => { toast.style.display = "none"; }, 4000);
+    // Khởi động lại hiệu ứng trượt vào + thanh đếm thời gian
+    toast.classList.remove("show");
+    void toast.offsetWidth;
+    toast.classList.add("show");
+    clearTimeout(adminToastTimer);
+    adminToastTimer = setTimeout(() => toast.classList.remove("show"), 4000);
 }
 // HÀM PHÁT CẢNH BÁO KHẨN CẤP ĐỒNG LOẠT CHO TẤT CẢ USER
 window.broadcastAlertToAll = function () {
@@ -1067,62 +1245,68 @@ function fetchAdminUsers() {
 function renderAdminUsersTable(users) {
     const tbody = document.getElementById("adm-users-table-body");
     if (!tbody) return;
+    if (!Array.isArray(users)) users = [];   // Máy chủ từ chối (hết phiên) -> bảng trống, đang chuyển về trang đăng nhập
     tbody.innerHTML = "";
 
     if (!users || users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: #64748b;">Chưa có thành viên nào đăng ký.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="table-empty"><i class="fa-regular fa-user"></i> Chưa có thành viên nào đăng ký.</td></tr>`;
         return;
     }
 
-    users.forEach(u => {
+    let rowsHtml = "";
+    users.forEach((u, idx) => {
         const isLocked = (u.status === 'BỊ KHÓA');
         const statusBadge = isLocked
-            ? `<span style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">BỊ KHÓA</span>`
-            : `<span style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">HOẠT ĐỘNG</span>`;
+            ? `<span class="chip chip-danger"><i class="fa-solid fa-lock"></i> BỊ KHÓA</span>`
+            : `<span class="chip chip-success"><i class="fa-solid fa-circle-check"></i> HOẠT ĐỘNG</span>`;
 
-        let providerBadge = `<span style="background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;"><i class="fa-solid fa-envelope"></i> Email</span>`;
-        if (u.provider === 'Google') providerBadge = `<span style="background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-google"></i> Google</span>`;
-        else if (u.provider === 'Facebook') providerBadge = `<span style="background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-facebook"></i> Facebook</span>`;
-        else if (u.provider === 'Apple') providerBadge = `<span style="background: #000; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;"><i class="fa-brands fa-apple"></i> Apple</span>`;
+        let providerBadge = `<span class="chip chip-neutral"><i class="fa-solid fa-envelope"></i> Email</span>`;
+        if (u.provider === 'Google') providerBadge = `<span class="chip chip-danger"><i class="fa-brands fa-google"></i> Google</span>`;
+        else if (u.provider === 'Facebook') providerBadge = `<span class="chip chip-info"><i class="fa-brands fa-facebook"></i> Facebook</span>`;
+        else if (u.provider === 'Apple') providerBadge = `<span class="chip chip-dark"><i class="fa-brands fa-apple"></i> Apple</span>`;
 
-        const row = `
+        // Số thứ tự hiển thị tự động tăng (ID thật vẫn dùng để gọi API)
+        const stt = idx + 1;
+        const avatar = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullname || "U")}&background=0284c7&color=fff&bold=true`;
+
+        rowsHtml += `
             <tr>
-                <td><b>#${u.id}</b></td>
+                <td class="center"><span class="rank-badge">${stt}</span></td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <img src="${u.avatar}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover;">
-                        <span style="font-weight: 700; color: #0f172a;">${u.fullname}</span>
+                    <div class="avatar-cell">
+                        <img src="${avatar}" alt="Avatar">
+                        <span class="cell-strong">${u.fullname}</span>
                     </div>
                 </td>
-                <td><a href="mailto:${u.email}" style="color: #0284c7; text-decoration: none;">${u.email}</a></td>
+                <td><a href="mailto:${u.email}" class="link-mail">${u.email}</a></td>
                 <td>${providerBadge}</td>
-                <td>${u.created_at || 'Mới'}</td>
-                <td style="text-align: center;">${statusBadge}</td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap: 6px; justify-content: center;">
-                        <button onclick="toggleUserStatusAdmin(${u.id})" class="btn-action-sm" style="background: ${isLocked ? '#dcfce7' : '#fef3c7'}; color: ${isLocked ? '#166534' : '#854d0e'}; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;" title="Khóa hoặc Mở khóa">
+                <td class="cell-muted nowrap">${u.created_at || 'Mới'}</td>
+                <td class="center nowrap">${statusBadge}</td>
+                <td class="center nowrap">
+                    <div class="act-group">
+                        <button onclick="toggleUserStatusAdmin(${u.id})" class="btn-act ${isLocked ? 'act-unlock' : 'act-lock'}" title="Khóa hoặc Mở khóa">
                             <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'}"></i> ${isLocked ? 'Mở' : 'Khóa'}
                         </button>
-                        <button onclick="deleteUserAdmin(${u.id})" class="btn-action-sm btn-act-delete" style="background: rgba(239,68,68,0.15); color: #dc2626; border: 1px solid #dc2626; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;" title="Xóa tài khoản">
+                        <button onclick="deleteUserAdmin(${u.id})" class="btn-act act-del" title="Xóa tài khoản">
                             <i class="fa-solid fa-trash"></i> Xóa
                         </button>
                     </div>
                 </td>
             </tr>
         `;
-        tbody.innerHTML += row;
     });
+    tbody.innerHTML = rowsHtml;
 }
 
-window.filterAdminUsers = function() {
+window.filterAdminUsers = function () {
     const term = document.getElementById("search-user").value.toLowerCase();
-    const filtered = adminUsersList.filter(u => 
+    const filtered = adminUsersList.filter(u =>
         u.fullname.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
     );
     renderAdminUsersTable(filtered);
 };
 
-window.toggleUserStatusAdmin = function(userId) {
+window.toggleUserStatusAdmin = function (userId) {
     fetch(`${API_BASE}/admin/users/${userId}/toggle-status`, { method: "PUT" })
         .then(res => res.json())
         .then(data => {
@@ -1132,7 +1316,7 @@ window.toggleUserStatusAdmin = function(userId) {
         .catch(err => alert("Lỗi: " + err.message));
 };
 
-window.deleteUserAdmin = function(userId) {
+window.deleteUserAdmin = function (userId) {
     if (confirm(`Bạn có chắc chắn muốn xóa tài khoản #${userId} này?`)) {
         fetch(`${API_BASE}/admin/users/${userId}`, { method: "DELETE" })
             .then(res => res.json())
@@ -1153,13 +1337,13 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==============================================================================
 
 // 1. NÚT LÀM MỚI DANH SÁCH (CÓ TOAST PHẢN HỒI)
-window.refreshAdminUsers = function() {
+window.refreshAdminUsers = function () {
     showAdminToast("🔄 Đang đồng bộ danh sách thành viên...");
     fetchAdminUsers();
 };
 
 // 2. NÚT THÊM THÀNH VIÊN (MỞ / ĐÓNG MODAL)
-window.openAddUserModal = function() {
+window.openAddUserModal = function () {
     const modal = document.getElementById("modal-add-user");
     if (modal) {
         modal.classList.add("active");
@@ -1170,7 +1354,7 @@ window.openAddUserModal = function() {
     }
 };
 
-window.closeAddUserModal = function() {
+window.closeAddUserModal = function () {
     const modal = document.getElementById("modal-add-user");
     if (modal) modal.classList.remove("active");
     const form = document.getElementById("form-add-user");
@@ -1178,7 +1362,7 @@ window.closeAddUserModal = function() {
 };
 
 // Xử lý gửi Form tạo User mới lên Backend
-window.submitAddUser = function(e) {
+window.submitAddUser = function (e) {
     e.preventDefault();
     const btnSubmit = e.target.querySelector('button[type="submit"]');
     const oldText = btnSubmit.innerHTML;
@@ -1197,43 +1381,43 @@ window.submitAddUser = function(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-    .then(async res => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Không thể tạo tài khoản");
-        return data;
-    })
-    .then(data => {
-        closeAddUserModal();
-        showAdminToast(`✅ ${data.message}`);
-        fetchAdminUsers(); // Tải lại bảng ngay lập tức
-    })
-    .catch(err => {
-        alert("Lỗi: " + err.message);
-    })
-    .finally(() => {
-        btnSubmit.innerHTML = oldText;
-        btnSubmit.disabled = false;
-    });
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || "Không thể tạo tài khoản");
+            return data;
+        })
+        .then(data => {
+            closeAddUserModal();
+            showAdminToast(`✅ ${data.message}`);
+            fetchAdminUsers(); // Tải lại bảng ngay lập tức
+        })
+        .catch(err => {
+            alert("Lỗi: " + err.message);
+        })
+        .finally(() => {
+            btnSubmit.innerHTML = oldText;
+            btnSubmit.disabled = false;
+        });
 };
 
 // 3. NÚT XUẤT EXCEL (CSV) CHUẨN UTF-8 BOM
-window.exportUsersToCSV = function() {
+window.exportUsersToCSV = function () {
     if (!adminUsersList || adminUsersList.length === 0) {
         alert("⚠️ Hiện tại chưa có dữ liệu thành viên để xuất file!");
         return;
     }
 
-    // Tiêu đề cột chuẩn nghiệp vụ
-    let csvContent = "\uFEFFMã ID,Họ và Tên,Địa Chỉ Email,Phương Thức Đăng Ký,Thời Gian Tạo,Trạng Thái\n";
-    
-    adminUsersList.forEach(u => {
-        csvContent += `"${u.id}","${u.fullname}","${u.email}","${u.provider}","${u.created_at || ''}","${u.status}"\n`;
+    // Đổi tiêu đề cột đầu tiên thành STT
+    let csvContent = "\uFEFFSTT,Họ và Tên,Địa Chỉ Email,Phương Thức Đăng Ký,Thời Gian Tạo,Trạng Thái\n";
+
+    adminUsersList.forEach((u, idx) => {
+        csvContent += `${idx + 1},"${u.fullname}","${u.email}","${u.provider}","${u.created_at || ''}","${u.status}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Danh_sach_Thanh_vien_AirHCM_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `Danh_sach_Thanh_vien_AirHCM_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

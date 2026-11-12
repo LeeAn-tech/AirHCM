@@ -1,5 +1,24 @@
 [
   {
+    "id": 8,
+    "fullname": "Trần Văn Giàu",
+    "email": "tranvangiau@gmail.com",
+    "phone": "0901478963",
+    "ward_code": "Phường Tam Bình",
+    "threshold_aqi": 100,
+    "fcm_token": null,
+    "created_at": "2026-11-10"
+  },
+  {
+    "id": 7,
+    "fullname": "Lee Min Hoang",
+    "email": "annleandro79@gmail.com",
+    "phone": "0978244687",
+    "ward_code": "Bàu Lâm",
+    "threshold_aqi": 200,
+    "created_at": "2026-11-09"
+  },
+  {
     "id": 6,
     "fullname": "Nguyễn Hoàng Minh",
     "email": "1250080001@sv.hcmunre.edu.vn",
@@ -7,24 +26,6 @@
     "ward_code": "Phường Tân Bình",
     "threshold_aqi": 100,
     "created_at": "2026-10-20"
-  },
-  {
-    "id": 5,
-    "fullname": "Lê Văn Em",
-    "email": "lehoangan1128@gmail.com",
-    "phone": "0789446824",
-    "ward_code": "Phường Bình Đông",
-    "threshold_aqi": 150,
-    "created_at": "2026-10-16"
-  },
-  {
-    "id": 4,
-    "fullname": "Lê Ngọc Ánh Dương",
-    "email": "lehoangan200504@gmail.com",
-    "phone": "0789446824",
-    "ward_code": "Tất cả khu vực TP.HCM",
-    "threshold_aqi": 100,
-    "created_at": "2026-10-10"
   },
   {
     "id": 1,
