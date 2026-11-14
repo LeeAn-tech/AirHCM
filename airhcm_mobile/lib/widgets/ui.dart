@@ -350,7 +350,9 @@ class _ServerSettingsBodyState extends State<_ServerSettingsBody> {
         widget.controller.text = found;
         _result = 'Đã tìm thấy & lưu máy chủ: $found';
       } else {
-        _result = 'Không tìm thấy máy chủ trong mạng này. Hãy bật Backend (python run.py) và kết nối cùng Wi-Fi với máy tính.';
+        _result = 'Không tìm thấy máy chủ. Kiểm tra: (1) Backend đã chạy; (2) điện thoại và máy tính cùng một mạng Wi-Fi '
+            '- Wi-Fi công cộng (quán cà phê, trường) thường chặn các thiết bị kết nối với nhau: hãy bật Điểm phát sóng '
+            'của điện thoại cho máy tính kết nối, hoặc cắm cáp USB rồi chạy start_airhcm.bat.';
       }
     });
   }

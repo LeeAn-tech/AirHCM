@@ -124,8 +124,10 @@ class ApiConfig {
         }
       }
 
-      // Thứ tự quét: quanh số cuối của IP cũ trước (router thường cấp IP gần nhau)
-      final candidates = <String>[];
+      // Ưu tiên kết nối qua cáp USB (adb reverse tcp:8000 tcp:8000): dùng được cả khi Wi-Fi công cộng
+      // (quán cà phê, trường học) chặn các thiết bị kết nối với nhau hoặc điện thoại khác mạng với máy tính
+      final candidates = <String>['http://127.0.0.1:$port'];
+      // Sau đó quét mạng Wi-Fi: quanh số cuối của IP cũ trước (router thường cấp IP gần nhau)
       for (final prefix in prefixes) {
         final center = oldHost.startsWith('$prefix.') ? int.tryParse(oldHost.split('.').last) ?? 100 : 100;
         final hosts = List<int>.generate(254, (i) => i + 1)

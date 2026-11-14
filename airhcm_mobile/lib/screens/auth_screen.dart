@@ -196,7 +196,11 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     );
   }
 
-  /// Cụm nút đăng nhập nhanh giống WebGIS: Google · Facebook · Apple ID
+  /// Apple ID tạm ẩn (giống WebGIS): cần tài khoản Apple Developer trả phí. Khi có, đổi thành true -
+  /// SocialAuth và Backend đã hỗ trợ sẵn.
+  static const bool _appleSignInEnabled = false;
+
+  /// Cụm nút đăng nhập nhanh giống WebGIS: Google · Facebook
   Widget _socialBlock() {
     return Column(
       children: [
@@ -216,14 +220,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           foreground: Colors.white,
           icon: const Icon(Icons.facebook, size: 21, color: Colors.white),
         ),
-        const SizedBox(height: 10),
-        _socialButton(
-          SocialProvider.apple,
-          'Đăng nhập bằng Apple ID',
-          background: Colors.black,
-          foreground: Colors.white,
-          icon: const Icon(Icons.apple, size: 22, color: Colors.white),
-        ),
+        if (_appleSignInEnabled) ...[
+          const SizedBox(height: 10),
+          _socialButton(
+            SocialProvider.apple,
+            'Đăng nhập bằng Apple ID',
+            background: Colors.black,
+            foreground: Colors.white,
+            icon: const Icon(Icons.apple, size: 22, color: Colors.white),
+          ),
+        ],
         const SizedBox(height: 20),
         const Row(
           children: [

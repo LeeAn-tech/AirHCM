@@ -4,3 +4,4 @@ backend/serviceAccountKey.json
 backend/auth_store.json
 backend/auth_store.json.tmp
 backend/knowledge/.embeddings_cache.json
+backend/avatars/

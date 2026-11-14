@@ -50,16 +50,36 @@ def verify_social_token(id_token: str) -> dict:
         print(f"-> [Đăng nhập MXH] Không xác minh được token: {e}")
         raise SocialAuthError("Máy chủ chưa xác minh được đăng nhập, vui lòng thử lại sau ít phút.", status_code=503)
 
-    provider_id = (decoded.get("firebase") or {}).get("sign_in_provider")
+    firebase_claims = decoded.get("firebase") or {}
+    provider_id = firebase_claims.get("sign_in_provider")
     provider = PROVIDERS.get(provider_id)
     if not provider:
         raise SocialAuthError(f"Phương thức đăng nhập '{provider_id}' không được hỗ trợ.", status_code=400)
 
+    identities = (firebase_claims.get("identities") or {}).get(provider_id) or []
+    email = (decoded.get("email") or "").strip().lower()
     return {
         "uid": decoded["uid"],
         "provider": provider,
-        "email": (decoded.get("email") or "").strip().lower(),
+        # ID tài khoản bên nhà cung cấp (Facebook: app-scoped user ID) - dùng để lấy ảnh đại diện thật
+        "provider_uid": str(identities[0]) if identities else "",
+        "email": email,
         "email_verified": bool(decoded.get("email_verified")),
+        # Facebook: Firebase không đưa email vào token (chưa coi là đã xác minh) nhưng vẫn lưu trong hồ sơ
+        "provider_email": "" if email else _provider_email(decoded["uid"], provider_id),
         "name": (decoded.get("name") or "").strip(),
         "picture": decoded.get("picture") or "",
     }
+
+
+def _provider_email(uid: str, provider_id: str) -> str:
+    """Email mà nhà cung cấp trả về, đọc từ hồ sơ Firebase bằng Admin SDK (cần serviceAccountKey.json)"""
+    try:
+        record = firebase_auth.get_user(uid, app=_firebase_app())
+    except Exception as e:
+        print(f"-> [Đăng nhập MXH] Không đọc được hồ sơ Firebase: {type(e).__name__}")
+        return ""
+    for p in record.provider_data:
+        if p.provider_id == provider_id and p.email:
+            return p.email.strip().lower()
+    return ""

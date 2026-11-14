@@ -11,6 +11,21 @@ const API_BASE = (location.port === "3000" || location.protocol === "file:")
     ? `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`
     : `${location.origin}/api/v1`;
 
+// Ảnh đại diện thành viên: ảnh Facebook được máy chủ lưu lại (đường dẫn dạng /api/v1/avatars/...)
+const API_ORIGIN = API_BASE.replace(/\/api\/v1$/, "");
+function initialsAvatar(name) {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "U")}&background=0284c7&color=fff&bold=true`;
+}
+function avatarUrl(url, name) {
+    if (!url) return initialsAvatar(name);
+    return url.startsWith("/") ? API_ORIGIN + url : url;
+}
+// <img> ảnh đại diện; ảnh hỏng (link hết hạn, máy khác chưa có file) -> tự đổi sang ảnh chữ cái
+function avatarImg(user, attrs = "") {
+    return `<img src="${escapeHtml(avatarUrl(user.avatar, user.fullname))}" data-fallback="${escapeHtml(initialsAvatar(user.fullname))}" `
+        + `onerror="this.onerror=null;this.src=this.dataset.fallback" alt="Avatar" referrerpolicy="no-referrer" ${attrs}>`;
+}
+
 let map = null;
 let wardsLayer = null;
 let selectedWardLayer = null;
@@ -3568,10 +3583,9 @@ function renderUserHeaderState() {
     if (userSession) {
         // Họ tên / ảnh đến từ tài khoản Google, Facebook, Apple thật -> luôn escape khi chèn HTML
         const name = escapeHtml(userSession.fullname || "Thành viên");
-        const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.fullname || "U")}&background=0284c7&color=fff`;
         slot.innerHTML = `
             <div class="user-chip" title="${escapeHtml(userSession.email || userSession.fullname || "")}">
-                <img src="${escapeHtml(userSession.avatar || fallbackAvatar)}" alt="Avatar" referrerpolicy="no-referrer">
+                ${avatarImg(userSession)}
                 <span class="user-name btn-label">${name}</span>
                 <button class="user-logout" onclick="handleUserLogout()" title="Đăng xuất">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -3643,11 +3657,11 @@ function renderAdminUsersTable(users) {
                 <td><b>#${u.id}</b></td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <img src="${u.avatar}" alt="Avatar" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover;">
-                        <span style="font-weight: 700; color: #0f172a;">${u.fullname}</span>
+                        ${avatarImg(u, 'style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover;"')}
+                        <span style="font-weight: 700; color: #0f172a;">${escapeHtml(u.fullname)}</span>
                     </div>
                 </td>
-                <td><a href="mailto:${u.email}" style="color: #0284c7; text-decoration: none;">${u.email}</a></td>
+                <td><a href="mailto:${escapeHtml(u.email)}" style="color: #0284c7; text-decoration: none;">${escapeHtml(u.email)}</a></td>
                 <td>${providerBadge}</td>
                 <td>${u.created_at || 'Mới'}</td>
                 <td style="text-align: center;">${statusBadge}</td>

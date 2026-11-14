@@ -32,7 +32,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="assets/css/style.css?v=20261112e">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261114b">
 </head>
 
 <body class="app-body">
@@ -1199,7 +1199,9 @@
                     <p id="auth-modal-desc">Đăng nhập để nhận thông báo ô nhiễm tức thời</p>
                 </div>
 
-                <!-- CỤM NÚT ĐĂNG NHẬP NHANH QUA GOOGLE, FACEBOOK, APPLE -->
+                <!-- CỤM NÚT ĐĂNG NHẬP NHANH QUA GOOGLE, FACEBOOK
+                     (Apple ID tạm ẩn: cần tài khoản Apple Developer trả phí. Khi có, bỏ thuộc tính hidden
+                     của nút Apple bên dưới - app.js và Backend đã hỗ trợ sẵn) -->
                 <div class="social-stack">
                     <button type="button" class="btn-social btn-social-google" onclick="handleSocialAuth('Google')">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
@@ -1211,7 +1213,7 @@
                         <i class="fa-brands fa-facebook-f" style="font-size: 16px;"></i>
                         <span>Tiếp tục với Facebook</span>
                     </button>
-                    <button type="button" class="btn-social btn-social-apple" onclick="handleSocialAuth('Apple')">
+                    <button type="button" class="btn-social btn-social-apple" onclick="handleSocialAuth('Apple')" hidden>
                         <i class="fa-brands fa-apple" style="font-size: 18px;"></i>
                         <span>Đăng nhập bằng Apple ID</span>
                     </button>
@@ -1306,7 +1308,7 @@
     </div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/app.js?v=20261112e"></script>
+    <script src="js/app.js?v=20261114a"></script>
     <script src="js/ai-agent.js?v=20261112e"></script>
 </body>
 

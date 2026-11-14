@@ -1440,7 +1440,9 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = '${user['fullname'] ?? user['email'] ?? 'U'}'.trim();
     final initial = name.isEmpty ? 'U' : name.characters.first.toUpperCase();
-    final avatar = '${user['avatar'] ?? ''}';
+    var avatar = '${user['avatar'] ?? ''}';
+    // Ảnh Facebook do máy chủ lưu lại (/api/v1/avatars/...) -> ghép với địa chỉ máy chủ đang dùng
+    if (avatar.startsWith('/')) avatar = '${ApiConfig.server}$avatar';
     return Container(
       width: size,
       height: size,

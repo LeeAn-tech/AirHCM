@@ -1,5 +1,38 @@
 [
   {
+    "time": "2026-11-14 10:35:44",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 19.7,
+    "peak_aqi": 67,
+    "peak_time": "2026-11-14 22:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-14 10:04:46",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 15.8,
+    "peak_aqi": 59,
+    "peak_time": "2026-11-14 22:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-14 09:52:15",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 19.9,
+    "peak_aqi": 68,
+    "peak_time": "2026-11-14 10:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
     "time": "2026-11-12 22:27:38",
     "status": "WARNING",
     "title": "⚠️ Cảnh báo bụi mịn PM2.5 vượt QCVN 05:2023",

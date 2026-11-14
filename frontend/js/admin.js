@@ -10,6 +10,26 @@ const API_BASE = (location.port === "3000" || location.protocol === "file:")
     ? `http://${window.location.hostname || "127.0.0.1"}:8000/api/v1`
     : `${location.origin}/api/v1`;
 
+// Họ tên / email do người dùng tự nhập hoặc lấy từ tài khoản Google, Facebook -> luôn escape khi chèn HTML
+function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Ảnh đại diện thành viên: ảnh Facebook được máy chủ lưu lại (đường dẫn dạng /api/v1/avatars/...)
+const API_ORIGIN = API_BASE.replace(/\/api\/v1$/, "");
+function initialsAvatar(name) {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "U")}&background=0284c7&color=fff&bold=true`;
+}
+function avatarUrl(url, name) {
+    if (!url) return initialsAvatar(name);
+    return url.startsWith("/") ? API_ORIGIN + url : url;
+}
+// <img> ảnh đại diện; ảnh hỏng (link hết hạn, máy khác chưa có file) -> tự đổi sang ảnh chữ cái
+function avatarImg(user, attrs = "") {
+    return `<img src="${escapeHtml(avatarUrl(user.avatar, user.fullname))}" data-fallback="${escapeHtml(initialsAvatar(user.fullname))}" `
+        + `onerror="this.onerror=null;this.src=this.dataset.fallback" alt="Avatar" referrerpolicy="no-referrer" ${attrs}>`;
+}
+
 // ------------------------------------------------------------------------------
 // PHIÊN QUẢN TRỊ (RBAC): token vai trò admin do máy chủ cấp khi đăng nhập
 // ------------------------------------------------------------------------------
@@ -1267,18 +1287,17 @@ function renderAdminUsersTable(users) {
 
         // Số thứ tự hiển thị tự động tăng (ID thật vẫn dùng để gọi API)
         const stt = idx + 1;
-        const avatar = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullname || "U")}&background=0284c7&color=fff&bold=true`;
 
         rowsHtml += `
             <tr>
                 <td class="center"><span class="rank-badge">${stt}</span></td>
                 <td>
                     <div class="avatar-cell">
-                        <img src="${avatar}" alt="Avatar">
-                        <span class="cell-strong">${u.fullname}</span>
+                        ${avatarImg(u)}
+                        <span class="cell-strong">${escapeHtml(u.fullname)}</span>
                     </div>
                 </td>
-                <td><a href="mailto:${u.email}" class="link-mail">${u.email}</a></td>
+                <td>${u.email ? `<a href="mailto:${escapeHtml(u.email)}" class="link-mail">${escapeHtml(u.email)}</a>` : '<span class="cell-muted">—</span>'}</td>
                 <td>${providerBadge}</td>
                 <td class="cell-muted nowrap">${u.created_at || 'Mới'}</td>
                 <td class="center nowrap">${statusBadge}</td>

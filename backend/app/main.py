@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from app.database import engine
@@ -12,7 +13,7 @@ from app.services.alert_service import (
     evaluate_forecast_and_alert,
 )
 from app.services.forecast_insight import summarize_forecast
-from app.services import ward_index
+from app.services import avatar_store, ward_index
 from app.services.social_auth import SocialAuthError, verify_social_token
 from app.services import knowledge_base
 from app.services.auth_service import (
@@ -1084,6 +1085,19 @@ def login_end_user(req: EndUserLoginRequest):
         raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác!")
     return {"status": "success", "message": "Đăng nhập thành công!", "user": user}
 
+def _initials_avatar(fullname: str) -> str:
+    """Ảnh chữ cái viết tắt khi tài khoản không có ảnh đại diện"""
+    return f"https://ui-avatars.com/api/?name={urllib.parse.quote(fullname)}&background=0284c7&color=fff"
+
+# Ảnh đại diện thành viên lưu trên máy chủ (ảnh Facebook tải về bằng app access token)
+@app.get("/api/v1/avatars/{name}", tags=["Xác thực End-User"])
+def get_member_avatar(name: str):
+    found = avatar_store.file_for(name)
+    if not found:
+        raise HTTPException(status_code=404, detail="Không có ảnh đại diện.")
+    path, media_type = found
+    return FileResponse(path, media_type=media_type, headers={"Cache-Control": "public, max-age=604800"})
+
 # API Đăng nhập qua Google / Facebook / Apple (Firebase Authentication)
 # Thông tin tài khoản lấy từ ID token đã xác minh chữ ký - không tin email/họ tên do trình duyệt tự gửi.
 @app.post("/api/v1/auth/user/social", tags=["Xác thực End-User"])
@@ -1115,24 +1129,37 @@ def social_login_end_user(req: SocialLoginRequest):
                            f"Vui lòng đăng nhập bằng phương thức đó.",
                 )
 
+    # Email Facebook không có trong token: chỉ dùng làm email liên hệ (hiển thị, nhận cảnh báo) khi chưa
+    # tài khoản nào khác dùng - KHÔNG dùng để liên kết tài khoản vì Firebase chưa coi là đã xác minh
+    contact_email = email
+    if not contact_email and info.get("provider_email"):
+        owner = next((u for u in users_db if (u.get("email") or "").lower() == info["provider_email"]), None)
+        if owner is None or owner is user:
+            contact_email = info["provider_email"]
+
     if user is not None:
         if user.get("status") == "BỊ KHÓA":
             raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa bởi Quản trị viên!")
         user["firebase_uid"] = uid
-        if info["picture"]:
-            user["avatar"] = info["picture"]
+        if contact_email and not user.get("email"):
+            user["email"] = contact_email
+        # Ảnh đại diện thật từ Google / Facebook (ảnh Facebook được tải về lưu trên máy chủ)
+        user["avatar"] = (avatar_store.social_avatar(user["id"], info, user.get("avatar", ""))
+                          or _initials_avatar(user.get("fullname") or "U"))
         user["last_login"] = now
         save_users_to_disk(users_db)
         return {"status": "success", "message": f"Đăng nhập thành công qua {provider}!", "user": user}
 
     # 3. Lần đầu đăng nhập: tự tạo tài khoản thành viên
-    fullname = info["name"] or (req.fullname or "").strip()[:80] or (email.split("@")[0] if email else f"Thành viên {provider}")
+    fullname = (info["name"] or (req.fullname or "").strip()[:80]
+                or (contact_email.split("@")[0] if contact_email else f"Thành viên {provider}"))
+    new_id = (max([u["id"] for u in users_db], default=0)) + 1
     new_user = {
-        "id": (max([u["id"] for u in users_db], default=0)) + 1,
+        "id": new_id,
         "fullname": fullname,
-        "email": email,
+        "email": contact_email,
         "provider": provider,
-        "avatar": info["picture"] or f"https://ui-avatars.com/api/?name={urllib.parse.quote(fullname)}&background=0284c7&color=fff",
+        "avatar": avatar_store.social_avatar(new_id, info) or _initials_avatar(fullname),
         "status": "HOẠT ĐỘNG",
         "created_at": now,
         "last_login": now,
@@ -1167,6 +1194,7 @@ def delete_end_user(user_id: int):
     for u in users_db:
         if u["id"] == user_id and u.get("email"):
             remove_user_password(u["email"])  # Xóa luôn mã băm mật khẩu
+    avatar_store.remove(user_id)  # Xóa luôn ảnh đại diện đã lưu
     users_db = [u for u in users_db if u["id"] != user_id]
     save_users_to_disk(users_db)
     return {"status": "success", "message": f"Đã xóa vĩnh viễn tài khoản #{user_id} khỏi hệ thống!"}
