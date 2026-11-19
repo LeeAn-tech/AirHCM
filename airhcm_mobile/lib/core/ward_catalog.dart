@@ -97,4 +97,29 @@ class WardCatalog {
     }
     return null;
   }
+
+  static WardShape? byCode(String? code) {
+    if (code == null || code.isEmpty) return null;
+    for (final w in _wards ?? const <WardShape>[]) {
+      if (w.code == code) return w;
+    }
+    return null;
+  }
+
+  static const _accents = {
+    'a': 'àáạảãâầấậẩẫăằắặẳẵ',
+    'e': 'èéẹẻẽêềếệểễ',
+    'i': 'ìíịỉĩ',
+    'o': 'òóọỏõôồốộổỗơờớợởỡ',
+    'u': 'ùúụủũưừứựửữ',
+    'y': 'ỳýỵỷỹ',
+    'd': 'đ',
+  };
+  static final Map<String, String> _foldMap = {
+    for (final e in _accents.entries)
+      for (final ch in e.value.split('')) ch: e.key,
+  };
+
+  /// Chữ thường, bỏ dấu tiếng Việt: tìm "tan son" khớp "Tân Sơn"
+  static String fold(String s) => s.toLowerCase().split('').map((c) => _foldMap[c] ?? c).join();
 }

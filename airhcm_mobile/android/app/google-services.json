@@ -12,7 +12,20 @@
           "package_name": "com.example.airhcm_mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "903722662342-8s993rsqtm5cjdq7kp8sjmhqmmj8fm48.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.airhcm_mobile",
+            "certificate_hash": "bf33c6f8dc7e9fcf41d26fe8ced93e054387cb74"
+          }
+        },
+        {
+          "client_id": "903722662342-0ouihkmmtf60loem8uka7hgn8lmtcpm5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBQJR_UgJu8iz_O8lzFtD55SUkOqYesyv8"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "903722662342-0ouihkmmtf60loem8uka7hgn8lmtcpm5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "903722662342-mlpvi0nll4esdet5ahdq389r895k7tde.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.airhcmMobile"
+              }
+            }
+          ]
         }
       }
     }

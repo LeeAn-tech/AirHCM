@@ -1,0 +1,5 @@
+# Script chạy trên máy chủ Linux: luôn giữ xuống dòng LF
+*.sh text eol=lf
+*.service text eol=lf
+Caddyfile text eol=lf
+env.server.example text eol=lf

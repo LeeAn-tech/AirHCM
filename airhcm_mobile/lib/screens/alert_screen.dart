@@ -24,6 +24,13 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
   final _phoneController = TextEditingController();
 
   static const _allWards = 'Tất cả TP.HCM';
+
+  /// Ngưỡng cảnh báo: (giá trị AQI, nhãn ngắn khi đã chọn, mô tả đầy đủ trong danh sách)
+  static const _thresholds = <(int, String, String)>[
+    (100, 'AQI > 100 · Nhạy cảm', 'AQI > 100 · Bắt đầu ảnh hưởng nhóm nhạy cảm'),
+    (150, 'AQI > 150 · Mức xấu', 'AQI > 150 · Mức xấu - ảnh hưởng mọi người'),
+    (200, 'AQI > 200 · Rất xấu', 'AQI > 200 · Rất xấu - hạn chế ra ngoài'),
+  ];
   String _selectedWard = _allWards;
   int _threshold = 100;
   bool _submitting = false;
@@ -44,9 +51,19 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
     AppState.alert.addListener(_refresh);
     AppState.useUSAQI.addListener(_refresh);
     WardCatalog.load().then((wards) {
-      if (mounted) setState(() => _wardNames = [_allWards, ...wards.map((w) => w.displayName)]);
+      if (!mounted) return;
+      setState(() => _wardNames = [_allWards, ...wards.map((w) => w.displayName)]);
+      _prefillFromUser();
     });
     _loadLists();
+  }
+
+  /// Chọn sẵn nơi sinh sống (hoặc nơi làm việc) của thành viên cho ô "Khu vực theo dõi"
+  void _prefillAreaFromUser() {
+    if (_wardNames.length <= 1 || _selectedWard != _allWards) return; // Chưa nạp danh mục / người dùng đã tự chọn
+    final area = AppState.area('home') ?? AppState.area('work');
+    final name = WardCatalog.byCode(area?['code']?.toString())?.displayName;
+    if (name != null && _wardNames.contains(name)) setState(() => _selectedWard = name);
   }
 
   @override
@@ -69,6 +86,7 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
     if (u == null) return;
     if (_nameController.text.isEmpty) _nameController.text = '${u['fullname'] ?? ''}';
     if (_emailController.text.isEmpty) _emailController.text = '${u['email'] ?? ''}';
+    _prefillAreaFromUser();
   }
 
   Future<void> _loadLists() async {
@@ -364,12 +382,21 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               initialValue: _threshold,
+              isExpanded: true,
               decoration: _input('Ngưỡng kích hoạt cảnh báo', Icons.tune),
-              items: const [
-                DropdownMenuItem(value: 100, child: Text('AQI > 100 · Bắt đầu ảnh hưởng nhóm nhạy cảm')),
-                DropdownMenuItem(value: 150, child: Text('AQI > 150 · Mức xấu')),
-                DropdownMenuItem(value: 200, child: Text('AQI > 200 · Rất xấu')),
-              ],
+              // Ô đã chọn hiện nhãn ngắn gọn (vừa một dòng); danh sách xổ xuống hiện mô tả đầy đủ
+              selectedItemBuilder: (_) => _thresholds
+                  .map((t) => Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              items: _thresholds
+                  .map((t) => DropdownMenuItem(
+                        value: t.$1,
+                        child: Text(t.$3, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
+                      ))
+                  .toList(),
               onChanged: (v) {
                 setState(() => _threshold = v ?? 100);
                 AlarmService.setThreshold(_threshold); // Còi trong máy dùng chung ngưỡng với Push

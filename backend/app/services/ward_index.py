@@ -61,6 +61,7 @@ def _load():
                     "name": props.get("ten_xa") or props.get("ten_phuong_xa") or "Phường/Xã",
                     "type": props.get("loai") or props.get("loai_don_vi") or "",
                     "area": float(props.get("dtich_km2") or props.get("dien_tich_km2") or 0),
+                    "pop": float(props.get("dan_so") or 0),
                     "geom": geom,
                     "rep_lat": rep.y,
                     "rep_lng": rep.x,
@@ -100,14 +101,15 @@ def by_code(code):
 
 def all_wards():
     """Danh mục phường/xã trong GeoJSON: mã, tên, loại, diện tích"""
-    return [{"code": w["code"], "name": w["name"], "type": w["type"], "area": w["area"]} for w in _load() or []]
+    return [{"code": w["code"], "name": w["name"], "type": w["type"], "area": w["area"], "pop": w.get("pop", 0.0)}
+            for w in _load() or []]
 
 
 def representative_points():
     """Điểm đại diện (nằm trong đa giác) của từng phường/xã"""
     return [
         {"code": w["code"], "name": w["name"], "lat": w["rep_lat"], "lng": w["rep_lng"]}
-        for w in _load()
+        for w in _load() or []
     ]
 
 

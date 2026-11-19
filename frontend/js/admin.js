@@ -1262,6 +1262,15 @@ function fetchAdminUsers() {
         .catch(err => console.error("Lỗi tải danh sách người dùng:", err));
 }
 
+// Khu vực theo dõi thành viên tự chọn trên app: nơi sinh sống & nơi làm việc / học tập
+function memberAreasHtml(u) {
+    const a = (u && u.areas) || {};
+    const parts = [];
+    if (a.home && a.home.name) parts.push(`<i class="fa-solid fa-house"></i> ${escapeHtml(a.home.name)}`);
+    if (a.work && a.work.name) parts.push(`<i class="fa-solid fa-briefcase"></i> ${escapeHtml(a.work.name)}`);
+    return parts.length ? `<div class="cell-muted" style="font-size: 11px; margin-top: 2px;">${parts.join(" &middot; ")}</div>` : "";
+}
+
 function renderAdminUsersTable(users) {
     const tbody = document.getElementById("adm-users-table-body");
     if (!tbody) return;
@@ -1294,7 +1303,10 @@ function renderAdminUsersTable(users) {
                 <td>
                     <div class="avatar-cell">
                         ${avatarImg(u)}
-                        <span class="cell-strong">${escapeHtml(u.fullname)}</span>
+                        <div>
+                            <span class="cell-strong">${escapeHtml(u.fullname)}</span>
+                            ${memberAreasHtml(u)}
+                        </div>
                     </div>
                 </td>
                 <td>${u.email ? `<a href="mailto:${escapeHtml(u.email)}" class="link-mail">${escapeHtml(u.email)}</a>` : '<span class="cell-muted">—</span>'}</td>

@@ -33,10 +33,12 @@ class ApiService {
     }
   }
 
-  static Future<dynamic> _send(String method, String path, Map<String, dynamic> body, {Duration? timeout}) async {
+  static Future<dynamic> _send(String method, String path, Map<String, dynamic> body,
+      {Duration? timeout, Map<String, String>? headers}) async {
     try {
       final request = http.Request(method, ApiConfig.uri(path))
         ..headers['Content-Type'] = 'application/json'
+        ..headers.addAll(headers ?? const {})
         ..body = jsonEncode(body);
       final streamed = await request.send().timeout(timeout ?? _defaultTimeout);
       final res = await http.Response.fromStream(streamed);
@@ -100,6 +102,23 @@ class ApiService {
   // ---------------------------------------------------------------------------
   // DỰ BÁO AI & CẢNH BÁO DSS
   // ---------------------------------------------------------------------------
+  /// Dự báo realtime đa chất (AirData): hôm nay + 7 ngày tới + xu hướng tháng.
+  /// Ưu tiên mã phường; không có thì theo tọa độ; bỏ trống cả hai -> cấp TP.
+  static Future<Map<String, dynamic>> airForecast({String? wardCode, double? lat, double? lng}) async {
+    final q = <String, String>{};
+    if (wardCode != null && wardCode.isNotEmpty) {
+      q['ward_code'] = wardCode;
+    } else if (lat != null && lng != null) {
+      q['lat'] = lat.toStringAsFixed(6);
+      q['lng'] = lng.toStringAsFixed(6);
+    }
+    return _map(await _get('/air/forecast', query: q.isEmpty ? null : q, timeout: const Duration(seconds: 40)));
+  }
+
+  /// Kết quả huấn luyện/kiểm thử mô hình (metrics.json)
+  static Future<Map<String, dynamic>> airModelMetrics() async =>
+      _map(await _get('/air/model-metrics', timeout: const Duration(seconds: 20)));
+
   static Future<List<dynamic>> forecast(int hours) async =>
       _list(await _get('/forecast/hourly', query: {'hours': '$hours'}, timeout: const Duration(seconds: 30)));
 
@@ -141,23 +160,45 @@ class ApiService {
   // ---------------------------------------------------------------------------
   // TÀI KHOẢN (DÙNG CHUNG VỚI WEBGIS & TRANG QUẢN TRỊ)
   // ---------------------------------------------------------------------------
+  /// Tài khoản + token phiên (token dùng để thành viên sửa hồ sơ của chính mình, VD khu vực theo dõi)
+  static Map<String, dynamic> _withSession(dynamic res) {
+    final data = _map(res);
+    final user = _map(data['user']);
+    if (data['token'] is String) {
+      user['token'] = data['token'];
+      user['token_expires_at'] = data['expires_at'];
+    }
+    return user;
+  }
+
   static Future<Map<String, dynamic>> login(String email, String password) async =>
-      _map(_map(await _send('POST', '/auth/user/login', {'email': email, 'password': password}))['user']);
+      _withSession(await _send('POST', '/auth/user/login', {'email': email, 'password': password}));
 
   /// Đăng nhập / đăng ký bằng Google, Facebook, Apple: Backend xác minh Firebase ID token
   /// (cùng endpoint với WebGIS) rồi trả về tài khoản thành viên AirHCM
   static Future<Map<String, dynamic>> socialLogin(String idToken, {String? fullname}) async =>
-      _map(_map(await _send('POST', '/auth/user/social', {
+      _withSession(await _send('POST', '/auth/user/social', {
         'id_token': idToken,
         'fullname': ?fullname,
-      }, timeout: const Duration(seconds: 30)))['user']);
+      }, timeout: const Duration(seconds: 30)));
 
   static Future<Map<String, dynamic>> register(String fullname, String email, String password) async =>
-      _map(_map(await _send('POST', '/auth/user/register', {
+      _withSession(await _send('POST', '/auth/user/register', {
         'fullname': fullname,
         'email': email,
         'password': password,
-      }))['user']);
+      }));
+
+  /// Phương thức đăng nhập đang dùng được: {'facebook': {'available': false, 'reason': '...'}, ...}
+  static Future<Map<String, dynamic>> authProviders() async =>
+      _map(await _get('/auth/providers', timeout: const Duration(seconds: 10)));
+
+  /// Lưu khu vực theo dõi (nơi sinh sống / nơi làm việc) lên tài khoản - trả về tài khoản đã cập nhật
+  static Future<Map<String, dynamic>> updateAreas(String token, {String? homeCode, String? workCode}) async =>
+      _map(_map(await _send('PUT', '/auth/user/areas', {
+        'home_ward_code': homeCode,
+        'work_ward_code': workCode,
+      }, headers: {'Authorization': 'Bearer $token'}))['user']);
 
   // ---------------------------------------------------------------------------
   // ĐĂNG KÝ NHẬN CẢNH BÁO

@@ -195,7 +195,7 @@ class AlertStatusCard extends StatelessWidget {
                       ),
                       Text(
                         'Đỉnh ${a['peak_pm25']} µg/m³ lúc ${a['peak_label'] ?? '--'}'
-                        '${isWarning ? ' · ${a['exceed_hours']} giờ vượt 50 µg/m³' : ''}',
+                        '${isWarning ? ' · ${a['exceed_hours']} giờ vượt ${AqiUtils.toDouble(a['threshold_pm25'], AqiUtils.qcvnPm25).toStringAsFixed(0)} µg/m³' : ''}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 11.5, color: AppColors.text2, fontWeight: FontWeight.w600),

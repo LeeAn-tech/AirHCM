@@ -23,6 +23,7 @@ BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__
 ENV_FILE = os.path.join(BACKEND_DIR, ".env")
 STORE_FILE = os.path.join(BACKEND_DIR, "auth_store.json")
 TOKEN_TTL_SECONDS = 12 * 3600
+USER_TOKEN_TTL_SECONDS = 30 * 24 * 3600  # Thành viên giữ đăng nhập trên điện thoại lâu hơn quản trị viên
 PBKDF2_ROUNDS = 260_000
 
 # Tài khoản quản trị cũ (trước đây kiểm tra bằng JavaScript phía trình duyệt) - chỉ dùng để
@@ -148,8 +149,8 @@ def _unb64(text: str) -> bytes:
     return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
 
 
-def issue_token(subject: str, role: str, name: str = "") -> dict:
-    exp = int(time.time()) + TOKEN_TTL_SECONDS
+def issue_token(subject: str, role: str, name: str = "", ttl_seconds: Optional[int] = None) -> dict:
+    exp = int(time.time()) + (ttl_seconds or TOKEN_TTL_SECONDS)
     payload = _b64(json.dumps({"sub": subject, "role": role, "name": name, "exp": exp}, ensure_ascii=False).encode("utf-8"))
     signature = _b64(hmac.new(_secret(), payload.encode("ascii"), hashlib.sha256).digest())
     return {"token": f"{payload}.{signature}", "expires_at": exp}
@@ -165,6 +166,24 @@ def decode_token(token: str) -> Optional[dict]:
         return data if data.get("exp", 0) > time.time() else None
     except Exception:
         return None
+
+
+def issue_user_token(user_id: int) -> dict:
+    """Token phiên của thành viên (End-User): chỉ dùng để sửa hồ sơ của chính mình"""
+    return issue_token(str(user_id), "user", ttl_seconds=USER_TOKEN_TTL_SECONDS)
+
+
+def require_user(authorization: Optional[str] = Header(None)) -> int:
+    """Dependency FastAPI: trả về ID thành viên trong token còn hạn có vai trò user"""
+    data = None
+    if authorization and authorization.lower().startswith("bearer "):
+        data = decode_token(authorization.split(" ", 1)[1].strip())
+    if not data or data.get("role") != "user":
+        raise HTTPException(status_code=401, detail="Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.")
+    try:
+        return int(data["sub"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.")
 
 
 def require_admin(authorization: Optional[str] = Header(None)) -> dict:

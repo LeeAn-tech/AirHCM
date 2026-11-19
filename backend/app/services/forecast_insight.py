@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 
 from app.services.dss_service import DSSEngine
 
-# Giới hạn PM2.5 trung bình 24 giờ theo QCVN 05:2023/BTNMT
-QCVN_PM25_24H_LIMIT = 50.0
+# Giới hạn PM2.5 trung bình 24 giờ theo QCVN 05:2023/BTNMT (50 µg/m³; 45 µg/m³ từ 01/01/2026)
+from app.airdata.config import qcvn_pm25_24h
+QCVN_PM25_24H_LIMIT = qcvn_pm25_24h()
 
 
 def _parse_time(time_str: str):

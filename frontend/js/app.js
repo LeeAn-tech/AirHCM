@@ -160,20 +160,22 @@ function getAQIColor(aqi) {
 }
 
 function calculateEPA_AQI(pm) {
+    // US EPA - bảng ngưỡng PM2.5 sửa đổi 02/2024 (EPA-454/B-24-002), trùng backend & Mobile
     pm = parseFloat(pm);
     if (isNaN(pm) || pm < 0) return 0;
-    if (pm <= 12.0) return Math.round((50 / 12.0) * pm);
-    if (pm <= 35.4) return Math.round(((100 - 51) / (35.4 - 12.0)) * (pm - 12.0) + 51);
-    if (pm <= 55.4) return Math.round(((150 - 101) / (55.4 - 35.4)) * (pm - 35.4) + 101);
-    if (pm <= 150.4) return Math.round(((200 - 151) / (150.4 - 55.4)) * (pm - 55.4) + 151);
-    if (pm <= 250.4) return Math.round(((300 - 201) / (250.4 - 150.4)) * (pm - 150.4) + 201);
-    if (pm <= 350.4) return Math.round(((400 - 301) / (350.4 - 250.4)) * (pm - 250.4) + 301);
-    if (pm <= 500.4) return Math.round(((500 - 401) / (500.4 - 350.4)) * (pm - 350.4) + 401);
+    const bands = [[9.0, 0.0, 0, 50], [35.4, 9.0, 51, 100], [55.4, 35.4, 101, 150],
+                   [125.4, 55.4, 151, 200], [225.4, 125.4, 201, 300], [325.4, 225.4, 301, 500]];
+    for (const [hi, lo, ilo, ihi] of bands) {
+        if (pm <= hi) return Math.round(((ihi - ilo) / (hi - lo)) * (pm - lo) + ilo);
+    }
     return 500;
 }
 
+// QCVN 05:2023/BTNMT: PM2.5 TB 24h = 50 µg/m³, từ 01/01/2026 là 45 µg/m³
+const QCVN_PM25_24H = new Date() >= new Date(2026, 0, 1) ? 45 : 50;
+
 function getAdvisoryForAQI(aqi, pm25) {
-    const qcvn = pm25 <= 50.0 ? "Đạt quy chuẩn QCVN 05:2023" : "Vượt ngưỡng QCVN 05:2023";
+    const qcvn = pm25 <= QCVN_PM25_24H ? "Đạt quy chuẩn QCVN 05:2023" : "Vượt ngưỡng QCVN 05:2023";
     if (aqi <= 50) return { level: "Tốt", color: "#00E400", qcvn_comparison: qcvn, general_population: "Không khí trong lành. Hoạt động bình thường ngoài trời.", sensitive_groups: "An toàn cho sức khỏe người nhạy cảm.", action_plan: "Duy trì giám sát môi trường đô thị." };
     if (aqi <= 100) return { level: "Trung bình", color: "#FFFF00", qcvn_comparison: qcvn, general_population: "Chất lượng không khí ở mức chấp nhận được.", sensitive_groups: "Người nhạy cảm nên giảm vận động thể lực kéo dài.", action_plan: "Kiểm tra lưu lượng giao thông cửa ngõ." };
     if (aqi <= 150) return { level: "Kém (nhóm nhạy cảm)", color: "#FF7E00", qcvn_comparison: qcvn, general_population: "Hạn chế tập thể dục gắng sức cạnh đường lớn.", sensitive_groups: "BẮT BUỘC đeo khẩu trang N95 khi ra ngoài.", action_plan: "Khuyến nghị phương tiện che chắn bụi cẩn thận." };
@@ -464,7 +466,7 @@ function initNavigationTabs() {
     // 2. Tự động kích hoạt tab dựa theo URL khi người dùng truy cập trực tiếp
     function routeFromURL() {
         const hash = window.location.hash.replace("#", "");
-        const validRoutes = ["map", "forecast", "dss", "hotspots", "subscribe", "about", "news"];
+        const validRoutes = ["map", "map3d", "forecast", "dss", "hotspots", "analysis", "subscribe", "about", "news"];
         const selectedRoute = validRoutes.includes(hash) ? hash : "map";
         switchTab(`tab-${selectedRoute}`);
     }
@@ -489,6 +491,16 @@ function switchTab(targetId) {
     // Tự động căn chỉnh lại kích thước bản đồ khi mở Tab Map
     if (targetId === "tab-map" && map) {
         setTimeout(() => map.invalidateSize(), 150);
+    }
+
+    // Tab Bản đồ 3D: nạp thư viện 3D + dữ liệu khi mở lần đầu, căn lại khung khi mở lại
+    if (targetId === "tab-map3d" && window.AirMap3D) {
+        setTimeout(() => window.AirMap3D.onShow(), 60);
+    }
+
+    // Tab Phân tích xác suất & Truy nguồn: khởi tạo/căn lại bản đồ khi mở
+    if (targetId === "tab-analysis" && window.AirAnalysis) {
+        setTimeout(() => window.AirAnalysis.onShow(), 60);
     }
 
     // Tự động kích hoạt kịch bản What-If khi mở Tab DSS
@@ -708,6 +720,10 @@ function fetchWardsGeoJSON() {
                         },
                         click: function (e) {
                             L.DomEvent.stopPropagation(e);
+                            if (pickMyLocationMode) {
+                                finishPickMyLocation(e.latlng); // Đang chọn vị trí của người dùng
+                                return;
+                            }
 
                             if (selectedWardLayer && selectedWardFeature) {
                                 selectedWardLayer.setStyle(getWardStyleByAQI(selectedWardFeature, currentHourSimulated));
@@ -846,7 +862,7 @@ function renderForecastView(forecastData, hours) {
         forecastData.forEach(item => {
             const lvl = getAQILevelIndex(parseInt(item.aqi));
 
-            const isStandard = item.pm2_5 <= 50;
+            const isStandard = item.pm2_5 <= QCVN_PM25_24H;
             const qcvnBadge = isStandard
                 ? `<span class="chip chip-success"><i class="fa-solid fa-check"></i> Dưới ngưỡng 24h</span>`
                 : `<span class="chip chip-danger"><i class="fa-solid fa-triangle-exclamation"></i> Trên ngưỡng 24h</span>`;
@@ -1393,6 +1409,13 @@ function initGPSFeature() {
 
     // Chuột phải (máy tính) hoặc nhấn giữ (điện thoại) lên bản đồ -> phân tích điểm đó
     if (map) {
+        // Đang ở chế độ "Chọn đúng vị trí trên bản đồ": lần bấm này là vị trí của người dùng
+        map.on("click", e => {
+            if (pickMyLocationMode) finishPickMyLocation(e.latlng);
+        });
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && pickMyLocationMode) cancelPickMyLocation();
+        });
         map.on("contextmenu", e => {
             const { lat, lng } = e.latlng;
             openPlacePanel({ lat, lng, name: "Điểm đã chọn trên bản đồ", address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, kind: "point" });
@@ -1649,45 +1672,193 @@ function reverseGeocode(lat, lng) {
         .catch(() => null);
 }
 
-// Định vị GPS của người dùng (chấm xanh + vòng sai số như bản đồ thật)
-function locateMe({ openPanel = false } = {}) {
+// ------------------------------------------------------------------------------
+// ĐỊNH VỊ NGƯỜI DÙNG
+// Máy tính không có GPS: trình duyệt chỉ ƯỚC LƯỢNG vị trí theo mạng Wi-Fi / địa chỉ IP (có thể lệch
+// nhiều km, VD dùng 4G phát từ điện thoại -> ra trung tâm thành phố). Khi sai số lớn: báo rõ cho người
+// dùng và cho chọn đúng vị trí (bấm trên bản đồ, kéo chấm xanh, hoặc "Tôi đang ở đây" ở địa điểm tìm được).
+// ------------------------------------------------------------------------------
+const COARSE_ACCURACY_M = 1000;               // Sai số lớn hơn -> định vị theo mạng, không phải GPS
+const MY_LOCATION_KEY = "airhcm_my_location"; // Vị trí người dùng tự chọn
+const MY_LOCATION_TTL_MS = 12 * 3600 * 1000;
+const DEFAULT_LOCATION = { lat: 10.7769, lng: 106.7009 };
+let pickMyLocationMode = false;
+
+function loadSavedMyLocation() {
+    try {
+        const s = JSON.parse(localStorage.getItem(MY_LOCATION_KEY) || "null");
+        if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng) && Date.now() - s.ts < MY_LOCATION_TTL_MS) return s;
+    } catch (_) { /* dữ liệu cũ lỗi định dạng */ }
+    return null;
+}
+
+function saveMyLocation(lat, lng) {
+    try { localStorage.setItem(MY_LOCATION_KEY, JSON.stringify({ lat, lng, ts: Date.now() })); } catch (_) { /* chế độ ẩn danh */ }
+}
+
+function clearSavedMyLocation() {
+    try { localStorage.removeItem(MY_LOCATION_KEY); } catch (_) { /* chế độ ẩn danh */ }
+}
+
+// Chấm xanh + vòng sai số (vòng cam nét đứt = vị trí chỉ là ước lượng). Kéo chấm xanh để sửa vị trí.
+function drawMyLocation() {
+    if (!map || !myLocation) return;
+    const { lat, lng, accuracy, source } = myLocation;
+    if (myLocationLayer) map.removeLayer(myLocationLayer);
+
+    const coarse = source === "network";
+    const layers = [];
+    if (accuracy > 0) {
+        layers.push(L.circle([lat, lng], {
+            radius: Math.min(accuracy, 30000), interactive: false, weight: coarse ? 1.5 : 1,
+            color: coarse ? "#f97316" : "#2563eb", fillColor: coarse ? "#fb923c" : "#3b82f6",
+            fillOpacity: coarse ? 0.07 : 0.12, dashArray: coarse ? "6 6" : null
+        }));
+    }
+    const tooltip = {
+        gps: "Vị trí của bạn · kéo chấm xanh nếu chưa đúng",
+        network: `Vị trí ước lượng (sai số ~${formatDistance(accuracy)}) · kéo chấm xanh tới đúng chỗ`,
+        manual: "Vị trí bạn đã chọn · kéo để chỉnh",
+        default: "Vị trí mặc định (chưa lấy được định vị) · kéo tới vị trí của bạn"
+    }[source] || "Vị trí của bạn";
+    const marker = L.marker([lat, lng], {
+        icon: L.divIcon({ className: "my-location-wrapper", html: '<div class="my-location-dot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
+        zIndexOffset: 1000,
+        draggable: true,
+        autoPan: true
+    }).bindTooltip(tooltip, { direction: "top", offset: [0, -10] });
+    marker.on("dragend", e => {
+        const p = e.target.getLatLng();
+        setMyLocationManually(p.lat, p.lng);
+    });
+    layers.push(marker);
+    myLocationLayer = L.layerGroup(layers).addTo(map);
+}
+
+function openMyLocationPanel() {
+    if (!myLocation) return;
+    const { lat, lng, source } = myLocation;
+    const isDefault = source === "default";
+    openPlacePanel({
+        lat, lng, kind: "me",
+        name: isDefault ? "Trung tâm TP.HCM (mặc định)" : "Vị trí của bạn",
+        address: isDefault ? "Chưa lấy được vị trí của bạn" : `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+        // Vị trí ước lượng: thu nhỏ bản đồ để thấy cả vòng sai số
+        bounds: source === "network" ? L.latLng(lat, lng).toBounds(Math.min(myLocation.accuracy, 30000) * 2) : undefined
+    });
+    if (isDefault) return;
+    reverseGeocode(lat, lng).then(info => {
+        if (info && currentPlace && currentPlace.kind === "me" && currentPlace.lat === lat && currentPlace.lng === lng) {
+            currentPlace.address = [info.name, info.address].filter(Boolean).join(", ");
+            setSafeText("pp-address", currentPlace.address);
+        }
+    });
+}
+
+// Ghi chú độ tin cậy của vị trí trong bảng "Vị trí của bạn"
+function myLocationNoteHtml() {
+    if (!myLocation) return "";
+    const pick = `<button type="button" onclick="startPickMyLocation()"><i class="fa-solid fa-crosshairs"></i> Chọn đúng vị trí trên bản đồ</button>`;
+    switch (myLocation.source) {
+        case "network":
+            return `<div class="pp-locnote warn"><i class="fa-solid fa-triangle-exclamation"></i><div>
+                <b>Vị trí chỉ là ước lượng · sai số ~${formatDistance(myLocation.accuracy)}</b>
+                <span>Máy tính không có GPS nên trình duyệt đoán vị trí theo mạng Wi-Fi / Internet và có thể lệch nhiều km.</span>
+                ${pick}</div></div>`;
+        case "manual":
+            return `<div class="pp-locnote"><i class="fa-solid fa-hand-pointer"></i><div>
+                <b>Vị trí bạn đã chọn</b>
+                <span>Được dùng cho phân tích, chỉ đường và Trợ lý AI trong 12 giờ.</span>
+                <button type="button" onclick="startPickMyLocation()"><i class="fa-solid fa-crosshairs"></i> Chọn lại</button>
+                <button type="button" onclick="locateMe({ openPanel: true, fresh: true })"><i class="fa-solid fa-location-crosshairs"></i> Dùng định vị của trình duyệt</button>
+                </div></div>`;
+        case "default":
+            return `<div class="pp-locnote warn"><i class="fa-solid fa-location-pin-lock"></i><div>
+                <b>Chưa lấy được vị trí của bạn</b>
+                <span>Trình duyệt chưa được cấp quyền vị trí (biểu tượng bên trái thanh địa chỉ), hoặc thiết bị không định vị được.</span>
+                ${pick}</div></div>`;
+        default:
+            return `<div class="pp-locnote"><i class="fa-solid fa-satellite-dish"></i><div>
+                <span>Sai số ±${Math.round(myLocation.accuracy || 0)} m. Không đúng chỗ bạn đang đứng?</span>
+                ${pick}</div></div>`;
+    }
+}
+
+function setMyLocationManually(lat, lng) {
+    saveMyLocation(lat, lng);
+    myLocation = { lat, lng, accuracy: 0, source: "manual" };
+    drawMyLocation();
+    openMyLocationPanel();
+}
+window.setMyLocationHere = () => {
+    if (currentPlace) setMyLocationManually(currentPlace.lat, currentPlace.lng);
+};
+
+// Chế độ chọn vị trí: lần bấm kế tiếp trên bản đồ = vị trí của người dùng
+window.startPickMyLocation = () => {
+    if (!map) return;
+    pickMyLocationMode = true;
+    const container = map.getContainer();
+    container.classList.add("picking-location");
+    let hint = document.getElementById("pick-location-hint");
+    if (!hint) {
+        hint = document.createElement("div");
+        hint.id = "pick-location-hint";
+        hint.className = "pick-location-hint";
+        hint.innerHTML = `<i class="fa-solid fa-crosshairs"></i>
+            <span>Bấm vào đúng vị trí của bạn trên bản đồ, hoặc tìm tên địa điểm rồi chọn "Tôi đang ở đây"</span>
+            <button type="button" onclick="cancelPickMyLocation()">Hủy</button>`;
+        L.DomEvent.disableClickPropagation(hint);
+        container.appendChild(hint);
+    }
+    hint.hidden = false;
+};
+
+window.cancelPickMyLocation = () => {
+    pickMyLocationMode = false;
+    if (map) map.getContainer().classList.remove("picking-location");
+    const hint = document.getElementById("pick-location-hint");
+    if (hint) hint.hidden = true;
+};
+
+function finishPickMyLocation(latlng) {
+    cancelPickMyLocation();
+    map.closePopup();
+    setMyLocationManually(latlng.lat, latlng.lng);
+}
+
+// Định vị người dùng; fresh = bỏ vị trí đã tự chọn và hỏi lại trình duyệt
+function locateMe({ openPanel = false, fresh = false } = {}) {
     const btns = [document.getElementById("place-locate-btn"), document.getElementById("btn-locate")].filter(Boolean);
     btns.forEach(b => b.classList.add("is-locating"));
+    if (fresh) clearSavedMyLocation();
+    const saved = loadSavedMyLocation();
 
-    const done = () => btns.forEach(b => b.classList.remove("is-locating"));
-    const onPosition = (lat, lng, accuracy, approximate) => {
-        done();
-        myLocation = { lat, lng, accuracy };
-        if (myLocationLayer) map.removeLayer(myLocationLayer);
-        myLocationLayer = L.layerGroup([
-            L.circle([lat, lng], { radius: Math.min(accuracy || 60, 1500), color: "#2563eb", weight: 1, fillColor: "#3b82f6", fillOpacity: 0.12, interactive: false }),
-            L.marker([lat, lng], {
-                icon: L.divIcon({ className: "my-location-wrapper", html: '<div class="my-location-dot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
-                zIndexOffset: 1000
-            }).bindTooltip(approximate ? "Vị trí mặc định (không lấy được GPS)" : "Vị trí của bạn", { direction: "top", offset: [0, -10] })
-        ]).addTo(map);
-
-        if (currentPlace && currentPlace.kind !== "me" && !openPanel) {
-            updateRoute();
-        } else if (openPanel) {
-            openPlacePanel({ lat, lng, name: approximate ? "Trung tâm TP.HCM (mặc định)" : "Vị trí của bạn", address: approximate ? "Trình duyệt chưa cấp quyền vị trí" : `Sai số ±${Math.round(accuracy || 0)} m`, kind: "me" });
-            reverseGeocode(lat, lng).then(info => {
-                if (info && currentPlace && currentPlace.kind === "me") {
-                    currentPlace.address = [info.name, info.address].filter(Boolean).join(", ");
-                    setSafeText("pp-address", currentPlace.address);
-                }
-            });
-        }
+    const show = (lat, lng, accuracy, source) => {
+        btns.forEach(b => b.classList.remove("is-locating"));
+        myLocation = { lat, lng, accuracy, source };
+        drawMyLocation();
+        if (currentPlace && currentPlace.kind !== "me" && !openPanel) updateRoute();
+        else if (openPanel) openMyLocationPanel();
     };
+    const fallback = () => saved
+        ? show(saved.lat, saved.lng, 0, "manual")
+        : show(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng, 0, "default");
 
-    if (!navigator.geolocation) {
-        onPosition(10.7769, 106.7009, 0, true);
-        return;
-    }
+    if (!navigator.geolocation) return fallback();
     navigator.geolocation.getCurrentPosition(
-        pos => onPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, false),
-        () => onPosition(10.7769, 106.7009, 0, true),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        pos => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            if (accuracy > COARSE_ACCURACY_M) {
+                // Chỉ đoán theo mạng: ưu tiên vị trí người dùng đã tự chọn (nếu còn hạn)
+                if (saved) return show(saved.lat, saved.lng, 0, "manual");
+                return show(latitude, longitude, accuracy, "network");
+            }
+            clearSavedMyLocation(); // Có GPS / Wi-Fi chính xác -> không cần vị trí tự chọn nữa
+            show(latitude, longitude, accuracy, "gps");
+        },
+        fallback,
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: fresh ? 0 : 60000 }
     );
 }
 
@@ -2004,6 +2175,11 @@ function renderPlacePanel(data) {
             </div>
             <button type="button" class="btn-modal-close" onclick="closePlacePanel()" aria-label="Đóng">&times;</button>
         </div>
+        ${place.kind === "me" ? myLocationNoteHtml() : ""}
+        ${place.kind === "geo" || place.kind === "point" ? `
+        <button type="button" class="pp-setme" onclick="setMyLocationHere()" title="Dùng địa điểm này làm vị trí hiện tại của bạn">
+            <i class="fa-solid fa-street-view"></i> Tôi đang ở đây
+        </button>` : ""}
         <div id="pp-route" class="pp-route"></div>`;
 
     if (!data) {
@@ -2054,7 +2230,7 @@ function renderPlacePanel(data) {
                     <div><span>NHIỆT ĐỘ</span><b class="pp-temp">${placeTemp.toFixed(1)} <small>°C</small></b></div>
                 </div>
                 <p class="pp-wind"><i class="fa-solid fa-wind"></i> Gió ${placeWind.speed.toFixed(1)} m/s (${(placeWind.speed * 3.6).toFixed(0)} km/h) · hướng ${placeWind.dir}</p>
-                <p class="pp-qcvn ${pm > 50 ? "is-bad" : ""}"><i class="fa-solid fa-scale-balanced"></i> ${pm > 50 ? "Vượt" : "Đạt"} QCVN 05:2023 (50 µg/m³)</p>
+                <p class="pp-qcvn ${pm > QCVN_PM25_24H ? "is-bad" : ""}"><i class="fa-solid fa-scale-balanced"></i> ${pm > QCVN_PM25_24H ? "Vượt" : "Đạt"} QCVN 05:2023 (${QCVN_PM25_24H} µg/m³)</p>
             </div>
         </div>
         <div class="pp-meta">
@@ -2068,7 +2244,7 @@ function renderPlacePanel(data) {
             <span class="pp-alert-icon"><i class="fa-solid ${isWarning ? "fa-triangle-exclamation" : "fa-shield-heart"}"></i></span>
             <div>
                 <b>${isWarning ? "Cảnh báo: PM2.5 dự báo vượt QCVN 05:2023" : "Không khí 24h tới trong ngưỡng an toàn"}</b>
-                <small>${fs.peak ? `Đỉnh tại đây ${fs.peak.pm2_5} µg/m³ lúc ${fs.peak.label}` : ""}${isWarning && fs.exceed_hours ? ` · ${fs.exceed_hours} giờ vượt 50 µg/m³` : ""}</small>
+                <small>${fs.peak ? `Đỉnh tại đây ${fs.peak.pm2_5} µg/m³ lúc ${fs.peak.label}` : ""}${isWarning && fs.exceed_hours ? ` · ${fs.exceed_hours} giờ vượt ${QCVN_PM25_24H} µg/m³` : ""}</small>
             </div>
         </div>` : ""}
         ${fs.best_window && fs.worst_window ? `
@@ -2136,8 +2312,8 @@ function renderAlertBanner(alert) {
 
     setSafeText("ab-title", isWarning ? "Cảnh báo sức khỏe: PM2.5 dự báo vượt QCVN 05:2023" : "Không khí 24 giờ tới trong ngưỡng an toàn");
     setSafeText("ab-message", isWarning
-        ? `Đỉnh ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · ${alert.exceed_hours} giờ vượt 50 µg/m³. Nhóm nhạy cảm hạn chế ra ngoài.`
-        : `Đỉnh dự báo ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · dưới ngưỡng 50 µg/m³.`);
+        ? `Đỉnh ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · ${alert.exceed_hours} giờ vượt ${alert.threshold_pm25 || QCVN_PM25_24H} µg/m³. Nhóm nhạy cảm hạn chế ra ngoài.`
+        : `Đỉnh dự báo ${alert.peak_pm25} µg/m³ lúc ${alert.peak_label} · dưới ngưỡng ${alert.threshold_pm25 || QCVN_PM25_24H} µg/m³.`);
     setSafeText("ab-short", isWarning ? "Cảnh báo PM2.5" : "An toàn 24h");
 
     const icon = document.getElementById("ab-icon");
@@ -2167,7 +2343,7 @@ function renderDssAlertCard(alert) {
         <p class="dac-message">${alert.message}</p>
         <div class="dac-stats">
             <div><span>Đỉnh PM2.5 dự báo</span><b>${alert.peak_pm25} µg/m³</b><small>${alert.peak_label || ''}</small></div>
-            <div><span>Số giờ vượt 50 µg/m³</span><b>${alert.exceed_hours} giờ</b><small>trong 24 giờ tới</small></div>
+            <div><span>Số giờ vượt ${alert.threshold_pm25 || QCVN_PM25_24H} µg/m³</span><b>${alert.exceed_hours} giờ</b><small>trong 24 giờ tới</small></div>
             <div><span>Khung giờ nên ra ngoài</span><b>${best}</b><small>PM2.5 thấp nhất</small></div>
             <div><span>Khung giờ nên tránh</span><b>${worst}</b><small>PM2.5 cao nhất</small></div>
         </div>
@@ -3142,6 +3318,7 @@ window.setAQIStandard = function (standard) {
     if (hotspotAqiTh) hotspotAqiTh.innerText = standard === 'VN' ? "VN_AQI" : "US AQI";
 
     // 5. VẼ LẠI BIỂU ĐỒ DỰ BÁO AI NGAY LẬP TỨC TỪ DỮ LIỆU ĐANG CÓ
+    if (window.AirForecast) window.AirForecast.rerender();  // tab dự báo đa chất (AirData)
     if (cachedForecastData) {
         renderForecastView(cachedForecastData, cachedForecastHours);
     } else {
@@ -3246,6 +3423,19 @@ function fetchEnvironmentalNews() {
         });
 }
 
+// Ảnh bài báo + lớp nền dự phòng (ảnh lỗi / mất mạng -> hiện nền màu thay vì khung trống)
+function newsImageStyle(url) {
+    // Mã hóa các ký tự có thể phá vỡ CSS url("...") / thuộc tính style
+    const safe = /^https?:\/\//i.test(url || "")
+        ? String(url).replace(/["'()\\\s<>]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"))
+        : "";
+    return `background-image: ${safe ? `url("${safe}"), ` : ""}linear-gradient(135deg, #0ea5e9, #14b8a6);`;
+}
+
+function safeNewsLink(url) {
+    return /^https?:\/\//i.test(url || "") ? escapeHtml(url) : "#";
+}
+
 function renderNewsUI(newsList) {
     const featuredContainer = document.getElementById("news-featured-container");
     const gridContainer = document.getElementById("news-card-grid");
@@ -3256,18 +3446,18 @@ function renderNewsUI(newsList) {
     featuredContainer.innerHTML = `
         <div class="panel news-featured">
             <div class="nf-media">
-                <div class="nf-img" style="background-image: url('${featured.image}');"></div>
+                <div class="nf-img" style='${newsImageStyle(featured.image)}'></div>
                 <span class="nf-flag"><i class="fa-solid fa-bolt"></i> Tin tiêu điểm hôm nay</span>
             </div>
             <div class="nf-body">
                 <div>
                     <div class="news-meta">
-                        <span class="news-source"><i class="fa-solid fa-building-columns"></i> ${featured.source}</span>
+                        <span class="news-source"><i class="fa-solid fa-building-columns"></i> ${escapeHtml(featured.source)}</span>
                         <span>•</span>
-                        <span><i class="fa-regular fa-clock"></i> ${featured.pub_date}</span>
+                        <span><i class="fa-regular fa-clock"></i> ${escapeHtml(featured.pub_date)}</span>
                     </div>
-                    <h3>${featured.title}</h3>
-                    <p>${featured.summary}</p>
+                    <h3>${escapeHtml(featured.title)}</h3>
+                    <p>${escapeHtml(featured.summary)}</p>
                 </div>
                 <div class="nf-foot">
                     <div class="tag-row">
@@ -3275,7 +3465,7 @@ function renderNewsUI(newsList) {
                         <span class="news-tag">#KhíTượng</span>
                         <span class="news-tag">#AirHCM</span>
                     </div>
-                    <a href="${featured.link}" target="_blank" rel="noopener noreferrer" class="btn btn-gradient">
+                    <a href="${safeNewsLink(featured.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-gradient">
                         Đọc bài viết gốc <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </a>
                 </div>
@@ -3289,18 +3479,18 @@ function renderNewsUI(newsList) {
 
     regularNews.forEach(item => {
         cardsHtml += `
-            <div class="panel news-card" data-category="${item.category}">
+            <div class="panel news-card" data-category="${escapeHtml(item.category)}">
                 <div class="nc-media">
-                    <div class="nc-img" style="background-image: url('${item.image}');"></div>
-                    <span class="news-source-badge" style="background: ${item.badge_color};">${item.source}</span>
+                    <div class="nc-img" style='${newsImageStyle(item.image)}'></div>
+                    <span class="news-source-badge" style="background: ${/^#[0-9a-f]{3,8}$/i.test(item.badge_color || "") ? item.badge_color : "#0284c7"};">${escapeHtml(item.source)}</span>
                 </div>
                 <div class="nc-body">
-                    <small><i class="fa-regular fa-clock"></i> ${item.pub_date}</small>
-                    <h4>${item.title}</h4>
-                    <p>${item.summary}</p>
+                    <small><i class="fa-regular fa-clock"></i> ${escapeHtml(item.pub_date)}</small>
+                    <h4>${escapeHtml(item.title)}</h4>
+                    <p>${escapeHtml(item.summary)}</p>
                     <div class="nc-foot">
-                        <span class="news-tag">#${item.category}</span>
-                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="link-arrow">
+                        <span class="news-tag">#${escapeHtml(item.category)}</span>
+                        <a href="${safeNewsLink(item.link)}" target="_blank" rel="noopener noreferrer" class="link-arrow">
                             Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
@@ -3345,11 +3535,37 @@ document.addEventListener("visibilitychange", () => {
 // ==============================================================================
 // 15. QUẢN LÝ TÀI KHOẢN THÀNH VIÊN END-USER & SOCIAL LOGIN
 // ==============================================================================
+// Phương thức đăng nhập đang dùng được (Meta có thể tạm khóa ứng dụng Facebook của AirHCM)
+let socialProviders = null;
+function loadSocialProviders() {
+    return fetch(`${API_BASE}/auth/providers`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => { if (d) { socialProviders = d; applySocialProviders(); } return d; })
+        .catch(() => null);
+}
+
+function socialProviderOff(provider) {
+    const st = socialProviders && socialProviders[provider.toLowerCase()];
+    return st && st.available === false ? (st.reason || `Đăng nhập bằng ${provider} tạm thời không khả dụng.`) : null;
+}
+
+function applySocialProviders() {
+    const btn = document.querySelector(".btn-social-facebook");
+    if (!btn) return;
+    const reason = socialProviderOff("Facebook");
+    btn.classList.toggle("is-unavailable", !!reason);
+    btn.setAttribute("aria-disabled", reason ? "true" : "false");
+    btn.title = reason || "";
+    const label = btn.querySelector("span");
+    if (label) label.textContent = reason ? "Facebook tạm ngừng" : "Tiếp tục với Facebook";
+}
+
 window.openUserAuthModal = function (mode = 'login') {
     const modal = document.getElementById("modal-user-auth");
     if (modal) {
         modal.classList.add("active");
         switchUserAuthMode(mode);
+        loadSocialProviders();
         // Nạp sẵn thư viện đăng nhập để cửa sổ Google/Facebook/Apple mở ngay khi bấm
         loadFirebaseAuth().catch(err => console.warn("Chưa tải được Firebase Auth:", err));
     }
@@ -3526,6 +3742,12 @@ function showUserAuthMsg(text, type = "error") {
 }
 
 window.handleSocialAuth = async function (provider) {
+    // Nhà cung cấp đang bị khóa / chưa cấu hình: báo lý do, không mở cửa sổ lỗi của nhà cung cấp
+    const offReason = socialProviderOff(provider);
+    if (offReason) {
+        showUserAuthMsg(offReason);
+        return;
+    }
     const btn = document.querySelector(`.btn-social-${provider.toLowerCase()}`);
     const busyBtns = document.querySelectorAll(".btn-social");
     busyBtns.forEach(b => (b.disabled = true));
@@ -3614,6 +3836,7 @@ window.handleUserLogout = function () {
 // Gọi kiểm tra khi khởi động trang
 document.addEventListener("DOMContentLoaded", () => {
     renderUserHeaderState();
+    loadSocialProviders(); // Biết trước nút đăng nhập nào đang tạm ngừng (VD Facebook bị Meta khóa)
 });
 
 // ==============================================================================

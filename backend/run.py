@@ -1,3 +1,4 @@
+import os
 import socket
 
 import uvicorn
@@ -14,10 +15,14 @@ def lan_ip():
 
 
 if __name__ == "__main__":
+    # Máy chủ cloud chạy bằng systemd (deploy/airhcm.service), không dùng file này.
+    # Có thể đặt AIRHCM_RELOAD=0 để tắt tự nạp lại khi sửa code.
+    port = int(os.getenv("PORT", "8000"))
+    reload = os.getenv("AIRHCM_RELOAD", "1") != "0"
     print("=== Khởi động AirHCM: Backend FastAPI + WebGIS ===")
-    print("   WebGIS trên máy này : http://localhost:8000")
+    print(f"   WebGIS trên máy này : http://localhost:{port}")
     ip = lan_ip()
     if ip:
-        print(f"   Điện thoại (cùng Wi-Fi): http://{ip}:8000   (nút QR trên WebGIS)")
-    print("   Tài liệu API         : http://localhost:8000/docs")
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+        print(f"   Điện thoại (cùng Wi-Fi): http://{ip}:{port}   (nút QR trên WebGIS)")
+    print(f"   Tài liệu API         : http://localhost:{port}/docs")
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=reload)

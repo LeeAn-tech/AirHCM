@@ -4,11 +4,14 @@
     "fullname": "Hoàng Ân Lê",
     "email": "lehoangan200504@gmail.com",
     "provider": "Facebook",
-    "avatar": "/api/v1/avatars/u11.jpg?v=1794629822",
+    "avatar": "/api/v1/avatars/u11.jpg?v=1795025942",
     "status": "HOẠT ĐỘNG",
-    "created_at": "2026-11-14 11:07",
-    "last_login": "2026-11-14 11:28",
-    "firebase_uid": "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2"
+    "created_at": "2026-11-19 01:19",
+    "last_login": "2026-11-19 01:19",
+    "firebase_uid": "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2",
+    "firebase_uids": [
+      "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2"
+    ]
   },
   {
     "id": 10,
@@ -18,8 +21,11 @@
     "avatar": "https://lh3.googleusercontent.com/a/ACg8ocK9BfTn1bv1NgOsVWS8hISkW7X2HsOmqUe0KacOxuYA36zhEGU=s96-c",
     "status": "HOẠT ĐỘNG",
     "created_at": "2026-11-14 10:58",
-    "last_login": "2026-11-14 10:58",
-    "firebase_uid": "5NZKr9p5ziaNIhdzIFxQyoPK2x13"
+    "last_login": "2026-11-17 23:29",
+    "firebase_uid": "5NZKr9p5ziaNIhdzIFxQyoPK2x13",
+    "firebase_uids": [
+      "5NZKr9p5ziaNIhdzIFxQyoPK2x13"
+    ]
   },
   {
     "id": 9,
@@ -29,7 +35,7 @@
     "avatar": "https://lh3.googleusercontent.com/a/ACg8ocKXOZ-ult1EsJzHcdSvmUDW4J-WqA8xqRQST9_7c0B7TZjKWQ=s96-c",
     "status": "HOẠT ĐỘNG",
     "created_at": "2026-11-12 09:57",
-    "last_login": "2026-11-12 09:57",
+    "last_login": "2026-11-16 22:03",
     "firebase_uid": "1uOFGnFug4Ntd3juryMM82OHyEE3"
   },
   {

@@ -6,7 +6,13 @@ Luồng: WebGIS mở cửa sổ đăng nhập THẬT của nhà cung cấp (Fire
 Firebase Admin SDK (serviceAccountKey.json, project "airhcm") và chỉ tin thông tin
 (email, họ tên, ảnh đại diện, nhà cung cấp) nằm trong token đã xác minh.
 """
+import json
 import os
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import firebase_admin
 from firebase_admin import auth as firebase_auth
@@ -83,3 +89,45 @@ def _provider_email(uid: str, provider_id: str) -> str:
         if p.provider_id == provider_id and p.email:
             return p.email.strip().lower()
     return ""
+
+
+# ------------------------------------------------------------------------------
+# TRẠNG THÁI ỨNG DỤNG FACEBOOK (Meta có thể tạm khóa ứng dụng: "Ứng dụng không hoạt động")
+# Hỏi Graph API bằng app access token; kết quả lưu 10 phút. Lỗi mạng tạm thời KHÔNG coi là bị khóa.
+# ------------------------------------------------------------------------------
+_FB_TTL_SECONDS = 600
+_fb_status = {"checked": 0.0, "available": True, "reason": ""}
+_fb_lock = threading.Lock()
+
+
+def facebook_status() -> dict:
+    with _fb_lock:
+        if time.time() - _fb_status["checked"] < _FB_TTL_SECONDS:
+            return {"available": _fb_status["available"], "reason": _fb_status["reason"]}
+        app_id = os.getenv("FACEBOOK_APP_ID", "").strip()
+        secret = os.getenv("FACEBOOK_APP_SECRET", "").strip()
+        available, reason = True, ""
+        if not app_id or not secret:
+            available, reason = False, "Máy chủ chưa cấu hình ứng dụng Facebook."
+        else:
+            url = f"https://graph.facebook.com/v21.0/{app_id}?" + urllib.parse.urlencode(
+                {"fields": "id", "access_token": f"{app_id}|{secret}"})
+            try:
+                urllib.request.urlopen(url, timeout=6).read()
+            except urllib.error.HTTPError as e:
+                try:
+                    err = json.loads(e.read()).get("error", {})
+                except Exception:
+                    err = {}
+                # 200 = ứng dụng bị Meta chặn/hạn chế; 190/101 = App ID / App Secret sai hoặc ứng dụng đã xóa
+                if err.get("code") in (200, 190, 101, 803):
+                    available = False
+                    reason = ("Meta (Facebook) đang tạm khóa ứng dụng đăng nhập của AirHCM. "
+                              "Vui lòng đăng nhập bằng Google hoặc Email.")
+                    print(f"-> [Đăng nhập MXH] Ứng dụng Facebook không khả dụng: {err.get('message')} "
+                          f"(code {err.get('code')}, subcode {err.get('error_subcode')})")
+            except Exception:
+                pass  # Mất mạng tạm thời: vẫn cho thử, không ẩn nút
+        _fb_status.update({"checked": time.time(), "available": available, "reason": reason})
+        return {"available": available, "reason": reason}
+

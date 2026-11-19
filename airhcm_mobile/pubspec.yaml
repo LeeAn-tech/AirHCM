@@ -47,6 +47,7 @@ dependencies:
   geolocator: ^12.0.0        # GPS: gửi tọa độ người dùng để phân tích không khí theo vị trí
   flutter_local_notifications: ^17.2.4  # Thông báo kèm tiếng còi khi AQI vượt ngưỡng
   firebase_auth: ^7.0.1      # Đăng nhập Google / Facebook / Apple (Firebase Authentication)
+  flutter_facebook_auth: ^7.3.3
 
 dev_dependencies:
   flutter_test:

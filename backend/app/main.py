@@ -13,14 +13,16 @@ from app.services.alert_service import (
     evaluate_forecast_and_alert,
 )
 from app.services.forecast_insight import summarize_forecast
-from app.services import avatar_store, ward_index
-from app.services.social_auth import SocialAuthError, verify_social_token
+from app.services import avatar_store, news_service, ward_index
+from app.services.social_auth import SocialAuthError, facebook_status, verify_social_token
 from app.services import knowledge_base
 from app.services.auth_service import (
     check_admin,
     issue_token,
+    issue_user_token,
     remove_user_password,
     require_admin,
+    require_user,
     set_user_password,
     user_password_hash,
     verify_password,
@@ -54,6 +56,20 @@ app = FastAPI(
     description="Hệ thống Backend WebGIS Dự báo Chất lượng Không khí & Cảnh báo Sức khỏe TP.HCM - Khoa CNTT HCMUNRE"
 )
 
+# Phân hệ AirData: dữ liệu đa chất (PM2.5, PM10, CO, NO2, SO2, O3, CO2) đồng nhất 168 phường × giờ,
+# dự báo realtime hôm nay + 7 ngày tới và xu hướng tháng (app/airdata, API /api/v1/air/*)
+from app.airdata.router import router as airdata_router
+from app.airdata.forecast import ENGINE as AIR_ENGINE
+from app.airdata import pipeline as airdata_pipeline
+app.include_router(airdata_router)
+# Phân tích nâng cao: ngưỡng WHO/QCVN (Nm³), QA/QC, hoa gió, dự báo xác suất, rủi ro phơi nhiễm,
+# truy vết nguồn A-E, kịch bản can thiệp & tối ưu (app/airdata/router_analytics.py)
+try:
+    from app.airdata.router_analytics import router as airdata_analytics_router
+    app.include_router(airdata_analytics_router)
+except Exception as _e:  # không để lỗi phân hệ mới làm dừng hệ thống cũ
+    print(f"-> [AirData] Không nạp được API phân tích nâng cao: {_e}")
+
 # Sự kiện chạy một lần khi Backend vừa khởi động xong
 @app.on_event("startup")
 def on_startup():
@@ -62,6 +78,12 @@ def on_startup():
         forecast_provider=lambda: get_cached_forecast(24),
         etl_job=run_scheduled_etl,
     )
+    # AirData: cập nhật CAMS + khí tượng + GEE mỗi giờ (phút 05) và ngay khi khởi động
+    try:
+        from app.services.alert_service import scheduler as _bg_scheduler
+        airdata_pipeline.schedule(_bg_scheduler)
+    except Exception as e:
+        print(f"-> [AirData] Không gắn được lịch cập nhật: {e}")
     # Nạp kho tri thức RAG + embedding ngữ nghĩa ở luồng nền (câu hỏi đầu tiên không phải chờ)
     threading.Thread(target=knowledge_base.warm_up, daemon=True).start()
 
@@ -535,6 +557,13 @@ def fetch_open_meteo_live():
 @app.get("/api/v1/aqi/current", tags=["Quan trắc AQI"])
 def get_current_aqi():
     """API trả về số liệu quan trắc mới nhất theo thời gian thực"""
+    # Ưu tiên bộ dữ liệu đồng nhất đa chất (AirData) nếu đã có số liệu trong 3 giờ gần nhất
+    try:
+        air = AIR_ENGINE.current_legacy()
+        if air:
+            return air
+    except Exception as e:
+        print(f"-> [AirData] current dự phòng sang Open-Meteo trực tiếp: {e}")
     now = datetime.now()
     
     if (realtime_cache["data"] is None or 
@@ -583,7 +612,27 @@ def trigger_etl_pipeline():
 
 @app.get("/api/v1/aqi/spatial-summary", tags=["Quan trắc AQI"])
 def get_spatial_summary(date_str: Optional[str] = Query(None, description="Ngày cần thống kê YYYY-MM-DD")):
-    """Bảng tổng hợp nồng độ PM2.5 và AQI của 166 phường/xã, tự động liên kết với số liệu Real-time"""
+    """Bảng tổng hợp nồng độ PM2.5 và AQI của 168 phường/xã, tự động liên kết với số liệu Real-time"""
+    # Ưu tiên giá trị đã hạ quy mô theo phường (AirData); chưa có thì dùng mô hình hệ số vùng cũ
+    try:
+        air = AIR_ENGINE.spatial("pm2_5")
+        if air and air.get("wards"):
+            rows = []
+            for w in air["wards"]:
+                pm = w.get("pm2_5")
+                if pm is None:
+                    continue
+                rows.append({
+                    "ma_phuong_xa": w["ma_phuong_xa"], "ten_phuong_xa": w["ten_phuong_xa"],
+                    "dien_tich_km2": float((ward_index.by_code(w["ma_phuong_xa"]) or {}).get("dien_tich_km2") or 0),
+                    "so_luong_tram": 0, "pm2_5_trung_binh": pm, "aqi_trung_binh": DSSEngine.calculate_us_aqi(pm),
+                    "vn_aqi": w.get("vn_aqi"), "chat_chi_phoi": w.get("vn_dominant"), "nguon": "airdata",
+                })
+            if rows:
+                rows.sort(key=lambda x: x["pm2_5_trung_binh"], reverse=True)
+                return rows
+    except Exception as e:
+        print(f"-> [AirData] spatial-summary dự phòng: {e}")
     # 1. Lấy nồng độ PM2.5 thời gian thực hiện tại của trạm trung tâm làm mốc chuẩn
     current_data = get_current_aqi()
     base_pm25 = float(current_data.get("pm2_5", 22.5))
@@ -676,7 +725,7 @@ def get_spatial_summary(date_str: Optional[str] = Query(None, description="Ngày
 def get_hourly_forecast(hours: int = Query(24, ge=1, le=168, description="Số giờ cần dự báo (24h đến 7 ngày)")):
     """API dự báo AI chuỗi thời gian nồng độ PM2.5 & AQI cho 24 giờ đến 7 ngày tới"""
     try:
-        return ai_service.predict_future_hours(hours_ahead=hours)
+        return get_cached_forecast(hours)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -833,69 +882,12 @@ def delete_subscription(sub_id: str):
 # 5. NHÓM API TIN TỨC MÔI TRƯỜNG & KHÔNG KHÍ TỰ ĐỘNG CẬP NHẬT (RSS FEED PARSER)
 # ==============================================================================
 
-def clean_html_tags(raw_html):
-    """Xóa bỏ các thẻ HTML dư thừa trong phần tóm tắt của RSS"""
-    cleanr = re.compile('<.*?>')
-    return re.sub(cleanr, '', raw_html).strip()
-
-def fetch_live_environmental_news():
-    """Hàm tự động cào tin mới nhất từ RSS chuyên mục Môi trường & Đô thị"""
-    news_items = []
-    
-    # 1. Luồng RSS từ VnExpress (Thời sự / Môi trường đô thị)
-    rss_urls = [
-        {"source": "VnExpress", "url": "https://vnexpress.net/rss/thoi-su.rss", "badge_color": "#7c2d12"},
-        {"source": "Báo Tuổi Trẻ", "url": "https://tuoitre.vn/rss/thoi-su.rss", "badge_color": "#e11d48"}
-    ]
-    
-    keywords = ["không khí", "bụi mịn", "ô nhiễm", "thời tiết", "môi trường", "triều cường", "nắng nóng", "mưa", "đô thị", "giao thông", "tphcm", "hồ chí minh"]
-
-    for source_info in rss_urls:
-        try:
-            req = urllib.request.Request(source_info["url"], headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-            with urllib.request.urlopen(req, timeout=5) as response:
-                xml_data = response.read()
-                root = ET.fromstring(xml_data)
-
-                for item in root.findall('./channel/item'):
-                    title = item.find('title').text if item.find('title') is not None else ""
-                    link = item.find('link').text if item.find('link') is not None else ""
-                    pub_date = item.find('pubDate').text if item.find('pubDate') is not None else ""
-                    description_raw = item.find('description').text if item.find('description') is not None else ""
-
-                    # Trích xuất link ảnh thumbnail nếu có trong description
-                    img_match = re.search(r'src="(https?://[^"]+)"', description_raw)
-                    image_url = img_match.group(1) if img_match else "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=700&q=80"
-
-                    clean_desc = clean_html_tags(description_raw)
-
-                    # Bộ lọc thông minh: Chỉ lấy bài viết liên quan đến môi trường / đô thị
-                    title_lower = title.lower()
-                    desc_lower = clean_desc.lower()
-                    if any(kw in title_lower or kw in desc_lower for kw in keywords):
-                        # Phân loại chuyên đề
-                        cat = "PM25" if any(k in title_lower for k in ["bụi", "pm2.5", "ô nhiễm"]) else (
-                              "WEATHER" if any(k in title_lower for k in ["thời tiết", "nắng nóng", "mưa", "nhiệt độ", "sương mù"]) else "POLICY")
-
-                        news_items.append({
-                            "title": title,
-                            "link": link,
-                            "summary": clean_desc[:220] + "...",
-                            "source": source_info["source"],
-                            "badge_color": source_info["badge_color"],
-                            "pub_date": pub_date[:16], # Lấy phần ngày tháng
-                            "image": image_url,
-                            "category": cat
-                        })
-        except Exception as e:
-            print(f"-> [Lỗi đọc RSS từ {source_info['source']}]: {e}")
-
-    return news_items
+# Lấy tin từ RSS các báo + bộ lọc chủ đề không khí / thời tiết / môi trường: app/services/news_service.py
 
 @app.get("/api/v1/news", tags=["Tin tức Môi trường"])
 def get_environmental_news():
     """API cung cấp danh sách bài báo tự động làm mới theo ngày cho Frontend"""
-    live_news = fetch_live_environmental_news()
+    live_news = news_service.fetch_news()
 
     # Dữ liệu dự phòng đồng bộ ngày tự động (Dynamic Fallback) nếu phòng báo cáo mất mạng Internet
     if not live_news or len(live_news) < 4:
@@ -1058,7 +1050,8 @@ def register_end_user(req: EndUserRegisterRequest):
     set_user_password(new_user["email"], req.password)  # Chỉ lưu mã băm PBKDF2 (auth_store.json)
     users_db.insert(0, new_user)
     save_users_to_disk(users_db)
-    return {"status": "success", "message": "Đăng ký tài khoản thành công!", "user": new_user}
+    return {"status": "success", "message": "Đăng ký tài khoản thành công!", "user": new_user,
+            **issue_user_token(new_user["id"])}
 
 # API Đăng nhập Email thông thường (kiểm tra mật khẩu băm)
 @app.post("/api/v1/auth/user/login", tags=["Xác thực End-User"])
@@ -1083,7 +1076,14 @@ def login_end_user(req: EndUserLoginRequest):
     elif not verify_password(req.password or "", stored):
         time.sleep(0.6)
         raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác!")
-    return {"status": "success", "message": "Đăng nhập thành công!", "user": user}
+    return {"status": "success", "message": "Đăng nhập thành công!", "user": user, **issue_user_token(user["id"])}
+
+def _linked_uids(user: dict) -> list:
+    """Các danh tính Firebase (Google / Facebook / Apple) đã liên kết với tài khoản thành viên"""
+    uids = [u for u in (user.get("firebase_uids") or []) if u]
+    if user.get("firebase_uid") and user["firebase_uid"] not in uids:
+        uids.append(user["firebase_uid"])
+    return uids
 
 def _initials_avatar(fullname: str) -> str:
     """Ảnh chữ cái viết tắt khi tài khoản không có ảnh đại diện"""
@@ -1100,6 +1100,15 @@ def get_member_avatar(name: str):
 
 # API Đăng nhập qua Google / Facebook / Apple (Firebase Authentication)
 # Thông tin tài khoản lấy từ ID token đã xác minh chữ ký - không tin email/họ tên do trình duyệt tự gửi.
+# Phương thức đăng nhập đang dùng được (WebGIS / app ẩn hoặc tạm ngừng nút tương ứng)
+@app.get("/api/v1/auth/providers", tags=["Xác thực End-User"])
+def social_login_providers():
+    return {
+        "google": {"available": True, "reason": ""},
+        "facebook": facebook_status(),
+        "apple": {"available": False, "reason": "Cần tài khoản Apple Developer."},
+    }
+
 @app.post("/api/v1/auth/user/social", tags=["Xác thực End-User"])
 def social_login_end_user(req: SocialLoginRequest):
     global users_db
@@ -1112,8 +1121,8 @@ def social_login_end_user(req: SocialLoginRequest):
     users_db = load_users_from_disk()  # Đồng bộ với thay đổi từ trang quản trị
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    # 1. Tài khoản đã liên kết với đúng danh tính này
-    user = next((u for u in users_db if u.get("firebase_uid") == uid), None)
+    # 1. Tài khoản đã liên kết với đúng danh tính này (một tài khoản có thể liên kết cả Google lẫn Facebook)
+    user = next((u for u in users_db if uid in _linked_uids(u)), None)
 
     # 2. Tài khoản cũ cùng email: chỉ liên kết khi nhà cung cấp đã xác minh email
     #    (hoặc tài khoản đó vốn được tạo bằng chính nhà cung cấp này)
@@ -1140,7 +1149,9 @@ def social_login_end_user(req: SocialLoginRequest):
     if user is not None:
         if user.get("status") == "BỊ KHÓA":
             raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa bởi Quản trị viên!")
-        user["firebase_uid"] = uid
+        # Thêm liên kết mới, KHÔNG ghi đè liên kết cũ (đăng nhập Google rồi Facebook vẫn về cùng tài khoản)
+        user["firebase_uids"] = _linked_uids(user) + ([uid] if uid not in _linked_uids(user) else [])
+        user["firebase_uid"] = uid  # Danh tính dùng gần nhất
         if contact_email and not user.get("email"):
             user["email"] = contact_email
         # Ảnh đại diện thật từ Google / Facebook (ảnh Facebook được tải về lưu trên máy chủ)
@@ -1148,7 +1159,8 @@ def social_login_end_user(req: SocialLoginRequest):
                           or _initials_avatar(user.get("fullname") or "U"))
         user["last_login"] = now
         save_users_to_disk(users_db)
-        return {"status": "success", "message": f"Đăng nhập thành công qua {provider}!", "user": user}
+        return {"status": "success", "message": f"Đăng nhập thành công qua {provider}!", "user": user,
+                **issue_user_token(user["id"])}
 
     # 3. Lần đầu đăng nhập: tự tạo tài khoản thành viên
     fullname = (info["name"] or (req.fullname or "").strip()[:80]
@@ -1164,10 +1176,47 @@ def social_login_end_user(req: SocialLoginRequest):
         "created_at": now,
         "last_login": now,
         "firebase_uid": uid,
+        "firebase_uids": [uid],
     }
     users_db.insert(0, new_user)
     save_users_to_disk(users_db)
-    return {"status": "success", "message": f"Đăng ký & Đăng nhập thành công qua {provider}!", "user": new_user}
+    return {"status": "success", "message": f"Đăng ký & Đăng nhập thành công qua {provider}!", "user": new_user,
+            **issue_user_token(new_user["id"])}
+
+# Khu vực theo dõi của thành viên: nơi sinh sống & nơi làm việc / học tập (mã phường/xã trong GeoJSON)
+class UserAreasRequest(BaseModel):
+    home_ward_code: Optional[str] = None
+    work_ward_code: Optional[str] = None
+
+
+def _ward_display_name(w: dict) -> str:
+    loai, ten = w.get("loai_don_vi") or "", w.get("ten_phuong_xa") or ""
+    return f"{loai} {ten}".strip() if loai and not ten.startswith(loai) else ten
+
+
+@app.put("/api/v1/auth/user/areas", tags=["Xác thực End-User"])
+def update_user_areas(req: UserAreasRequest, user_id: int = Depends(require_user)):
+    """Thành viên tự chọn khu vực theo dõi (chỉ sửa được tài khoản của chính mình - token vai trò user)"""
+    global users_db
+    users_db = load_users_from_disk()
+    user = next((u for u in users_db if u.get("id") == user_id), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Tài khoản không còn tồn tại, vui lòng đăng nhập lại.")
+    if user.get("status") == "BỊ KHÓA":
+        raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa bởi Quản trị viên!")
+
+    areas = {}
+    for key, code in (("home", req.home_ward_code), ("work", req.work_ward_code)):
+        code = (code or "").strip()
+        if not code:
+            continue
+        ward = ward_index.by_code(code)
+        if ward is None:
+            raise HTTPException(status_code=400, detail=f"Không tìm thấy phường/xã có mã {code}.")
+        areas[key] = {"code": ward["ma_phuong_xa"], "name": _ward_display_name(ward)}
+    user["areas"] = areas
+    save_users_to_disk(users_db)
+    return {"status": "success", "message": "Đã lưu khu vực theo dõi.", "user": user}
 
 # API Admin lấy danh sách người dùng
 @app.get("/api/v1/admin/users", dependencies=ADMIN_ONLY, tags=["Admin - Quản lý Người dùng"])
@@ -1409,7 +1458,13 @@ def get_cached_forecast(hours: int = 24) -> list:
     cached = _forecast_cache.get(hours)
     if cached and time.time() - cached[0] < FORECAST_CACHE_TTL:
         return cached[1]
-    data = ai_service.predict_future_hours(hours_ahead=hours)
+    data = None
+    try:
+        data = AIR_ENGINE.legacy_hourly(hours)  # mô hình đa chất trực tiếp đa hạn (AirData)
+    except Exception as e:
+        print(f"-> [AirData] dự báo dự phòng sang mô hình PM2.5 cũ: {e}")
+    if not data:
+        data = ai_service.predict_future_hours(hours_ahead=hours)
     _forecast_cache[hours] = (time.time(), data)
     return data
 

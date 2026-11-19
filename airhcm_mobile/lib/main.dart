@@ -73,7 +73,8 @@ class AirHCMMobileApp extends StatelessWidget {
         chipTheme: ChipThemeData(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           side: const BorderSide(color: AppColors.line),
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+          // Phải đặt màu chữ: labelStyle không có màu làm chữ trong chip trắng trên nền trắng (chip "trống")
+          labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: AppColors.text),
         ),
         snackBarTheme: SnackBarThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
       ),

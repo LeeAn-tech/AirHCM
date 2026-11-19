@@ -1,0 +1,6 @@
+# Caddy: tự xin và gia hạn chứng chỉ HTTPS miễn phí, chuyển tiếp vào FastAPI (127.0.0.1:8000)
+# setup_server.sh thay __DOMAIN__ bằng tên miền thật, VD airhcm-nhom2.southeastasia.cloudapp.azure.com
+__DOMAIN__ {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8000
+}

@@ -63,6 +63,38 @@ class AppState {
     await prefs.setString(_prefUser, jsonEncode(data));
   }
 
+  /// Khu vực theo dõi của thành viên: 'home' (nơi sinh sống), 'work' (nơi làm việc / học tập) -> {code, name}
+  static Map<String, dynamic>? area(String key) {
+    final areas = user.value?['areas'];
+    if (areas is! Map) return null;
+    final a = areas[key];
+    return a is Map && '${a['code'] ?? ''}'.isNotEmpty ? Map<String, dynamic>.from(a) : null;
+  }
+
+  /// Lưu khu vực theo dõi trên máy rồi đồng bộ lên tài khoản (dùng chung WebGIS / trang quản trị).
+  /// Trả về null nếu đã đồng bộ, hoặc lời nhắn khi mới lưu được trên máy này.
+  static Future<String?> updateAreas({Map<String, dynamic>? home, Map<String, dynamic>? work}) async {
+    final current = user.value;
+    if (current == null) return 'Vui lòng đăng nhập để lưu khu vực theo dõi.';
+    await saveUser({
+      ...current,
+      'areas': {'home': ?home, 'work': ?work},
+    });
+
+    final token = current['token'];
+    if (token is! String || token.isEmpty) {
+      return 'Đã lưu trên máy này. Đăng xuất rồi đăng nhập lại để đồng bộ với tài khoản.';
+    }
+    try {
+      final server = await ApiService.updateAreas(token, homeCode: home?['code'], workCode: work?['code']);
+      await saveUser({...user.value ?? current, ...server, 'token': token, 'token_expires_at': current['token_expires_at']});
+      return null;
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) return 'Đã lưu trên máy này. Phiên đăng nhập đã hết hạn, đăng nhập lại để đồng bộ.';
+      return 'Đã lưu trên máy này, chưa đồng bộ được với máy chủ: ${e.message}';
+    }
+  }
+
   static Future<void> logout() async {
     user.value = null;
     final prefs = await SharedPreferences.getInstance();

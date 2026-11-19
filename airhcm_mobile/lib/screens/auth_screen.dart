@@ -27,15 +27,43 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   final _regEmailCtrl = TextEditingController();
   final _regPassCtrl = TextEditingController();
 
-  static const _allWards = 'Tất cả TP.HCM';
-  String _selectedWard = _allWards;
-  List<String> _wardNames = const [_allWards];
+  static const _noWard = 'Chưa chọn (chọn sau trong tài khoản)';
+  String _selectedWard = _noWard;
+  List<String> _wardNames = const [_noWard];
+  List<WardShape> _wards = const [];
+
+  /// Lý do nhà cung cấp tạm ngừng (VD Meta khóa ứng dụng Facebook của AirHCM); null = dùng được
+  final Map<SocialProvider, String> _providerOff = {};
+
+  Future<void> _loadProviders() async {
+    try {
+      final data = await ApiService.authProviders();
+      final fb = data['facebook'];
+      if (!mounted) return;
+      setState(() {
+        if (fb is Map && fb['available'] == false) {
+          _providerOff[SocialProvider.facebook] =
+              '${fb['reason'] ?? 'Đăng nhập Facebook tạm thời không khả dụng.'}';
+        } else {
+          _providerOff.remove(SocialProvider.facebook);
+        }
+      });
+    } catch (_) {
+      // Không hỏi được máy chủ: vẫn để người dùng thử như bình thường
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadProviders();
     WardCatalog.load().then((wards) {
-      if (mounted) setState(() => _wardNames = [_allWards, ...wards.map((w) => w.displayName)]);
+      if (mounted) {
+        setState(() {
+          _wards = wards;
+          _wardNames = [_noWard, ...wards.map((w) => w.displayName)];
+        });
+      }
     });
   }
 
@@ -57,7 +85,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     }
     await _run(() async {
       final user = await ApiService.login(email, pass);
-      await AppState.saveUser({...user, 'ward': AppState.user.value?['ward'] ?? _selectedWard});
+      await AppState.saveUser(user); // Khu vực theo dõi lấy từ tài khoản trên máy chủ
       _toast('🎉 Chào mừng ${user['fullname'] ?? ''} quay lại AirHCM!', AppColors.success);
       if (mounted) Navigator.pop(context);
     });
@@ -73,7 +101,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     }
     await _run(() async {
       final user = await ApiService.register(name, email, pass);
-      await AppState.saveUser({...user, 'ward': _selectedWard});
+      await AppState.saveUser(user);
+      // Phường chọn khi đăng ký = nơi sinh sống (đổi / thêm nơi làm việc trong mục Tài khoản)
+      final home = _wards.where((w) => w.displayName == _selectedWard).firstOrNull;
+      if (home != null) await AppState.updateAreas(home: {'code': home.code, 'name': home.displayName});
       _toast('✅ Tạo tài khoản thành công! Tài khoản dùng chung trên WebGIS AirHCM.', AppColors.success);
       if (mounted) Navigator.pop(context);
     });
@@ -87,7 +118,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     });
     try {
       final user = await SocialAuth.signIn(provider);
-      await AppState.saveUser({...user, 'ward': AppState.user.value?['ward'] ?? _selectedWard});
+      await AppState.saveUser(user); // Khu vực theo dõi lấy từ tài khoản trên máy chủ
       _toast('🎉 Chào mừng ${user['fullname'] ?? ''}! Đã đăng nhập bằng ${SocialAuth.label(provider)}.', AppColors.success);
       if (mounted) Navigator.pop(context);
     } on SocialAuthCancelled {
@@ -250,13 +281,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   Widget _socialButton(SocialProvider provider, String label,
       {required Color background, required Color foreground, required Widget icon, BorderSide? border}) {
     final loading = _socialBusy == provider;
+    final offReason = _providerOff[provider];
+    if (offReason != null) label = '${SocialAuth.label(provider)} tạm ngừng';
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: _busy ? null : () => _social(provider),
+        // Nhà cung cấp đang bị khóa: báo lý do thay vì mở trang lỗi của nhà cung cấp
+        onPressed: _busy ? null : () => offReason != null ? _toast(offReason, AppColors.danger) : _social(provider),
         style: ElevatedButton.styleFrom(
-          backgroundColor: background,
+          backgroundColor: offReason != null ? background.withValues(alpha: 0.45) : background,
           foregroundColor: foreground,
           disabledBackgroundColor: background.withValues(alpha: loading ? 1 : 0.55),
           disabledForegroundColor: foreground.withValues(alpha: loading ? 1 : 0.7),
@@ -322,11 +356,11 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           initialValue: _selectedWard,
           isExpanded: true,
           menuMaxHeight: 420,
-          decoration: _input('Khu vực sinh sống / quan tâm', Icons.location_city_outlined),
+          decoration: _input('Nơi sinh sống', Icons.home_outlined),
           items: _wardNames
               .map((w) => DropdownMenuItem(value: w, child: Text(w, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5))))
               .toList(),
-          onChanged: (v) => setState(() => _selectedWard = v ?? _allWards),
+          onChanged: (v) => setState(() => _selectedWard = v ?? _noWard),
         ),
         const SizedBox(height: 12),
         TextField(controller: _regPassCtrl, obscureText: true, decoration: _input('Mật khẩu (tối thiểu 6 ký tự) *', Icons.lock_outline)),

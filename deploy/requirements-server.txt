@@ -1,0 +1,33 @@
+# Thư viện cho máy chủ cloud (Linux) - gọn hơn backend/requirements.txt (bản pip freeze của máy Windows).
+# Cài: pip install -r deploy/requirements-server.txt
+# Giữ đúng phiên bản scikit-learn / xgboost / numpy / joblib như máy đã huấn luyện,
+# nếu không file mô hình .joblib có thể không nạp được.
+
+# Web API
+fastapi==0.142.2
+starlette==1.7.0
+uvicorn==0.54.0
+pydantic==2.12.5
+email-validator==2.3.0
+python-dotenv==1.2.4
+APScheduler==3.11.3
+requests==2.34.2
+
+# Cơ sở dữ liệu PostgreSQL/PostGIS
+SQLAlchemy==2.0.54
+psycopg2-binary==2.9.11
+shapely==2.1.2
+
+# Dữ liệu và mô hình dự báo (phải khớp máy huấn luyện)
+numpy==2.4.1
+pandas==2.3.3
+scipy==1.17.0
+scikit-learn==1.8.0
+xgboost==3.4.1
+joblib==1.5.3
+tzdata
+
+# Google: Earth Engine, Firebase (đăng nhập, thông báo đẩy), Gemini (trợ lý AI)
+earthengine-api==1.7.41
+firebase_admin==7.7.0
+google-generativeai

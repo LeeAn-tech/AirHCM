@@ -14,6 +14,7 @@ import '../core/location_service.dart';
 import '../core/ward_catalog.dart';
 import '../core/weather_field.dart';
 import '../widgets/location_insight_sheet.dart';
+import '../widgets/my_areas.dart';
 import '../widgets/ui.dart';
 import 'auth_screen.dart';
 
@@ -70,6 +71,11 @@ class _Basemap {
 class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin {
   static const LatLng _hcmCenter = LatLng(10.8231, 106.6297);
   static const _prefBasemap = 'map_basemap';
+
+  // Máy chủ bản đồ (đặc biệt tile.openstreetmap.org) chặn yêu cầu không xưng danh ứng dụng: lớp bản đồ
+  // và ảnh xem trước phải gửi cùng User-Agent (flutter_map gửi "flutter_map (<userAgentPackageName>)")
+  static const _tileAppId = 'com.airhcm.mobile';
+  static const _tileHeaders = {'User-Agent': 'flutter_map ($_tileAppId)'};
 
   static const List<_Basemap> _basemaps = [
     _Basemap('light', 'Sáng',
@@ -451,9 +457,10 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     }
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -481,12 +488,15 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 ],
               ),
               const Divider(height: 28),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.location_city_outlined),
-                title: const Text('Khu vực theo dõi'),
-                subtitle: Text('${user['ward'] ?? 'Tất cả TP.HCM'}'),
+              MyAreasSection(
+                wardPm: _wardPm,
+                useUS: _useUS,
+                onShowOnMap: (ward) {
+                  Navigator.pop(ctx);
+                  _selectWard(ward);
+                },
               ),
+              const Divider(height: 20),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.dns_outlined),
@@ -613,10 +623,12 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.network(b.thumbnail, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+                Image.network(b.thumbnail,
+                    headers: _tileHeaders, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox.shrink()),
                 if (b.labelsUrl != null)
                   Image.network(
                     b.labelsUrl!.replaceAll('{z}', '11').replaceAll('{x}', '1631').replaceAll('{y}', '962'),
+                    headers: _tileHeaders,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
                   ),
@@ -668,14 +680,14 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
               key: ValueKey(basemap.id),
               urlTemplate: basemap.url,
               maxNativeZoom: basemap.maxNativeZoom,
-              userAgentPackageName: 'com.airhcm.mobile',
+              userAgentPackageName: _tileAppId,
             ),
             if (basemap.labelsUrl != null)
               TileLayer(
                 key: const ValueKey('labels'),
                 urlTemplate: basemap.labelsUrl!,
                 maxNativeZoom: 18,
-                userAgentPackageName: 'com.airhcm.mobile',
+                userAgentPackageName: _tileAppId,
               ),
             if (_showWards) PolygonLayer(polygons: _buildWardPolygons()),
             if (_showHeat) CircleLayer(circles: _buildHeatCircles()),
@@ -940,7 +952,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                       children: [
                         Expanded(
                           child: _popMetric(Icons.blur_on, 'PM2.5', pm.toStringAsFixed(1), 'µg/m³', AqiUtils.strong(aqi),
-                              note: pm <= 50 ? 'Đạt QCVN' : 'Vượt QCVN', noteColor: pm <= 50 ? AppColors.success : AppColors.danger),
+                              note: pm <= AqiUtils.qcvnPm25 ? 'Đạt QCVN' : 'Vượt QCVN', noteColor: pm <= AqiUtils.qcvnPm25 ? AppColors.success : AppColors.danger),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -1327,7 +1339,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                     AqiPill(aqi: aqi, text: AqiUtils.level(aqi)),
                     const SizedBox(height: 5),
                     Text(
-                      pm <= 50 ? 'Đạt quy chuẩn QCVN 05:2023 (≤ 50 µg/m³)' : 'Vượt ngưỡng QCVN 05:2023 (> 50 µg/m³)',
+                      pm <= AqiUtils.qcvnPm25 ? 'Đạt quy chuẩn QCVN 05:2023 (≤ ${AqiUtils.qcvnPm25.toStringAsFixed(0)} µg/m³)' : 'Vượt ngưỡng QCVN 05:2023 (> ${AqiUtils.qcvnPm25.toStringAsFixed(0)} µg/m³)',
                       style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: pm <= 50 ? AppColors.brand : AppColors.danger),
                     ),
                   ],

@@ -22,7 +22,7 @@ class _NewsScreenState extends State<NewsScreen> {
     'ALL': 'Tất cả',
     'PM25': 'Bụi mịn & AQI',
     'WEATHER': 'Khí quyển & Thời tiết',
-    'POLICY': 'Quy chuẩn & Chỉ đạo',
+    'POLICY': 'Môi trường & Chính sách',
   };
 
   @override
@@ -76,10 +76,10 @@ class _NewsScreenState extends State<NewsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+            // Chiều cao tự co giãn theo cỡ chữ của máy (không cắt chữ khi phóng to cỡ chữ hệ thống)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
                 children: _categories.entries
                     .map((e) => Padding(
                           padding: const EdgeInsets.only(right: 8),

@@ -16,7 +16,10 @@ class ApiConfig {
 
   /// Mặc định: IP máy tính chạy backend trong mạng LAN (xem bằng lệnh `ipconfig`).
   /// Máy ảo Android dùng http://10.0.2.2:8000
-  static const String defaultServer = 'http://192.168.1.86:8000';
+  /// Bản phát hành trỏ tới máy chủ cloud:
+  ///   flutter build apk --release --dart-define=AIRHCM_SERVER=https://<ten-mien>
+  static const String defaultServer =
+      String.fromEnvironment('AIRHCM_SERVER', defaultValue: 'http://192.168.1.86:8000');
   static const int defaultPort = 8000;
   static const String _prefKey = 'api_server_url';
 
@@ -91,6 +94,12 @@ class ApiConfig {
   /// Bảo đảm có máy chủ dùng được: thử địa chỉ đã lưu, không được thì tự dò trong mạng Wi-Fi
   static Future<bool> ensureReachable() async {
     if (await ping(_server)) return true;
+    // Địa chỉ cũ (VD IP LAN của bản cài trước) không dùng được: thử máy chủ mặc định của bản build
+    final fallback = normalize(defaultServer);
+    if (fallback != _server && await ping(fallback, timeout: const Duration(seconds: 8))) {
+      await save(fallback);
+      return true;
+    }
     return await discover() != null;
   }
 

@@ -32,7 +32,10 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="assets/css/style.css?v=20261114b">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261119a">
+    <link rel="stylesheet" href="assets/css/air-forecast.css?v=20261117a">
+    <link rel="stylesheet" href="assets/css/air-analysis.css?v=20261119a">
+    <link rel="stylesheet" href="assets/css/map3d.css?v=20261119b">
 </head>
 
 <body class="app-body">
@@ -59,6 +62,10 @@
                 <i class="fa-solid fa-map-location-dot"></i>
                 <span class="tooltip">Bản đồ WebGIS</span>
             </li>
+            <li class="nav-item" data-tab="tab-map3d">
+                <i class="fa-solid fa-cubes"></i>
+                <span class="tooltip">Bản đồ 3D không gian - thời gian</span>
+            </li>
             <li class="nav-item" data-tab="tab-forecast">
                 <i class="fa-solid fa-chart-line"></i>
                 <span class="tooltip">Dự báo AI</span>
@@ -70,6 +77,10 @@
             <li class="nav-item" data-tab="tab-hotspots">
                 <i class="fa-solid fa-fire-flame-curved"></i>
                 <span class="tooltip">Điểm nóng Ô nhiễm</span>
+            </li>
+            <li class="nav-item" data-tab="tab-analysis">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <span class="tooltip">Phân tích xác suất & Truy nguồn</span>
             </li>
             <li class="nav-item" data-tab="tab-subscribe">
                 <i class="fa-solid fa-bell"></i>
@@ -358,145 +369,269 @@
         </section>
 
         <!-- ====================================================================== -->
+        <!-- VIEW 1b: BẢN ĐỒ 3D DIỄN BIẾN KHÔNG GIAN - THỜI GIAN (js/map3d.js)       -->
+        <!--   Khối nổi 168 phường: chiều cao = nồng độ, màu = mức ô nhiễm;          -->
+        <!--   hoạt cảnh theo giờ quan trắc + dự báo (API /api/v1/air/spatial-series) -->
+        <!-- ====================================================================== -->
+        <section id="tab-map3d" class="tab-content">
+            <div class="content-wrapper m3d-wrapper">
+                <div class="panel m3d-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="icon-chip"><i class="fa-solid fa-cubes"></i></span>
+                            <div>
+                                <h3>Bản đồ 3D diễn biến chất lượng không khí</h3>
+                                <p>168 phường/xã · chiều cao khối = nồng độ · hoạt cảnh theo giờ quan trắc và dự báo AI</p>
+                            </div>
+                        </div>
+                        <div class="an-tools">
+                            <select id="m3d-pollutant" class="air-select an-small" aria-label="Chất ô nhiễm">
+                                <option value="pm2_5">PM2.5</option><option value="pm10">PM10</option><option value="no2">NO2</option>
+                                <option value="so2">SO2</option><option value="co">CO</option><option value="o3">O3</option>
+                            </select>
+                            <select id="m3d-range" class="air-select" aria-label="Khoảng thời gian">
+                                <option value="24-72">24 giờ qua → 3 ngày tới</option>
+                                <option value="0-168">Hôm nay → 7 ngày tới (dự báo)</option>
+                                <option value="168-0">7 ngày qua (quan trắc)</option>
+                                <option value="720-0">30 ngày qua (quan trắc)</option>
+                            </select>
+                            <div class="segmented" id="m3d-color" role="group" aria-label="Cách tô màu">
+                                <button type="button" class="btn-forecast active" data-color="rel" title="Màu theo nồng độ tương đối giữa các phường">Tương đối</button>
+                                <button type="button" class="btn-forecast" data-color="aqi" title="Màu theo mức AQI chuẩn">Mức AQI</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="m3d-stage">
+                        <div id="map3d" class="m3d-canvas"></div>
+
+                        <div class="m3d-hud">
+                            <div class="m3d-clock">
+                                <span id="m3d-badge" class="m3d-badge">--</span>
+                                <b id="m3d-hour">--:--</b>
+                                <span id="m3d-day">--</span>
+                            </div>
+                            <div class="m3d-stats">
+                                <div><small>Trung bình 168 phường</small><b id="m3d-mean">--</b></div>
+                                <div><small>Cao nhất</small><b id="m3d-max">--</b></div>
+                            </div>
+                        </div>
+
+                        <div class="m3d-side">
+                            <div class="m3d-card">
+                                <div class="m3d-card-title" id="m3d-top-title">Top 5 phường cao nhất</div>
+                                <ol id="m3d-top" class="m3d-top"></ol>
+                            </div>
+                            <div class="m3d-card" id="m3d-legend"></div>
+                        </div>
+
+                        <div id="m3d-loading" class="m3d-loading" hidden></div>
+                    </div>
+
+                    <div class="m3d-timeline">
+                        <button type="button" id="m3d-play" class="m3d-play" aria-label="Phát"><i class="fa-solid fa-play"></i></button>
+                        <div class="m3d-track">
+                            <input type="range" id="m3d-slider" min="0" max="1" step="any" value="0" aria-label="Thời điểm">
+                            <span id="m3d-now-mark" class="m3d-now-mark" hidden title="Hiện tại: bên trái là quan trắc, bên phải là dự báo"></span>
+                            <div class="m3d-track-labels"><span id="m3d-start">--</span><span>Quan trắc ┃ Dự báo AI</span><span id="m3d-end">--</span></div>
+                        </div>
+                        <select id="m3d-speed" class="air-select an-small" aria-label="Tốc độ phát">
+                            <option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+                        </select>
+                        <button type="button" id="m3d-now" class="btn-forecast" title="Về thời điểm hiện tại"><i class="fa-solid fa-clock-rotate-left"></i> Hiện tại</button>
+                        <button type="button" id="m3d-rotate" class="btn-forecast" title="Xoay camera tự động"><i class="fa-solid fa-arrows-spin"></i> Xoay</button>
+                        <button type="button" id="m3d-view" class="btn-forecast" title="Chuyển góc nhìn 2D / 3D"><i class="fa-solid fa-map"></i> 2D</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
         <!-- VIEW 2: DỰ BÁO CHUỖI THỜI GIAN AI                                       -->
         <!-- ====================================================================== -->
         <section id="tab-forecast" class="tab-content">
             <div class="content-wrapper">
 
+                <!-- HÔM NAY: NGÀY HIỆN TẠI + CHỈ SỐ ĐA CHẤT TẠI GIỜ HIỆN TẠI -->
+                <div class="panel mb-20 air-today" id="air-today">
+                    <div class="air-today-head">
+                        <div>
+                            <span class="air-eyebrow"><i class="fa-regular fa-calendar"></i> <span id="air-today-label">Đang tải ngày hiện tại...</span></span>
+                            <h3 id="air-location-name">TP. Hồ Chí Minh</h3>
+                            <p class="air-sub" id="air-today-sub">Dự báo realtime đa chất ô nhiễm · hôm nay và 7 ngày tới</p>
+                        </div>
+                        <div class="air-today-tools">
+                            <select id="air-ward-select" class="air-select" aria-label="Chọn phường/xã">
+                                <option value="">Toàn TP. Hồ Chí Minh</option>
+                            </select>
+                            <button class="btn-forecast" type="button" onclick="AirForecast.useMyLocation()"><i class="fa-solid fa-location-crosshairs"></i> Vị trí của tôi</button>
+                            <button class="btn-forecast" type="button" onclick="AirForecast.load(true)"><i class="fa-solid fa-rotate"></i></button>
+                        </div>
+                    </div>
+                    <div class="air-now">
+                        <div class="air-now-aqi" id="air-now-aqi">
+                            <b>--</b><span>VN_AQI</span><small>--</small>
+                        </div>
+                        <div class="air-now-grid" id="air-now-grid"></div>
+                    </div>
+                </div>
+
+                <!-- 8 THẺ NGÀY: HÔM NAY + 7 NGÀY TỚI -->
+                <div class="panel mb-20">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="icon-chip"><i class="fa-solid fa-calendar-week"></i></span>
+                            <div>
+                                <h3>Hôm nay và 7 ngày tới</h3>
+                                <p>AQI ngày đa chất (PM2.5, PM10, CO, NO2, SO2, O3) · chất chi phối · đối chiếu QCVN 05:2023/BTNMT</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="air-days" id="air-days"></div>
+                </div>
+
+                <!-- BIỂU ĐỒ THEO GIỜ THEO CHẤT -->
                 <div class="panel mb-20">
                     <div class="panel-header">
                         <div class="panel-title">
                             <span class="icon-chip"><i class="fa-solid fa-brain"></i></span>
                             <div>
-                                <h3>Dự báo Biến thiên Chuỗi thời gian PM2.5 & AQI</h3>
-                                <p>Mô hình Học máy Random Forest kết hợp biến trễ Lag 1h, 2h, 24h & Khí tượng ERA5</p>
+                                <h3 id="air-chart-title">Diễn biến theo giờ</h3>
+                                <p id="air-chart-sub">Đường liền: số liệu đồng nhất đã có · Đường đứt: dự báo</p>
                             </div>
                         </div>
-                        <div class="forecast-controls segmented" role="group" aria-label="Khoảng thời gian dự báo">
-                            <button class="btn-forecast active" onclick="loadForecast(24, event)">24 giờ tới</button>
-                            <button class="btn-forecast" onclick="loadForecast(72, event)">72 giờ</button>
-                            <button class="btn-forecast" onclick="loadForecast(168, event)">7 ngày</button>
+                        <div class="forecast-controls segmented" role="group" aria-label="Khoảng thời gian">
+                            <button class="btn-forecast air-range active" data-range="24" onclick="AirForecast.setRange(24, this)">Hôm nay</button>
+                            <button class="btn-forecast air-range" data-range="72" onclick="AirForecast.setRange(72, this)">3 ngày</button>
+                            <button class="btn-forecast air-range" data-range="192" onclick="AirForecast.setRange(192, this)">8 ngày</button>
                         </div>
                     </div>
+                    <div class="air-chips" id="air-pollutant-chips"></div>
                     <div class="chart-container">
-                        <canvas id="forecastChart"></canvas>
+                        <canvas id="airForecastChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Thẻ KPI Dự báo -->
+                <!-- KPI MÔ HÌNH -->
                 <div class="kpi-grid forecast-kpi-grid mb-20">
                     <div class="panel kpi-card spotlight" style="--kc: rgba(2,132,199,.14);">
                         <span class="icon-chip"><i class="fa-solid fa-mountain-city"></i></span>
                         <div class="kpi-body">
-                            <span class="kpi-label">Đỉnh PM2.5 cao nhất</span>
-                            <b id="kpi-peak-pm25" class="kpi-value text-blue" data-countup>-- µg/m³</b>
-                            <small id="kpi-peak-time" class="kpi-sub">Đang tính toán...</small>
+                            <span class="kpi-label" id="kpi-air-peak-label">Đỉnh 7 ngày tới</span>
+                            <b id="kpi-air-peak" class="kpi-value text-blue">--</b>
+                            <small id="kpi-air-peak-time" class="kpi-sub">--</small>
                         </div>
                     </div>
                     <div class="panel kpi-card spotlight" style="--kc: rgba(245,158,11,.16);">
                         <span class="icon-chip amber"><i class="fa-solid fa-gauge-high"></i></span>
                         <div class="kpi-body">
-                            <span class="kpi-label">AQI đỉnh điểm</span>
-                            <b id="kpi-peak-aqi" class="kpi-value text-amber" data-countup>--</b>
-                            <small id="kpi-peak-standard" class="kpi-sub">QĐ 1459/QĐ-TCMT (Việt Nam)</small>
+                            <span class="kpi-label">AQI ngày cao nhất</span>
+                            <b id="kpi-air-aqi" class="kpi-value text-amber">--</b>
+                            <small id="kpi-air-aqi-sub" class="kpi-sub">--</small>
                         </div>
                     </div>
                     <div class="panel kpi-card spotlight" style="--kc: rgba(16,185,129,.16);">
-                        <span class="icon-chip green"><i class="fa-solid fa-arrows-spin"></i></span>
+                        <span class="icon-chip green"><i class="fa-solid fa-layer-group"></i></span>
                         <div class="kpi-body">
-                            <span class="kpi-label">Xu hướng biến thiên</span>
-                            <b id="kpi-trend" class="kpi-value text-green">Giảm dần về trưa</b>
-                            <small class="kpi-sub">Xáo trộn lớp biên khí quyển</small>
+                            <span class="kpi-label">Nguồn dự báo</span>
+                            <b id="kpi-air-source" class="kpi-value text-green">--</b>
+                            <small id="kpi-air-source-sub" class="kpi-sub">--</small>
                         </div>
                     </div>
                     <div class="panel kpi-card spotlight" style="--kc: rgba(139,92,246,.16);">
                         <span class="icon-chip violet"><i class="fa-solid fa-microchip"></i></span>
                         <div class="kpi-body">
-                            <span class="kpi-label">Hệ số xác định & Sai số</span>
-                            <b class="kpi-value text-violet">R² = 0.88 · MAE 3.8</b>
-                            <small class="kpi-sub">Random Forest Regressor (Chuẩn hóa)</small>
+                            <span class="kpi-label">Sai số kiểm thử (RMSE 1-24h)</span>
+                            <b id="kpi-air-skill" class="kpi-value text-violet">--</b>
+                            <small id="kpi-air-skill-sub" class="kpi-sub">Chưa có kết quả huấn luyện</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- GIẢI THÍCH MÔ HÌNH HỌC MÁY (FEATURE IMPORTANCE / XAI) -->
+                <!-- XU HƯỚNG THÁNG -->
+                <div class="panel mb-20">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="icon-chip teal"><i class="fa-solid fa-chart-column"></i></span>
+                            <div>
+                                <h3>Xu hướng các tháng tới (tham khảo)</h3>
+                                <p id="air-month-sub">Trung bình tháng: khí hậu tháng + xu thế + dị thường AR(1), khoảng tin cậy 80%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 260px;">
+                        <canvas id="airMonthlyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- GIẢI THÍCH MÔ HÌNH (ĐỌC TỪ KẾT QUẢ HUẤN LUYỆN THẬT) -->
                 <div class="panel mb-20">
                     <div class="panel-header">
                         <div class="panel-title">
                             <span class="icon-chip violet"><i class="fa-solid fa-network-wired"></i></span>
                             <div>
-                                <h3>Mức độ Ảnh hưởng của các Yếu tố đến Dự báo (Feature Importance)</h3>
-                                <p>Phân rã độ đóng góp thuộc tính thuật toán Random Forest Regressor (R² = 0.88)</p>
+                                <h3>Mức độ ảnh hưởng của các yếu tố (Permutation Importance)</h3>
+                                <p id="air-xai-sub">Đọc từ metrics.json của lần huấn luyện gần nhất</p>
                             </div>
                         </div>
-                        <span class="chip chip-violet"><i class="fa-solid fa-wand-magic-sparkles"></i> Explainable
-                            AI</span>
+                        <span class="chip chip-violet"><i class="fa-solid fa-wand-magic-sparkles"></i> Explainable AI</span>
                     </div>
-
-                    <div class="xai-list">
-                        <div class="xai-row" style="--w: 74%; --c: #0284c7;">
-                            <div class="xai-row-head"><span>Nồng độ bụi PM2.5 trung bình 7 ngày trước (Chu kỳ
-                                    nền)</span><b>74.0%</b></div>
-                            <div class="xai-track"><div class="xai-fill"></div></div>
-                        </div>
-                        <div class="xai-row" style="--w: 13.6%; --c: #16a34a;">
-                            <div class="xai-row-head"><span>Tốc độ gió 10m & Hệ số khuếch tán khí quyển
-                                    (ERA5)</span><b>13.6%</b></div>
-                            <div class="xai-track"><div class="xai-fill"></div></div>
-                        </div>
-                        <div class="xai-row" style="--w: 5.2%; --c: #d97706;">
-                            <div class="xai-row-head"><span>Biến trễ PM2.5 giờ trước (t−1 và t−24)</span><b>5.2%</b>
-                            </div>
-                            <div class="xai-track"><div class="xai-fill"></div></div>
-                        </div>
-                        <div class="xai-row" style="--w: 4.8%; --c: #dc2626;">
-                            <div class="xai-row-head"><span>Nhiệt độ bề mặt 2m & Bức xạ mặt trời</span><b>4.8%</b>
-                            </div>
-                            <div class="xai-track"><div class="xai-fill"></div></div>
-                        </div>
-                        <div class="xai-row" style="--w: 2.4%; --c: #7e22ce;">
-                            <div class="xai-row-head"><span>Chỉ số Sol khí hấp thụ Sentinel-5P (AAI)</span><b>2.4%</b>
-                            </div>
-                            <div class="xai-track"><div class="xai-fill"></div></div>
-                        </div>
-                    </div>
+                    <div class="xai-list" id="air-xai-list"><p class="air-sub">Chưa có kết quả huấn luyện.</p></div>
                 </div>
 
-                <!-- Bảng Chi tiết Chuỗi Số liệu Dự báo -->
-                <div class="panel">
+                <!-- BẢNG CHI TIẾT THEO GIỜ -->
+                <div class="panel mb-20">
                     <div class="panel-header">
                         <div class="panel-title">
                             <span class="icon-chip teal"><i class="fa-solid fa-table-list"></i></span>
                             <div>
-                                <h3>Bảng Chi tiết Chuỗi Số liệu Dự báo Cuốn chiếu theo Giờ</h3>
-                                <p>Đối chiếu từng mốc thời gian với ngưỡng QCVN 05:2023/BTNMT</p>
+                                <h3>Bảng chi tiết theo giờ (đa chất)</h3>
+                                <p>Đơn vị µg/m³ (CO2: ppm) · AQI theo chuẩn đang chọn</p>
                             </div>
                         </div>
                     </div>
-                    <div class="table-container" style="max-height: 340px;">
-                        <table class="custom-table">
+                    <div class="table-container" style="max-height: 360px;">
+                        <table class="custom-table air-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">Mốc thời gian</th>
-                                    <th class="center" style="width: 16%;">PM2.5 Dự báo</th>
-                                    <th class="center" style="width: 16%;">PM10 Ước tính</th>
-                                    <th class="center" style="width: 12%;">VN_AQI</th>
-                                    <th class="center" style="width: 18%;">Phân loại Môi trường</th>
-                                    <th class="center" style="width: 18%;">Đối chiếu QCVN (TB 24h)</th>
+                                    <th>Mốc thời gian</th><th class="center">Loại</th>
+                                    <th class="center">PM2.5</th><th class="center">PM10</th><th class="center">CO</th>
+                                    <th class="center">NO2</th><th class="center">SO2</th><th class="center">O3</th>
+                                    <th class="center" id="air-table-aqi-th">VN_AQI</th><th class="center">Chất chi phối</th>
                                 </tr>
                             </thead>
-                            <tbody id="forecast-table-body">
-                                <tr>
-                                    <td colspan="6" class="table-empty"><span class="loader-dots"></span> Đang nạp dữ
-                                        liệu từ AI Engine...</td>
-                                </tr>
+                            <tbody id="air-table-body">
+                                <tr><td colspan="10" class="table-empty"><span class="loader-dots"></span> Đang nạp dữ liệu...</td></tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="note-legal">
-                        (*) <b>Căn cứ pháp lý:</b> QCVN 05:2023/BTNMT quy định giới hạn PM2.5 trung bình 24 giờ là 50
-                        µg/m³. Cột đối chiếu phản ánh nồng độ dự báo tức thời so với ngưỡng trung bình ngày phục vụ mục
-                        đích phát hiện rủi ro và cảnh báo sớm.
+                        (*) <b>Căn cứ:</b> QCVN 05:2023/BTNMT (PM2.5 TB 24h 45 µg/m³ từ 01/01/2026; PM10 100; NO2 1h 200;
+                        SO2 1h 350; CO 1h 30.000; O3 1h 200, 8h 120 µg/m³). VN_AQI theo QĐ 1459/QĐ-TCMT, US AQI theo US EPA (2024).
+                    </div>
+                </div>
+
+                <!-- NGUỒN DỮ LIỆU & GIẢI THUẬT ĐỒNG NHẤT -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="icon-chip"><i class="fa-solid fa-satellite"></i></span>
+                            <div>
+                                <h3>Nguồn dữ liệu và độ phân giải</h3>
+                                <p id="air-target-res">Đích đồng nhất: 168 phường/xã × 1 giờ</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="custom-table air-src-table">
+                            <thead><tr><th>Nguồn</th><th>Biến</th><th>Không gian</th><th>Thời gian</th></tr></thead>
+                            <tbody id="air-sources-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="note-legal" id="air-algo-note">
+                        Giải thuật đồng nhất: nội suy song tuyến CAMS 0,4° về điểm đại diện phường → hạ quy mô bằng tỷ số
+                        không gian vệ tinh (Sentinel-5P, MAIAC AOD 1 km) có hệ số co theo chất và bảo toàn khối lượng →
+                        ghép khí tượng ERA5-Land với Open-Meteo đã hiệu chỉnh độ lệch → lưới giờ thống nhất (UTC+7).
                     </div>
                 </div>
             </div>
@@ -746,6 +881,192 @@
         </section>
 
         <!-- ====================================================================== -->
+        <!-- VIEW 4b: PHÂN TÍCH XÁC SUẤT, RỦI RO PHƠI NHIỄM, HOA GIÓ, TRUY NGUỒN,      -->
+        <!--          KỊCH BẢN CAN THIỆP (js/air-analysis.js, API /api/v1/air/*)      -->
+        <!-- ====================================================================== -->
+        <section id="tab-analysis" class="tab-content">
+            <div class="content-wrapper">
+                <div class="panel mb-20 an-head">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="icon-chip"><i class="fa-solid fa-magnifying-glass-chart"></i></span>
+                            <div>
+                                <h3>Phân tích xác suất, rủi ro phơi nhiễm và truy tìm nguồn thải</h3>
+                                <p>QCVN 05:2023 (µg/Nm³) đối chiếu WHO 2021 · ensemble thực nghiệm q05-q95 · hoa gió ô nhiễm · thang bằng chứng A-E · kịch bản can thiệp</p>
+                            </div>
+                        </div>
+                        <div class="an-tools">
+                            <select id="an-ward" class="air-select" aria-label="Phường/xã"><option value="">Toàn TP. Hồ Chí Minh</option></select>
+                            <select id="an-pollutant" class="air-select an-small" aria-label="Chất">
+                                <option value="pm2_5">PM2.5</option><option value="pm10">PM10</option><option value="no2">NO2</option>
+                                <option value="so2">SO2</option><option value="co">CO</option><option value="o3">O3</option>
+                            </select>
+                            <select id="an-standard" class="air-select an-small" aria-label="Chuẩn so sánh">
+                                <option value="qcvn">QCVN 05:2023</option><option value="who">WHO 2021</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="an-subtabs segmented" role="tablist">
+                        <button class="btn-forecast active" data-an="risk"><i class="fa-solid fa-chart-area"></i> Xác suất & Rủi ro</button>
+                        <button class="btn-forecast" data-an="rose"><i class="fa-solid fa-compass"></i> Hoa gió</button>
+                        <button class="btn-forecast" data-an="trace"><i class="fa-solid fa-route"></i> Truy vết nguồn</button>
+                        <button class="btn-forecast" data-an="scen"><i class="fa-solid fa-sliders"></i> Kịch bản can thiệp</button>
+                        <button class="btn-forecast" data-an="data"><i class="fa-solid fa-table-list"></i> Dữ liệu, ngưỡng & nghiệm thu</button>
+                    </div>
+                </div>
+
+                <!-- XÁC SUẤT & RỦI RO -->
+                <div class="an-pane active" id="an-pane-risk">
+                    <div class="an-cards" id="an-risk-cards"></div>
+                    <div class="an-grid2">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title"><div><h3 id="an-map-title">Xác suất vượt ngưỡng theo phường</h3>
+                                    <p id="an-map-sub">Chọn ngày dự báo; bấm phường để xem chi tiết</p></div></div>
+                                <div class="an-tools">
+                                    <select id="an-day" class="air-select an-small" aria-label="Ngày"></select>
+                                    <a id="an-csv" class="btn-forecast" href="#" download><i class="fa-solid fa-file-csv"></i> CSV</a>
+                                </div>
+                            </div>
+                            <div id="an-map" class="an-map"></div>
+                            <div class="an-legend" id="an-legend"></div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><div class="panel-title"><div>
+                                <h3 id="an-prob-title">Dự báo xác suất</h3><p id="an-prob-sub">Trung vị q50 và khoảng 90% (q05-q95)</p></div></div></div>
+                            <div class="an-chart"><canvas id="an-prob-chart"></canvas></div>
+                            <div class="an-chart an-chart-sm"><canvas id="an-pday-chart"></canvas></div>
+                            <p class="an-note" id="an-prob-method"></p>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><div class="panel-title"><div><h3>Phơi nhiễm dân số theo ngày (toàn TP)</h3>
+                            <p>A_T = Σ A_j·I(q50 &gt; T) · N_T = Σ Pop_j·I(q50 &gt; T) · E[N_T] = Σ Pop_j·P(C_j &gt; T) · PWE = Σ Pop_j·C_j / Σ Pop_j</p></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr>
+                            <th>Ngày</th><th>Phần dự báo</th><th>A_T (km²)</th><th>N_T (q50)</th><th>E[N_T]</th><th>N_T q05-q95</th><th>PWE</th><th>Phường P&gt;50%</th></tr></thead>
+                            <tbody id="an-exposure-body"><tr><td colspan="8" class="table-empty">Đang tải...</td></tr></tbody></table></div>
+                        <p class="an-note" id="an-risk-notes"></p>
+                    </div>
+                </div>
+
+                <!-- HOA GIÓ -->
+                <div class="an-pane" id="an-pane-rose">
+                    <div class="panel mb-20">
+                        <div class="panel-header">
+                            <div class="panel-title"><div><h3>Hoa gió và hoa gió ô nhiễm</h3>
+                                <p>F_k = n_k/N · C̄_k = TB nồng độ theo hướng · P_k = P(C &gt; T | hướng) · lặng gió tách riêng</p></div></div>
+                            <div class="an-tools">
+                                <select id="an-rose-days" class="air-select an-small"><option value="30">30 ngày</option><option value="90" selected>90 ngày</option><option value="365">365 ngày</option><option value="1200">Toàn kỳ</option></select>
+                                <select id="an-rose-sectors" class="air-select an-small"><option value="8">8 hướng</option><option value="16">16 hướng</option></select>
+                                <input id="an-rose-T" class="air-select an-small" type="number" step="1" placeholder="Ngưỡng T (µg/m³)">
+                                <button class="btn-forecast" id="an-rose-run"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                        </div>
+                        <div class="an-grid2">
+                            <div><h4 class="an-h4">Hoa gió (% số giờ, theo lớp tốc độ)</h4><div id="an-rose-wind" class="an-rose"></div></div>
+                            <div><h4 class="an-h4" id="an-rose-ptitle">Hoa gió ô nhiễm P(C &gt; T | hướng)</h4><div id="an-rose-poll" class="an-rose"></div></div>
+                        </div>
+                        <div class="an-kpis" id="an-rose-kpis"></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Hướng</th><th>n</th><th>F_k (%)</th><th>C̄_k</th><th>Trung vị</th><th>P90</th><th>P_k</th><th>Ghi chú</th></tr></thead>
+                            <tbody id="an-rose-body"></tbody></table></div>
+                        <p class="an-note" id="an-rose-note"></p>
+                    </div>
+                </div>
+
+                <!-- TRUY VẾT NGUỒN -->
+                <div class="an-pane" id="an-pane-trace">
+                    <div class="panel mb-20">
+                        <div class="panel-header">
+                            <div class="panel-title"><div><h3>Thang bằng chứng truy vết nguồn A-E</h3><p id="an-trace-sub">Chỉ kết luận ở mức bằng chứng đã đạt</p></div></div>
+                            <div class="an-tools">
+                                <select id="an-trace-days" class="air-select an-small"><option value="30">30 ngày</option><option value="90" selected>90 ngày</option><option value="365">365 ngày</option></select>
+                                <select id="an-trace-event" class="air-select"><option value="">Sự kiện ô nhiễm nhất</option></select>
+                                <button class="btn-forecast" id="an-trace-run"><i class="fa-solid fa-play"></i> Phân tích</button>
+                            </div>
+                        </div>
+                        <div class="an-ladder" id="an-ladder"></div>
+                    </div>
+                    <div class="an-grid2">
+                        <div class="panel">
+                            <div class="panel-header"><div class="panel-title"><div><h3>Bản đồ quỹ đạo ngược & ứng viên nguồn</h3>
+                                <p>Quỹ đạo 48 giờ đơn giản hóa (gió 10 m, 2D) - không thay thế HYSPLIT</p></div></div></div>
+                            <div id="an-trace-map" class="an-map"></div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><div class="panel-title"><div><h3>Dấu hiệu đa chất (mức A) & nền liên vùng</h3></div></div></div>
+                            <div id="an-signals"></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><div class="panel-title"><div><h3>Điểm nghi vấn ứng viên nguồn (KHÔNG phải % đóng góp)</h3>
+                            <p>Score = w1·hướng gió + w2·suy giảm khoảng cách + w3·mức hoạt động + w4·marker hóa học + w5·quỹ đạo</p></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>#</th><th>Ứng viên</th><th>Loại</th><th>Khoảng cách</th><th>Hướng gió</th><th>Khoảng cách*</th><th>Hoạt động</th><th>Marker</th><th>Quỹ đạo</th><th>Điểm</th><th>P(top-5)</th></tr></thead>
+                            <tbody id="an-suspects-body"><tr><td colspan="11" class="table-empty">Bấm "Phân tích"</td></tr></tbody></table></div>
+                        <p class="an-note" id="an-suspects-note"></p>
+                    </div>
+                </div>
+
+                <!-- KỊCH BẢN CAN THIỆP -->
+                <div class="an-pane" id="an-pane-scen">
+                    <div class="panel mb-20">
+                        <div class="panel-header">
+                            <div class="panel-title"><div><h3>Biện pháp can thiệp (tham số chỉnh được)</h3><p id="an-scen-note">Tỷ phần ngành, mức giảm và chi phí là giả định thử nghiệm</p></div></div>
+                            <div class="an-tools">
+                                <select id="an-scen-mode" class="air-select an-small"><option value="past">30 ngày đã qua</option><option value="forecast">Hôm nay + 7 ngày</option></select>
+                                <input id="an-scen-y0" class="air-select an-small" type="number" step="0.1" placeholder="Tỷ suất chết thô y0 (‰)">
+                                <button class="btn-forecast" id="an-scen-run"><i class="fa-solid fa-calculator"></i> Đánh giá</button>
+                            </div>
+                        </div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Chọn (S4)</th><th>Mã</th><th>Biện pháp</th><th>Ngành</th><th>Mức giảm r</th><th>Hiệu suất e</th><th>Chi phí</th><th>Phạm vi</th></tr></thead>
+                            <tbody id="an-measures-body"></tbody></table></div>
+                    </div>
+                    <div class="panel mb-20">
+                        <div class="panel-header"><div class="panel-title"><div><h3>So sánh kịch bản S0-S4</h3><p id="an-scen-sub"></p></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Kịch bản</th><th>Chi phí</th><th>PWE cơ sở</th><th>PWE kịch bản</th><th>ΔPWE</th><th>Giảm (%)</th><th>Dân hưởng lợi</th><th>Người-giờ vượt tránh được</th><th>Giảm rủi ro tử vong dài hạn (%)</th><th>Ca tử vong tránh được/năm*</th></tr></thead>
+                            <tbody id="an-scen-body"><tr><td colspan="10" class="table-empty">Bấm "Đánh giá"</td></tr></tbody></table></div>
+                        <p class="an-note" id="an-scen-add"></p>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><div><h3>Tối ưu tổ hợp biện pháp</h3><p>min Σ Pop_j·E[C_j(s)] với Σ Cost ≤ Ngân sách và nhóm phơi nhiễm cao giảm tối thiểu x%</p></div></div>
+                            <div class="an-tools">
+                                <input id="an-opt-budget" class="air-select an-small" type="number" step="1" value="15" title="Ngân sách (đơn vị tương đối)">
+                                <input id="an-opt-equity" class="air-select an-small" type="number" step="0.5" value="5" title="Giảm tối thiểu ở nhóm phơi nhiễm cao (%)">
+                                <button class="btn-forecast" id="an-opt-run"><i class="fa-solid fa-wand-magic-sparkles"></i> Tối ưu</button>
+                            </div>
+                        </div>
+                        <div class="an-grid2">
+                            <div id="an-opt-best" class="an-best"></div>
+                            <div class="an-chart"><canvas id="an-pareto-chart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DỮ LIỆU, NGƯỠNG, QA/QC, NGHIỆM THU -->
+                <div class="an-pane" id="an-pane-data">
+                    <div class="panel mb-20">
+                        <div class="panel-header"><div class="panel-title"><div><h3>Ngưỡng tham chiếu: QCVN 05:2023/BTNMT và WHO 2021</h3><p>QCVN dùng µg/Nm³ (25 °C, 760 mmHg); WHO là khuyến nghị sức khỏe</p></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Chất</th><th>QCVN 05:2023</th><th>WHO 2021</th></tr></thead><tbody id="an-thr-body"></tbody></table></div>
+                        <ul class="an-list" id="an-unit-notes"></ul>
+                    </div>
+                    <div class="panel mb-20">
+                        <div class="panel-header"><div class="panel-title"><div><h3>Danh mục nguồn dữ liệu, biến và trạng thái</h3></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Nguồn</th><th>Biến</th><th>Tần suất/độ phân giải</th><th>Trạng thái</th><th>Lưu ý</th></tr></thead><tbody id="an-cat-body"></tbody></table></div>
+                    </div>
+                    <div class="panel mb-20">
+                        <div class="panel-header"><div class="panel-title"><div><h3>QA/QC 30 ngày gần nhất</h3><p id="an-qa-sub"></p></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Biến</th><th>Độ đầy đủ</th><th>Giờ thiếu</th><th>Đoạn thiếu dài nhất</th><th>Âm</th><th>Spike</th><th>Chuỗi đứng</th><th>Ngày TB 24h hợp lệ</th></tr></thead><tbody id="an-qa-body"></tbody></table></div>
+                        <p class="an-note" id="an-qa-flags"></p>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><div class="panel-title"><div><h3>Tiêu chí nghiệm thu (tự đánh giá)</h3></div></div></div>
+                        <div class="table-container"><table class="custom-table"><thead><tr><th>Nhóm</th><th>Yêu cầu</th><th>Trạng thái</th><th>Minh chứng</th></tr></thead><tbody id="an-acc-body"></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
         <!-- VIEW 5: ĐĂNG KÝ NHẬN CẢNH BÁO TỰ ĐỘNG                                   -->
         <!-- ====================================================================== -->
         <section id="tab-subscribe" class="tab-content">
@@ -863,8 +1184,8 @@
                             <button class="btn-news-filter" onclick="filterNews('PM25', this)">Bụi mịn & AQI</button>
                             <button class="btn-news-filter" onclick="filterNews('WEATHER', this)">Khí quyển & Thời
                                 tiết</button>
-                            <button class="btn-news-filter" onclick="filterNews('POLICY', this)">Quy chuẩn & Chỉ
-                                đạo</button>
+                            <button class="btn-news-filter" onclick="filterNews('POLICY', this)">Môi trường & Chính
+                                sách</button>
                         </div>
                     </div>
 
@@ -903,9 +1224,9 @@
                     <p>Đồ án Chuyên ngành Công nghệ Thông tin - Chuyên ngành Tin Học Môi trường | Trường Đại học Tài
                         nguyên và Môi trường TP.HCM (HCMUNRE)</p>
                     <div class="hero-badges">
-                        <span class="hero-badge"><i class="fa-solid fa-brain"></i> Random Forest · R² 0.88</span>
-                        <span class="hero-badge"><i class="fa-solid fa-map"></i> 167 Phường/Xã</span>
-                        <span class="hero-badge"><i class="fa-solid fa-satellite"></i> Sentinel-5P & ERA5</span>
+                        <span class="hero-badge"><i class="fa-solid fa-brain"></i> Học máy đa chất · 7 ngày</span>
+                        <span class="hero-badge"><i class="fa-solid fa-map"></i> 168 Phường/Xã</span>
+                        <span class="hero-badge"><i class="fa-solid fa-satellite"></i> CAMS · Sentinel-5P · ERA5</span>
                         <span class="hero-badge"><i class="fa-solid fa-scale-balanced"></i> QCVN 05:2023</span>
                     </div>
                 </div>
@@ -925,9 +1246,9 @@
                         <h4 class="section-title" style="margin-top: 20px;"><span class="icon-chip sm"><i
                                     class="fa-solid fa-bullseye"></i></span> Mục tiêu Đồ án</h4>
                         <p class="about-goal">
-                            Xây dựng giải pháp WebGIS tích hợp trí tuệ nhân tạo (Mô hình Học máy Random Forest) và động
-                            cơ hỗ trợ ra quyết định (DSS Engine) nhằm giám sát, dự báo chuỗi thời gian nồng độ bụi mịn
-                            PM2.5 và chỉ số US AQI theo thời gian thực cho 166 Phường/Xã trên địa bàn TP. Hồ Chí Minh.
+                            Xây dựng giải pháp WebGIS tích hợp học máy và động cơ hỗ trợ ra quyết định (DSS Engine) nhằm
+                            giám sát, dự báo theo thời gian thực 6 chất ô nhiễm (PM2.5, PM10, CO, NO2, SO2, O3) và chỉ số
+                            VN_AQI/US AQI cho hôm nay, 7 ngày tới và xu hướng các tháng tại 168 phường/xã TP. Hồ Chí Minh.
                         </p>
                     </div>
 
@@ -939,16 +1260,16 @@
                                 <span class="tier-num">1</span>
                                 <div>
                                     <b>Lớp Dữ liệu (Data Layer)</b>
-                                    <p>PostgreSQL 16 + PostGIS Extension, Chuỗi thời gian Open-Meteo, Ảnh vệ tinh
-                                        Sentinel-5P (AAI) & Khí tượng ERA5-Land.</p>
+                                    <p>PostgreSQL + PostGIS; bộ dữ liệu đồng nhất 168 phường × giờ từ CAMS (Open-Meteo),
+                                        Sentinel-5P, MODIS MAIAC AOD và ERA5-Land (Google Earth Engine).</p>
                                 </div>
                             </div>
                             <div class="tier">
                                 <span class="tier-num" style="--g: var(--grad-amber);">2</span>
                                 <div>
                                     <b>Lớp Dịch vụ & AI (Service Layer)</b>
-                                    <p>FastAPI Python, Mô hình Random Forest Regressor (R² = 0.88), Động cơ DSS tham
-                                        chiếu QCVN 05:2023/BTNMT & US EPA.</p>
+                                    <p>FastAPI Python, mô hình dự báo trực tiếp đa hạn cho từng chất (HistGradientBoosting /
+                                        XGBoost), Động cơ DSS tham chiếu QCVN 05:2023/BTNMT, VN_AQI & US EPA.</p>
                                 </div>
                             </div>
                             <div class="tier">
@@ -1128,7 +1449,7 @@
 
         <!-- 4. Diễn biến Dự báo Chuỗi thời gian 24 giờ tới (Rút gọn) -->
         <div class="doc-section">
-            <h4 class="doc-section-title">II. DỰ BÁO BIẾN THIÊN 24 GIỜ TỚI (MÔ HÌNH RANDOM FOREST, R² = 0.88)</h4>
+            <h4 class="doc-section-title">II. DỰ BÁO BIẾN THIÊN 24 GIỜ TỚI (MÔ HÌNH HỌC MÁY ĐA CHẤT)</h4>
             <table class="doc-table">
                 <thead>
                     <tr>
@@ -1144,7 +1465,7 @@
                 </tbody>
             </table>
             <p style="font-size: 10px; font-style: italic; margin-top: 4px; color: #444;">
-                (*) Chú thích: Giới hạn PM2.5 trung bình 24 giờ theo QCVN 05:2023/BTNMT là 50 µg/m³.
+                (*) Chú thích: Giới hạn PM2.5 trung bình 24 giờ theo QCVN 05:2023/BTNMT là 45 µg/m³ (áp dụng từ 01/01/2026; trước đó 50 µg/m³).
             </p>
         </div>
 
@@ -1308,7 +1629,10 @@
     </div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/app.js?v=20261114a"></script>
+    <script src="js/app.js?v=20261119d"></script>
+    <script src="js/air-forecast.js?v=20261117a"></script>
+    <script src="js/air-analysis.js?v=20261119a"></script>
+    <script src="js/map3d.js?v=20261119c"></script>
     <script src="js/ai-agent.js?v=20261112e"></script>
 </body>
 

@@ -1,0 +1,57 @@
+/* ==============================================================================
+   AIRHCM - TAB PHÂN TÍCH XÁC SUẤT, RỦI RO, HOA GIÓ, TRUY NGUỒN, KỊCH BẢN (js/air-analysis.js)
+   ============================================================================== */
+.an-head .panel-header { flex-wrap: wrap; gap: 12px; }
+.an-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.an-small { min-width: 120px !important; }
+.an-subtabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 18px 16px; }
+.an-pane { display: none; }
+.an-pane.active { display: block; animation: anFade .25s ease; }
+@keyframes anFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.an-grid2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; margin-bottom: 18px; }
+.an-grid2 > .panel { margin-bottom: 0; }
+.an-map { height: 430px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); margin: 0 18px 10px; }
+.an-chart { position: relative; height: 260px; padding: 0 18px; }
+.an-chart-sm { height: 170px; margin-top: 8px; }
+.an-note { font-size: 12px; color: var(--muted); margin: 8px 18px 14px; line-height: 1.5; }
+.an-h4 { font-size: 13px; font-weight: 800; color: var(--text-2); margin: 4px 18px 6px; }
+.an-list { margin: 8px 18px 16px 34px; color: var(--text-2); font-size: 12.5px; line-height: 1.6; }
+.an-cards, .an-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.an-kpis { margin: 4px 18px 14px; }
+.an-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.an-card .k { font-size: 12px; font-weight: 800; color: var(--muted); }
+.an-card .v { font-size: 22px; font-weight: 900; color: var(--text); margin-top: 4px; }
+.an-card .s { font-size: 11.5px; color: var(--muted-2); margin-top: 2px; }
+.an-legend { display: flex; gap: 6px; align-items: center; font-size: 11.5px; color: var(--muted); margin: 0 18px 14px; flex-wrap: wrap; }
+.an-legend i { display: inline-block; width: 26px; height: 10px; border-radius: 3px; }
+.an-rose { display: flex; justify-content: center; padding: 4px 8px 10px; }
+.an-rose svg { max-width: 100%; height: auto; }
+.an-ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 0 18px 18px; }
+.an-step { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; background: var(--surface-2); }
+.an-step.done { border-color: #10b981; background: rgba(16, 185, 129, .06); }
+.an-step.todo { opacity: .82; }
+.an-step .lv { font-size: 22px; font-weight: 900; color: var(--brand-600); }
+.an-step.done .lv { color: #047857; }
+.an-step .nm { font-size: 13px; font-weight: 800; color: var(--text); }
+.an-step .md { font-size: 11.5px; color: var(--text-2); margin-top: 6px; }
+.an-step .cc { font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+.an-step .st { font-size: 11px; font-weight: 800; margin-top: 8px; }
+#an-signals { padding: 0 18px 16px; font-size: 12.5px; color: var(--text-2); }
+.an-sig { border-left: 3px solid var(--brand); padding: 6px 10px; margin-bottom: 8px; background: var(--surface-2); border-radius: 0 8px 8px 0; }
+.an-sig b { color: var(--text); }
+.an-best { padding: 0 18px 16px; font-size: 13px; color: var(--text-2); }
+.an-best .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; background: rgba(2, 132, 199, .1); color: var(--brand-600);
+    font-weight: 800; font-size: 11.5px; margin: 2px 4px 2px 0; }
+.an-status-ok { color: #047857; font-weight: 800; }
+.an-status-part { color: #b45309; font-weight: 800; }
+.an-status-no { color: var(--red); font-weight: 800; }
+.an-in { width: 70px; height: 30px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 0 6px; font: 600 12.5px var(--font); }
+.an-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+@media (max-width: 1100px) {
+    .an-grid2 { grid-template-columns: 1fr; }
+    .an-ladder { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .an-ladder { grid-template-columns: 1fr; }
+    .an-map { height: 340px; margin: 0 10px 10px; }
+}

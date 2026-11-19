@@ -7,33 +7,21 @@ from dotenv import load_dotenv
 class DSSEngine:
     @staticmethod
     def calculate_us_aqi(pm25: float) -> int:
-        """Thuật toán tính US AQI chuẩn EPA, triệt tiêu hoàn toàn lỗi khe hở ranh giới"""
+        """US AQI theo bảng ngưỡng PM2.5 sửa đổi của US EPA (02/2024, EPA-454/B-24-002), không có khe hở ranh giới"""
         try:
             cp = float(pm25)
         except (ValueError, TypeError):
             return 0
-
         if cp < 0:
             return 0
-        elif cp <= 12.0:
-            c_low, c_high, i_low, i_high = 0.0, 12.0, 0, 50
-        elif cp <= 35.4:
-            c_low, c_high, i_low, i_high = 12.0, 35.4, 51, 100
-        elif cp <= 55.4:
-            c_low, c_high, i_low, i_high = 35.4, 55.4, 101, 150
-        elif cp <= 150.4:
-            c_low, c_high, i_low, i_high = 55.4, 150.4, 151, 200
-        elif cp <= 250.4:
-            c_low, c_high, i_low, i_high = 150.4, 250.4, 201, 300
-        elif cp <= 350.4:
-            c_low, c_high, i_low, i_high = 250.4, 350.4, 301, 400
-        elif cp <= 500.4:
-            c_low, c_high, i_low, i_high = 350.4, 500.4, 401, 500
-        else:
-            return 500  
-
-        aqi = ((i_high - i_low) / (c_high - c_low)) * (cp - c_low) + i_low
-        return int(round(aqi))
+        bands = [
+            (9.0, 0.0, 0, 50), (35.4, 9.0, 51, 100), (55.4, 35.4, 101, 150),
+            (125.4, 55.4, 151, 200), (225.4, 125.4, 201, 300), (325.4, 225.4, 301, 500),
+        ]
+        for c_high, c_low, i_low, i_high in bands:
+            if cp <= c_high:
+                return int(round(((i_high - i_low) / (c_high - c_low)) * (cp - c_low) + i_low))
+        return 500
 
     @staticmethod
     def calculate_vn_aqi(pm25: float) -> int:
@@ -58,8 +46,11 @@ class DSSEngine:
     @staticmethod
     def get_health_advisory(aqi: int, pm25: float) -> dict:
         """Động cơ DSS: Xuất bản kịch bản khuyến cáo y tế và chỉ đạo môi trường"""
-        # Giới hạn 24h trung bình theo QCVN 05:2023/BTNMT là 50 ug/m3
-        qcvn_status = "Đạt quy chuẩn QCVN 05:2023" if pm25 <= 50.0 else "Vượt ngưỡng QCVN 05:2023"
+        # Giới hạn PM2.5 TB 24h theo QCVN 05:2023/BTNMT: 50 µg/m³, từ 01/01/2026 là 45 µg/m³
+        from app.airdata.config import qcvn_pm25_24h
+        limit = qcvn_pm25_24h()
+        qcvn_status = (f"Đạt quy chuẩn QCVN 05:2023 (≤ {limit:g} µg/m³)" if pm25 <= limit
+                       else f"Vượt ngưỡng QCVN 05:2023 ({limit:g} µg/m³)")
 
         if aqi <= 50:
             return {

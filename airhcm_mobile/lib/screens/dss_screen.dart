@@ -396,19 +396,27 @@ class _DssScreenState extends State<DssScreen> {
     );
   }
 
+  /// Gợi ý câu hỏi nhanh: chiều cao tự co giãn theo cỡ chữ của máy (không đặt cứng chiều cao,
+  /// tránh chữ bị cắt mất chỉ còn khung trắng khi người dùng phóng to cỡ chữ hệ thống)
   Widget _suggestionBar() {
-    return SizedBox(
-      height: 42,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        itemCount: _suggestions.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) => ActionChip(
-          label: Text(_suggestions[i], style: const TextStyle(fontSize: 12)),
-          avatar: const Icon(Icons.auto_awesome, size: 14),
-          onPressed: () => _send(_suggestions[i]),
-        ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: Row(
+        children: [
+          for (final s in _suggestions)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ActionChip(
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                backgroundColor: Colors.white,
+                label: Text(s, maxLines: 1, style: const TextStyle(fontSize: 12, color: AppColors.text)),
+                avatar: const Icon(Icons.auto_awesome, size: 14, color: AppColors.brand),
+                onPressed: () => _send(s),
+              ),
+            ),
+        ],
       ),
     );
   }

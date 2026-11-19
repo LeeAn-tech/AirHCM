@@ -179,9 +179,9 @@ class _InsightBodyState extends State<_InsightBody> {
       const SizedBox(height: 16),
       if (peak != null)
         _row(Icons.trending_up, 'Đỉnh dự báo 24h', '${peak['pm2_5']} µg/m³ · ${peak['label']}',
-            AqiUtils.toDouble(peak['pm2_5']) > 50 ? AppColors.danger : AppColors.brand),
+            AqiUtils.toDouble(peak['pm2_5']) > AqiUtils.qcvnPm25 ? AppColors.danger : AppColors.brand),
       if (fs['exceed_hours'] != null)
-        _row(Icons.timer_outlined, 'Số giờ vượt QCVN (50 µg/m³)', '${fs['exceed_hours']} giờ',
+        _row(Icons.timer_outlined, 'Số giờ vượt QCVN (${AqiUtils.qcvnPm25.toStringAsFixed(0)} µg/m³)', '${fs['exceed_hours']} giờ',
             (fs['exceed_hours'] ?? 0) > 0 ? AppColors.danger : AppColors.success),
       if (best != null && worst != null) ...[
         const SizedBox(height: 4),

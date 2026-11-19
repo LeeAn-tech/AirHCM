@@ -3828,6 +3828,13 @@ select.inline-select {
     gap: 10px;
 }
 
+/* Nhà cung cấp tạm ngừng (VD Meta khóa ứng dụng Facebook): vẫn bấm được để xem lý do */
+.btn-social.is-unavailable {
+    opacity: 0.55;
+    filter: grayscale(0.6);
+    cursor: help;
+}
+
 .btn-social[hidden] {
     display: none;
 }
@@ -5638,6 +5645,106 @@ select.inline-select {
 
 .pp-route-tip i {
     margin-top: 2px;
+}
+
+/* Độ tin cậy vị trí người dùng ("Vị trí của bạn") & chọn lại vị trí trên bản đồ */
+.pp-locnote {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.pp-locnote > i {
+    margin-top: 2px;
+}
+
+.pp-locnote b,
+.pp-locnote span {
+    display: block;
+}
+
+.pp-locnote b {
+    font-size: 12.5px;
+    margin-bottom: 2px;
+}
+
+.pp-locnote.warn {
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.pp-locnote button,
+.pp-setme {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 6px 0 0;
+    padding: 5px 11px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pp-locnote button:hover,
+.pp-setme:hover {
+    filter: brightness(0.96);
+}
+
+.pp-setme {
+    margin: 10px 0 0;
+    color: #1d4ed8;
+}
+
+.leaflet-container.picking-location,
+.leaflet-container.picking-location .leaflet-interactive {
+    cursor: crosshair !important;
+}
+
+.pick-location-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    z-index: 1000;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 32px);
+    padding: 10px 12px 10px 16px;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+}
+
+.pick-location-hint[hidden] {
+    display: none;
+}
+
+.pick-location-hint button {
+    flex-shrink: 0;
+    padding: 5px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .pp-route-tip.warn {

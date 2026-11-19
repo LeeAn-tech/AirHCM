@@ -1,0 +1,21 @@
+[Unit]
+Description=AirHCM - Backend FastAPI + WebGIS + du bao realtime
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=__APP_DIR__/backend
+Environment=PYTHONUTF8=1
+Environment=PYTHONIOENCODING=utf-8
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=Asia/Ho_Chi_Minh
+# Chỉ 1 worker: APScheduler chạy trong tiến trình, nhiều worker sẽ chạy trùng các job realtime.
+# Nghe ở 127.0.0.1 - bên ngoài chỉ vào được qua Caddy (HTTPS).
+ExecStart=__APP_DIR__/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --timeout-keep-alive 30
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

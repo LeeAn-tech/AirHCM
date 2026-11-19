@@ -2,7 +2,7 @@
 Nguồn: Tổng cục Môi trường – Quyết định 1459/QĐ-TCMT năm 2019 về hướng dẫn kỹ thuật tính toán và công bố chỉ số chất lượng không khí Việt Nam
 
 ## Thang VN_AQI và màu cảnh báo
-VN_AQI chia chất lượng không khí thành 6 mức: 0–50 Tốt (màu xanh lá), 51–100 Trung bình (màu vàng), 101–150 Kém (màu da cam), 151–200 Xấu (màu đỏ), 201–300 Rất xấu (màu tím), 301–500 Nguy hại (màu nâu). VN_AQI được tính từ nồng độ các thông số như PM2.5, PM10, O3, NO2, SO2, CO; AirHCM tính VN_AQI theo PM2.5.
+VN_AQI chia chất lượng không khí thành 6 mức: 0–50 Tốt (màu xanh lá), 51–100 Trung bình (màu vàng), 101–150 Kém (màu da cam), 151–200 Xấu (màu đỏ), 201–300 Rất xấu (màu tím), 301–500 Nguy hại (màu nâu). VN_AQI được tính từ nồng độ 6 thông số PM2.5, PM10, O3, NO2, SO2, CO: AQI của từng thông số tính theo bảng ngưỡng của Quyết định 1459/QĐ-TCMT (PM2.5 và PM10 dùng giá trị NowCast 12 giờ), VN_AQI tổng hợp là giá trị lớn nhất và thông số đó là chất ô nhiễm chi phối. AirHCM tính VN_AQI đủ 6 thông số từ bộ dữ liệu đồng nhất theo phường.
 
 ## Khuyến nghị khi VN_AQI Tốt và Trung bình
 Mức Tốt (0–50): mọi người tự do thực hiện các hoạt động ngoài trời. Mức Trung bình (51–100): người bình thường vẫn hoạt động ngoài trời bình thường; nhóm nhạy cảm nên theo dõi các triệu chứng như ho hoặc khó thở và cân nhắc giảm các hoạt động gắng sức kéo dài ngoài trời.

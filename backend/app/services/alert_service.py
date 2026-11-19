@@ -3,10 +3,10 @@
 
   [Bắt đầu]
      -> Nhận kết quả dự báo PM2.5 từ AI Engine (24 giờ tới)
-     -> Đối chiếu quy chuẩn QCVN 05:2023/BTNMT (PM2.5 TB 24h = 50 µg/m³)
-        [PM2.5_Predict > 50]  -> Kích hoạt Trigger Warning_NhayCam
+     -> Đối chiếu quy chuẩn QCVN 05:2023/BTNMT (PM2.5 TB 24h = 45 µg/m³ từ 01/01/2026; 50 µg/m³ trước đó)
+        [PM2.5_Predict > QCVN] -> Kích hoạt Trigger Warning_NhayCam
                               -> Xuất bản thông điệp khuyến cáo sức khỏe lên WebGIS (+ Push FCM tới Mobile)
-        [PM2.5_Predict <= 50] -> Hiển thị trạng thái không khí bình thường
+        [PM2.5_Predict <= QCVN] -> Hiển thị trạng thái không khí bình thường
   [Kết thúc]
 
 Bộ lập lịch (APScheduler) chạy ngầm:

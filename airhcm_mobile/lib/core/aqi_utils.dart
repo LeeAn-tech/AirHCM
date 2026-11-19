@@ -23,18 +23,25 @@ class AqiUtils {
     return 500;
   }
 
-  /// US AQI theo US EPA
+  /// US AQI theo US EPA - bảng ngưỡng PM2.5 sửa đổi 02/2024 (trùng backend & WebGIS)
   static int us(double pm) {
     if (pm.isNaN || pm < 0) return 0;
-    if (pm <= 12.0) return ((50 / 12.0) * pm).round();
-    if (pm <= 35.4) return (((100 - 51) / (35.4 - 12.0)) * (pm - 12.0) + 51).round();
-    if (pm <= 55.4) return (((150 - 101) / (55.4 - 35.4)) * (pm - 35.4) + 101).round();
-    if (pm <= 150.4) return (((200 - 151) / (150.4 - 55.4)) * (pm - 55.4) + 151).round();
-    if (pm <= 250.4) return (((300 - 201) / (250.4 - 150.4)) * (pm - 150.4) + 201).round();
-    if (pm <= 350.4) return (((400 - 301) / (350.4 - 250.4)) * (pm - 250.4) + 301).round();
-    if (pm <= 500.4) return (((500 - 401) / (500.4 - 350.4)) * (pm - 350.4) + 401).round();
+    const bands = <List<double>>[
+      [9.0, 0.0, 0, 50],
+      [35.4, 9.0, 51, 100],
+      [55.4, 35.4, 101, 150],
+      [125.4, 55.4, 151, 200],
+      [225.4, 125.4, 201, 300],
+      [325.4, 225.4, 301, 500],
+    ];
+    for (final b in bands) {
+      if (pm <= b[0]) return (((b[3] - b[2]) / (b[0] - b[1])) * (pm - b[1]) + b[2]).round();
+    }
     return 500;
   }
+
+  /// QCVN 05:2023/BTNMT: PM2.5 trung bình 24h = 45 µg/m³ từ 01/01/2026 (trước đó 50 µg/m³)
+  static double get qcvnPm25 => DateTime.now().isBefore(DateTime(2026, 1, 1)) ? 50.0 : 45.0;
 
   static int compute(double pm, {required bool useUS}) => useUS ? us(pm) : vn(pm);
 

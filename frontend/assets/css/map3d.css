@@ -1,0 +1,357 @@
+/* ==============================================================================
+   BẢN ĐỒ 3D DIỄN BIẾN KHÔNG GIAN - THỜI GIAN (js/map3d.js)
+   ============================================================================== */
+.m3d-panel {
+    padding-bottom: 14px;
+}
+
+.m3d-stage {
+    position: relative;
+    height: clamp(460px, 68vh, 780px);
+    margin-top: 12px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #e8eef5;
+    border: 1px solid var(--line, #e2e8f0);
+}
+
+/* Độ ưu tiên cao hơn .maplibregl-map { position: relative } của thư viện (nạp sau) - nếu không khung co về 0 */
+.m3d-stage > .m3d-canvas,
+.m3d-stage > .m3d-canvas.maplibregl-map {
+    position: absolute;
+    inset: 0;
+}
+
+/* Đồng hồ thời điểm + chỉ số tổng hợp */
+.m3d-hud {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    min-width: 230px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow, 0 12px 30px -14px rgba(15, 23, 42, .22));
+    color: var(--text, #0f172a);
+}
+
+.m3d-clock {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 10px;
+}
+
+.m3d-clock b {
+    font-size: 30px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+}
+
+.m3d-clock #m3d-day {
+    grid-column: 1 / -1;
+    font-size: 12.5px;
+    color: var(--muted, #64748b);
+}
+
+.m3d-badge {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.m3d-badge.is-observed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.m3d-badge.is-forecast {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.m3d-stats {
+    display: grid;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line, #e2e8f0);
+}
+
+.m3d-stats small {
+    display: block;
+    font-size: 11px;
+    color: var(--muted, #64748b);
+}
+
+.m3d-stats b {
+    font-size: 14px;
+}
+
+/* Cột phải: Top 5 + chú giải */
+.m3d-side {
+    position: absolute;
+    top: 118px;
+    right: 14px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 260px;
+}
+
+.m3d-card {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm, 0 2px 8px -2px rgba(15, 23, 42, .08));
+    color: var(--text, #0f172a);
+    font-size: 12.5px;
+}
+
+.m3d-card-title,
+.m3d-legend-title {
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: var(--text-2, #334155);
+}
+
+.m3d-top {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.m3d-top li {
+    display: grid;
+    grid-template-columns: 20px 1fr auto 10px;
+    align-items: center;
+    gap: 8px;
+}
+
+.m3d-rank {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.m3d-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.m3d-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.m3d-ramp {
+    height: 10px;
+    border-radius: 999px;
+}
+
+.m3d-ramp-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted, #64748b);
+    font-variant-numeric: tabular-nums;
+}
+
+.m3d-levels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+}
+
+.m3d-levels span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+}
+
+.m3d-levels i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+/* Lớp chờ tải / báo lỗi */
+.m3d-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    text-align: center;
+    background: rgba(241, 245, 249, 0.82);
+    backdrop-filter: blur(3px);
+    color: var(--text-2, #334155);
+    font-weight: 600;
+}
+
+.m3d-loading[hidden] {
+    display: none;
+}
+
+.m3d-loading small {
+    font-weight: 400;
+    color: var(--muted, #64748b);
+}
+
+.m3d-loading.is-error {
+    color: #b91c1c;
+}
+
+/* Thanh thời gian */
+.m3d-timeline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.m3d-play {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--brand, #0284c7);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 8px 18px -8px rgba(2, 132, 199, 0.8);
+}
+
+.m3d-play:hover {
+    filter: brightness(1.08);
+}
+
+.m3d-track {
+    position: relative;
+    flex: 1 1 320px;
+    min-width: 220px;
+}
+
+.m3d-track input[type="range"] {
+    width: 100%;
+    accent-color: var(--brand, #0284c7);
+    cursor: pointer;
+}
+
+.m3d-now-mark {
+    position: absolute;
+    top: 2px;
+    width: 2px;
+    height: 18px;
+    margin-left: -1px;
+    border-radius: 2px;
+    background: #7c3aed;
+    pointer-events: none;
+}
+
+.m3d-now-mark[hidden] {
+    display: none;
+}
+
+.m3d-track-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted, #64748b);
+}
+
+.m3d-timeline .btn-forecast.active {
+    background: var(--brand, #0284c7);
+    color: #fff;
+}
+
+/* Popup khi rê chuột lên khối phường */
+.m3d-popup .maplibregl-popup-content {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font: 12.5px/1.5 inherit;
+    color: #0f172a;
+    box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.35);
+}
+
+/* Điện thoại / màn hình hẹp: thông tin xếp dưới bản đồ */
+@media (max-width: 860px) {
+    .m3d-stage {
+        height: auto;
+        overflow: visible;
+        background: none;
+        border: 0;
+    }
+
+    .m3d-stage > .m3d-canvas,
+    .m3d-stage > .m3d-canvas.maplibregl-map {
+        position: relative;
+        inset: auto;
+        height: 58vh;
+        min-height: 360px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line, #e2e8f0);
+    }
+
+    .m3d-hud {
+        top: 10px;
+        left: 10px;
+        right: 60px;
+        min-width: 0;
+        padding: 10px 12px;
+    }
+
+    .m3d-clock b {
+        font-size: 24px;
+    }
+
+    .m3d-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .m3d-side {
+        position: static;
+        width: auto;
+        margin-top: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .m3d-side .m3d-card {
+        flex: 1 1 240px;
+    }
+}

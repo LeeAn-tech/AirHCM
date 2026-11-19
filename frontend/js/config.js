@@ -3,7 +3,7 @@ export const CONFIG = {
     API_URL: 'http://localhost:8000/api/v1',
     MAP_CENTER: [10.8231, 106.6297], 
     MAP_BOUNDS: [[10.35, 106.35], [11.15, 107.05]], 
-    QCVN_PM25_LIMIT: 50, 
+    QCVN_PM25_LIMIT: 45, // QCVN 05:2023: 45 µg/m³ từ 01/01/2026
 
   BASEMAPS: {
         dark: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
@@ -11,13 +11,13 @@ export const CONFIG = {
         satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
     },
 
-    AQI_BREAKPOINTS: [
-        [0, 12.0, 0, 50],
-        [12.1, 35.4, 51, 100],
+    AQI_BREAKPOINTS: [ // US EPA 2024 (PM2.5)
+        [0, 9.0, 0, 50],
+        [9.1, 35.4, 51, 100],
         [35.5, 55.4, 101, 150],
-        [55.5, 150.4, 151, 200],
-        [150.5, 250.4, 201, 300],
-        [250.5, 500.4, 301, 500]
+        [55.5, 125.4, 151, 200],
+        [125.5, 225.4, 201, 300],
+        [225.5, 325.4, 301, 500]
     ],
 
     AQI_LEVELS: [
