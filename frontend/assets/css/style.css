@@ -240,6 +240,21 @@ img {
     animation: spin 1.1s linear infinite;
 }
 
+/* Màn hình chờ: logo AirHCM (assets/img/logo-mark.png) trên nền trắng bo góc */
+.preloader-logo.preloader-logo--img {
+    background: #fff;
+    box-shadow: 0 20px 40px -14px rgba(2, 132, 199, .55), 0 0 0 1px rgba(2, 132, 199, .12);
+}
+
+.preloader-logo--img img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: contain;
+}
+
 .preloader-text {
     font-size: 22px;
     font-weight: 800;
@@ -357,6 +372,20 @@ img {
     width: 40%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent);
     animation: shine 4.5s ease-in-out infinite;
+}
+
+/* Logo AirHCM dạng ảnh (assets/img/logo-mark.png) trên nền trắng bo góc */
+.logo-mark.logo-mark--img {
+    background: #fff;
+    box-shadow: 0 10px 24px -8px rgba(6, 182, 212, .65), 0 0 0 1px rgba(255, 255, 255, .3);
+}
+
+.logo-mark--img img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .sidebar .logo {
@@ -3790,6 +3819,20 @@ select.inline-select {
     background: var(--grad-brand);
     box-shadow: var(--shadow-brand);
     animation: floatY 3s ease-in-out infinite;
+}
+
+/* Hộp Đăng nhập / Đăng ký: logo AirHCM (assets/img/logo-mark.png) trên nền trắng */
+.modal-hero-icon.modal-hero-icon--img {
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 12px 26px -10px rgba(2, 132, 199, .55), 0 0 0 1px rgba(2, 132, 199, .12);
+}
+
+.modal-hero-icon--img img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .modal-hero h3 {

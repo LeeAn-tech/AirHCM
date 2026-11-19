@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon ứng dụng AirHCM (Android 8+): launcher tự cắt theo hình dạng của máy (tròn, vuông bo, giọt nước...).
+     Biểu tượng lấy từ frontend/assets/img/Logo AirHCM.png, nằm trong vùng an toàn 66/108 dp. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

@@ -76,6 +76,7 @@ flutter:
   assets:
       - assets/animations/ai_loading.json
       - assets/data/hcm_wards.json
+      - assets/images/logo_mark.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

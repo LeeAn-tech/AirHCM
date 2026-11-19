@@ -2,4 +2,6 @@
 <resources>
     <!-- Màu nhấn của thông báo cảnh báo AQI (Push FCM) -->
     <color name="aqi_alert_color">#DC2626</color>
+    <!-- Nền icon ứng dụng (adaptive icon Android 8+) - logo AirHCM trên nền trắng -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

@@ -1,5 +1,16 @@
 [
   {
+    "time": "2026-11-20 05:22:37",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 32.5,
+    "peak_aqi": 95,
+    "peak_time": "2026-11-20 23:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
     "time": "2026-11-19 22:26:55",
     "status": "NORMAL",
     "title": "✅ Chất lượng không khí trong ngưỡng an toàn",

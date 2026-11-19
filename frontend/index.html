@@ -16,8 +16,9 @@
 
     <!-- Liên kết Web Manifest & Icon -->
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="assets/img/Logo AirHCM.png">
-    <link rel="apple-touch-icon" href="assets/img/Logo AirHCM.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 
     <!-- Leaflet, Heatmap, Chart.js -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -32,7 +33,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="assets/css/style.css?v=20261119a">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261120c">
     <link rel="stylesheet" href="assets/css/air-forecast.css?v=20261117a">
     <link rel="stylesheet" href="assets/css/air-analysis.css?v=20261119a">
     <link rel="stylesheet" href="assets/css/map3d.css?v=20261120a">
@@ -43,7 +44,7 @@
     <!-- MÀN HÌNH CHỜ KHI KHỞI ĐỘNG -->
     <div id="app-preloader" class="app-preloader" aria-hidden="true">
         <div class="preloader-core">
-            <div class="preloader-logo"><i class="fa-solid fa-wind"></i></div>
+            <div class="preloader-logo preloader-logo--img"><img src="assets/img/logo-mark.png" alt="AirHCM" width="84" height="84"></div>
             <div class="preloader-text"><span class="text-gradient">AirHCM</span></div>
             <div class="preloader-sub">Đang đồng bộ dữ liệu quan trắc không khí...</div>
             <div class="preloader-bar"></div>
@@ -54,8 +55,9 @@
     <!-- SIDEBAR ĐIỀU HƯỚNG                                                          -->
     <!-- ========================================================================== -->
     <nav class="sidebar" aria-label="Điều hướng chính">
-        <div class="logo" title="AirHCM">
-            <span class="logo-mark"><i class="fa-solid fa-wind"></i></span>
+        <div class="logo" title="AirHCM - Dự báo PM2.5 & cảnh báo sức khỏe TP. Hồ Chí Minh">
+            <!-- Biểu tượng cắt từ assets/img/Logo AirHCM.png (bản gốc 3000px, 2 MB) -> logo-mark.png 192px -->
+            <span class="logo-mark logo-mark--img"><img src="assets/img/logo-mark.png" alt="AirHCM" width="48" height="48" decoding="async"></span>
         </div>
         <ul class="nav-links">
             <li class="nav-item active" data-tab="tab-map">
@@ -1512,7 +1514,7 @@
 
             <div class="modal-body">
                 <div class="modal-hero">
-                    <div class="modal-hero-icon"><i class="fa-solid fa-wind"></i></div>
+                    <div class="modal-hero-icon modal-hero-icon--img"><img src="assets/img/logo-mark.png" alt="AirHCM" width="58" height="58" decoding="async"></div>
                     <h3 id="auth-modal-title">Chào mừng đến với AirHCM</h3>
                     <p id="auth-modal-desc">Đăng nhập để nhận thông báo ô nhiễm tức thời</p>
                 </div>

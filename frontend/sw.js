@@ -1,6 +1,6 @@
 // sw.js - Service Worker hỗ trợ vận hành PWA Offline/Cache cho AirHCM
 // v3: Luôn kiểm tra bản mới với máy chủ cho file cùng nguồn (tránh hiển thị giao diện cũ sau khi cập nhật)
-const CACHE_NAME = 'airhcm-cache-v19';
+const CACHE_NAME = 'airhcm-cache-v22';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -10,7 +10,10 @@ const ASSETS_TO_CACHE = [
     './js/app.js',
     './js/admin.js',
     './js/ai-agent.js',
-    './assets/data/hcm_wards.json'
+    './assets/data/hcm_wards.json',
+    './assets/img/logo-mark.png',
+    './assets/img/favicon-32.png',
+    './assets/img/favicon-64.png'
 ];
 
 self.addEventListener('install', event => {

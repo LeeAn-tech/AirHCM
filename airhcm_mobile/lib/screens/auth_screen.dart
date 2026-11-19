@@ -194,15 +194,20 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   Widget _hero(String title, String subtitle) {
     return Column(
       children: [
+        // Logo AirHCM (cắt từ frontend/assets/img/Logo AirHCM.png - cùng logo với WebGIS và icon ứng dụng)
         Container(
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            gradient: AppColors.brandGradient,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(22),
-            boxShadow: const [BoxShadow(color: Color(0x660284C7), blurRadius: 18, offset: Offset(0, 8))],
+            border: Border.all(color: const Color(0x1F0284C7)),
+            boxShadow: const [BoxShadow(color: Color(0x440284C7), blurRadius: 18, offset: Offset(0, 8))],
           ),
-          child: const Icon(Icons.air, color: Colors.white, size: 36),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(21),
+            child: Image.asset('assets/images/logo_mark.png', fit: BoxFit.contain, semanticLabel: 'AirHCM'),
+          ),
         ),
         const SizedBox(height: 14),
         Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
