@@ -91,7 +91,9 @@ class AirForecastEngine:
         if hit and time.time() - hit[0] < ttl and hit[2] == built:
             return hit[1]
         val = fn()
-        self._memo[key] = (time.time(), val, self._state["built"] if self._state else None)
+        # Không ghi nhớ kết quả rỗng (trạng thái đang dựng / chưa có dữ liệu) -> lần gọi sau thử lại ngay
+        if val is not None:
+            self._memo[key] = (time.time(), val, self._state["built"] if self._state else None)
         return val
 
     # ------------------------------------------------------------------ mô hình
@@ -117,8 +119,10 @@ class AirForecastEngine:
     # ------------------------------------------------------------------ làm mới
     def state(self, now=None, force=False):
         with self._lock:
+            # Dự báo realtime: sang giờ mới theo đồng hồ hệ thống thì tính lại ngay (không chờ hết bộ đệm 30 phút)
+            same_hour = self._state is not None and self._state.get("now") == pd.Timestamp.now().floor("h")
             if (not force and self._state is not None and time.time() - self._state["built"] < self.ttl
-                    and now is None):
+                    and now is None and same_hour):
                 return self._state
             self._state = self._build(now)
             return self._state

@@ -48,6 +48,7 @@ dependencies:
   flutter_local_notifications: ^17.2.4  # Thông báo kèm tiếng còi khi AQI vượt ngưỡng
   firebase_auth: ^7.0.1      # Đăng nhập Google / Facebook / Apple (Firebase Authentication)
   flutter_facebook_auth: ^7.3.3
+  webview_flutter: ^4.14.1
 
 dev_dependencies:
   flutter_test:

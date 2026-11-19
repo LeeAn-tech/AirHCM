@@ -123,7 +123,7 @@ class _LegacyForecastScreenState extends State<LegacyForecastScreen> {
     final peak = _data.reduce((a, b) => _pm(a) >= _pm(b) ? a : b);
     final low = _data.reduce((a, b) => _pm(a) <= _pm(b) ? a : b);
     final exceed = _data.where((e) => _pm(e) > _qcvn).length;
-    final peakAqi = AqiUtils.compute(_pm(peak), useUS: useUS);
+    final peakAqi = AqiUtils.pick(peak['vn_aqi'], peak['us_aqi_all'], _pm(peak), useUS: useUS);
 
     Widget tile(String label, String value, String sub, Color color, IconData icon) => Expanded(
           child: Container(
@@ -236,7 +236,7 @@ class _LegacyForecastScreenState extends State<LegacyForecastScreen> {
                 tooltipRoundedRadius: 10,
                 getTooltipItems: (spots) => spots.map((s) {
                   final item = _data[s.x.toInt()];
-                  final aqi = AqiUtils.compute(s.y, useUS: AppState.useUSAQI.value);
+                  final aqi = AqiUtils.pick(item['vn_aqi'], item['us_aqi_all'], s.y, useUS: AppState.useUSAQI.value);
                   return LineTooltipItem(
                     '${_timeLabel('${item['time']}', withDate: true)}\n${s.y.toStringAsFixed(1)} µg/m³ · AQI $aqi',
                     const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11.5),
@@ -280,7 +280,7 @@ class _LegacyForecastScreenState extends State<LegacyForecastScreen> {
       child: Column(
         children: shown.map((item) {
           final pm = _pm(item);
-          final aqi = AqiUtils.compute(pm, useUS: useUS);
+          final aqi = AqiUtils.pick(item['vn_aqi'], item['us_aqi_all'], pm, useUS: useUS);
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 9),
             decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEEF2F7)))),

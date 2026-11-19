@@ -11,10 +11,13 @@ import 'ward_picker.dart';
 class MyAreasSection extends StatefulWidget {
   /// PM2.5 hiện tại theo mã phường (từ /aqi/spatial-summary)
   final Map<String, double> wardPm;
+
+  /// AQI NowCast hiện tại theo mã phường: (VN_AQI, US AQI) do máy chủ tính
+  final Map<String, (int?, int?)> wardAqi;
   final bool useUS;
   final void Function(WardShape ward)? onShowOnMap;
 
-  const MyAreasSection({super.key, required this.wardPm, required this.useUS, this.onShowOnMap});
+  const MyAreasSection({super.key, required this.wardPm, this.wardAqi = const {}, required this.useUS, this.onShowOnMap});
 
   @override
   State<MyAreasSection> createState() => _MyAreasSectionState();
@@ -83,7 +86,8 @@ class _MyAreasSectionState extends State<MyAreasSection> {
     final area = AppState.area(key);
     final code = area?['code']?.toString();
     final pm = code == null ? null : widget.wardPm[code];
-    final aqi = pm == null ? null : AqiUtils.compute(pm, useUS: widget.useUS);
+    final srv = code == null ? null : widget.wardAqi[code];
+    final aqi = pm == null ? null : AqiUtils.pick(srv?.$1, srv?.$2, pm, useUS: widget.useUS);
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: _saving ? null : () => _pick(key, label, icon),

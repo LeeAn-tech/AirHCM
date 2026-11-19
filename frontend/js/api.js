@@ -23,11 +23,11 @@ async function fetchClient(endpoint, options = {}) {
 }
 
 export const ApiService = {
-    // 1. WebGIS: Lấy ranh giới 166 phường xã & danh sách trạm
+    // 1. WebGIS: Lấy ranh giới 168 phường xã & danh sách trạm
     getWardsGeoJSON: () => fetchClient('/gis/wards-geojson'),
     getStations: () => fetchClient('/gis/stations'),
 
-    // 2. AQI thời gian thực & Bảng tổng hợp không gian 166 phường
+    // 2. AQI thời gian thực & Bảng tổng hợp không gian 168 phường
     getCurrentAQI: () => fetchClient('/aqi/current'),
     getSpatialSummary: () => fetchClient('/aqi/spatial-summary'),
 

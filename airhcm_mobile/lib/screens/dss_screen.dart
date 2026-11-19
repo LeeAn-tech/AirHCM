@@ -254,7 +254,7 @@ class _DssScreenState extends State<DssScreen> {
     final alert = AppState.alert.value;
     final useUS = AppState.useUSAQI.value;
     final pm = AqiUtils.toDouble(cur?['pm2_5'], 0);
-    final aqi = AqiUtils.compute(pm, useUS: useUS);
+    final aqi = AqiUtils.pick(cur?['vn_aqi'], cur?['us_aqi_all'], pm, useUS: useUS);
     final hasLoc = AppState.lastLocation.value != null;
     final locLabel = !_useLocation || !hasLoc
         ? 'Trạm Trung tâm TP.HCM'

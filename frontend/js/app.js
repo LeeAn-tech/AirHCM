@@ -101,6 +101,13 @@ function getDynamicAQI(pm) {
     return currentAQIStandard === 'VN' ? calculateVN_AQI(pm) : calculateEPA_AQI(pm);
 }
 
+// AQI giờ chính thức do máy chủ tính: bụi theo NowCast 12 giờ (QĐ 1459/QĐ-TCMT, US EPA) và lấy max
+// các chất -> cùng con số với trang Dự báo AI. Chỉ khi máy chủ không có số liệu mới quy đổi thẳng từ PM2.5 một giờ.
+function pickAQI(vn, us, pm) {
+    const v = currentAQIStandard === 'VN' ? vn : us;
+    return (v !== null && v !== undefined && v !== "" && isFinite(v)) ? Math.round(Number(v)) : getDynamicAQI(pm);
+}
+
 function setSafeText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
@@ -239,7 +246,7 @@ function extractWardDetails(properties) {
     };
 }
 
-// TỰ ĐỘNG NẠP ĐẦY ĐỦ 166 PHƯỜNG/XÃ TP.HCM VÀO FORM ĐĂNG KÝ
+// TỰ ĐỘNG NẠP ĐẦY ĐỦ 168 PHƯỜNG/XÃ TP.HCM VÀO FORM ĐĂNG KÝ
 function populateWardDropdown(geojsonData) {
     const wardSelect = document.getElementById("sub-ward");
     if (!wardSelect || !geojsonData || !geojsonData.features) return;
@@ -269,11 +276,109 @@ function populateWardDropdown(geojsonData) {
 // -> ở giờ hiện tại, số trên bản đồ trùng khớp tuyệt đối với trang Điểm nóng.
 // ==============================================================================
 let wardPmByCode = {};      // mã phường -> PM2.5 hiện tại (µg/m³)
+let wardServerAQI = {};     // mã phường -> {vn, us}: AQI NowCast hiện tại của phường
 let stationPmByCode = {};   // mã trạm -> PM2.5 hiện tại (µg/m³)
+let stationWardByCode = {}; // mã trạm -> mã phường chứa trạm
 
 function diurnalRatio(hour) {
     const now = DIURNAL_FACTORS[new Date().getHours()] || 1.0;
     return (DIURNAL_FACTORS[hour] || 1.0) / now;
+}
+
+// ==============================================================================
+// THANH THỜI GIAN DỰ BÁO REALTIME (thay cho "Mô phỏng 24h" theo hệ số ngày đêm)
+// Mốc 0 = giờ hiện tại theo đồng hồ hệ thống, kéo tới 48 giờ tới, mỗi mốc có ngày tháng.
+// PM2.5 từng phường lấy từ DỰ BÁO AI (API /air/spatial-series - cùng nguồn với bản đồ 3D);
+// trạm & Trạm Trung tâm = giá trị hiện tại x tỉ lệ biến đổi dự báo (ở mốc hiện tại trùng số đo thật).
+// ==============================================================================
+const FORECAST_TIMELINE_HOURS = 48;
+const TL_WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+let forecastSeries = null;      // {times: ["YYYY-MM-DD HH:00"...], wards: [{code}], values: [[...]]}
+let forecastWardIdx = {};       // mã phường -> cột trong ma trận dự báo
+let forecastCityMean = [];      // TB PM2.5 các phường theo từng mốc
+let currentTimeIndex = 0;       // mốc đang xem (0 = hiện tại)
+let cityHourlyByTime = {};      // "YYYY-MM-DD HH:00" -> giờ dự báo cấp TP của trang Dự báo AI (/air/forecast)
+let latestServerAQI = { vn: null, us: null, pm10: null, temp: null }; // Trạm Trung tâm hiện tại (/aqi/current)
+const tlPad = n => String(n).padStart(2, "0");
+
+// Khóa thời gian của mốc i (cùng định dạng với API dự báo)
+function timelineKey(i) {
+    if (forecastSeries && forecastSeries.times[i]) return forecastSeries.times[i];
+    const d = timelineDate(i);
+    return `${d.getFullYear()}-${tlPad(d.getMonth() + 1)}-${tlPad(d.getDate())} ${tlPad(d.getHours())}:00`;
+}
+
+function timelineLength() {
+    return forecastSeries ? forecastSeries.times.length : FORECAST_TIMELINE_HOURS + 1;
+}
+
+// Ngày giờ của mốc i
+function timelineDate(i) {
+    if (forecastSeries && forecastSeries.times[i]) return new Date(forecastSeries.times[i].replace(" ", "T") + ":00");
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    d.setHours(d.getHours() + i);
+    return d;
+}
+
+// Tỉ lệ PM2.5 tại mốc i so với hiện tại: theo dự báo AI; chưa tải được dự báo thì theo chu kỳ ngày đêm
+function timelineRatio(i) {
+    if (forecastCityMean.length && forecastCityMean[0] > 0 && forecastCityMean[i] != null) return forecastCityMean[i] / forecastCityMean[0];
+    return diurnalRatio(timelineDate(i).getHours());
+}
+
+function setupTimelineSlider() {
+    const slider = document.getElementById("time-slider");
+    if (!slider) return;
+    const n = timelineLength() - 1;
+    slider.min = 0;
+    slider.max = n;
+    slider.step = 1;
+    const marks = document.querySelector("#panel-playback .slider-marks");
+    if (marks) {
+        const label = i => {
+            if (i === 0) return "Hiện tại";
+            const d = timelineDate(i);
+            return `${tlPad(d.getHours())}h ${tlPad(d.getDate())}/${tlPad(d.getMonth() + 1)}`;
+        };
+        marks.innerHTML = [0, Math.round(n / 4), Math.round(n / 2), Math.round(n * 3 / 4), n].map(i => `<span>${label(i)}</span>`).join("");
+    }
+    const tag = document.querySelector("#panel-playback .playback-tag");
+    if (tag) tag.innerHTML = `<i class="fa-solid fa-chart-line"></i> Dự báo ${n} giờ`;
+}
+
+function loadForecastTimeline() {
+    const getJSON = url => fetch(url).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    return Promise.all([
+        getJSON(`${API_BASE}/air/spatial-series?pollutant=pm2_5&back=0&ahead=${FORECAST_TIMELINE_HOURS}&step=1`),
+        getJSON(`${API_BASE}/air/forecast`)  // chuỗi giờ cấp TP - đúng số liệu trang Dự báo AI đang hiển thị
+    ])
+        .then(([d, city]) => {
+            if (city && Array.isArray(city.hourly)) {
+                cityHourlyByTime = {};
+                city.hourly.forEach(h => { if (h && h.time) cityHourlyByTime[h.time] = h; });
+            }
+            if (!d || !Array.isArray(d.times) || !d.times.length) {
+                if (city) applyTimeStep(currentTimeIndex);
+                return;
+            }
+            // Đang xem "Hiện tại" -> đi theo đồng hồ; đang xem một giờ dự báo -> giữ đúng giờ đó (nếu còn trong khung)
+            const prevKey = forecastSeries && currentTimeIndex > 0 ? forecastSeries.times[currentTimeIndex] : null;
+            forecastSeries = d;
+            forecastWardIdx = {};
+            d.wards.forEach((w, k) => { forecastWardIdx[String(w.code)] = k; });
+            forecastCityMean = d.values.map(row => {
+                const v = row.filter(x => x != null);
+                return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null;
+            });
+            const keep = prevKey ? d.times.indexOf(prevKey) : -1;
+            setupTimelineSlider();
+            const slider = document.getElementById("time-slider");
+            const idx = keep > 0 ? keep : 0;
+            if (slider) slider.value = idx;
+            applyTimeStep(idx);
+        })
+        .catch(err => console.warn("Chưa tải được dự báo theo phường:", err));
 }
 
 function wardCodeOf(feature) {
@@ -288,14 +393,28 @@ function wardDisplayName(feature) {
     return `${p.loai && !String(ward).startsWith(p.loai) ? p.loai + " " : ""}${ward}`;
 }
 
-function calculateWardAirStats(feature, hour) {
-    const known = wardPmByCode[wardCodeOf(feature)];
-    if (known !== undefined) {
-        const pm25 = parseFloat((known * diurnalRatio(hour)).toFixed(1));
-        const aqi = getDynamicAQI(pm25);
-        return { pm25, aqi, color: getAQIColor(aqi), advisory: getAdvisoryForAQI(aqi, pm25) };
+// Số liệu máy chủ của một phường tại mốc đang xem (null nếu chưa có)
+function wardStatsAt(code) {
+    const make = (pm25, aqi) => ({ pm25, aqi, color: getAQIColor(aqi), advisory: getAdvisoryForAQI(aqi, pm25) });
+    // Dự báo AI của chính phường này tại mốc đang xem trên thanh thời gian (AQI NowCast theo phường)
+    const col = forecastWardIdx[code];
+    const row = forecastSeries && forecastSeries.values[currentTimeIndex];
+    if (row && col !== undefined && row[col] != null) {
+        const pm25 = parseFloat(row[col].toFixed(1));
+        const at = (key) => (forecastSeries[key] && forecastSeries[key][currentTimeIndex] ? forecastSeries[key][currentTimeIndex][col] : null);
+        return make(pm25, pickAQI(at("vn_aqi"), at("us_aqi"), pm25));
     }
-    return estimateWardAirStats(feature, hour);
+    const known = wardPmByCode[code];
+    if (known !== undefined) {
+        const pm25 = parseFloat((known * timelineRatio(currentTimeIndex)).toFixed(1));
+        const srv = currentTimeIndex === 0 ? (wardServerAQI[code] || {}) : {};
+        return make(pm25, pickAQI(srv.vn, srv.us, pm25));
+    }
+    return null;
+}
+
+function calculateWardAirStats(feature, hour) {
+    return wardStatsAt(wardCodeOf(feature)) || estimateWardAirStats(feature, hour);
 }
 
 // Dự phòng khi chưa kết nối được máy chủ: ước tính theo đặc thù khu vực
@@ -334,7 +453,7 @@ function estimateWardAirStats(feature, hour) {
     return { pm25, aqi, color, advisory };
 }
 
-// Tô lại màu 166 phường + popup đang mở sau khi có số liệu mới
+// Tô lại màu 168 phường + popup đang mở sau khi có số liệu mới
 function refreshWardStyles() {
     if (!wardsLayer) return;
     wardsLayer.eachLayer(layer => {
@@ -374,6 +493,10 @@ function createIQAirStationIcon(aqi) {
 
 function getStationAirStats(st, hour) {
     if (!st) return { pm25: 18.5, aqi: getDynamicAQI(18.5), color: "#FFFF00", advisory: { level: "Trung bình" } };
+    // Trạm nằm trong phường nào -> dùng đúng số liệu & AQI của phường đó (trùng màu ranh giới phường)
+    const wardCode = stationWardByCode[String(st.ma_tram)];
+    const inWard = wardCode ? wardStatsAt(wardCode) : null;
+    if (inWard) return inWard;
     const lat = parseFloat(st.lat) || 10.8231;
     const lng = parseFloat(st.lng) || 106.6297;
     const known = stationPmByCode[String(st.ma_tram)];
@@ -382,7 +505,7 @@ function getStationAirStats(st, hour) {
         ? known
         : (latestBasePM25 > 0 ? latestBasePM25 : 22.0) * (Math.abs(Math.sin(lat * 120 + lng * 60)) * 0.20 + 0.90);
 
-    const pm25 = parseFloat((pmNow * diurnalRatio(hour)).toFixed(1));
+    const pm25 = parseFloat((pmNow * timelineRatio(currentTimeIndex)).toFixed(1));
     const aqi = getDynamicAQI(pm25);
     const color = getAQIColor(aqi);
     const advisory = getAdvisoryForAQI(aqi, pm25);
@@ -415,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchHotspotsSummary();
         fetchActiveAlert();
         fetchHeatmapPoints();
+        loadForecastTimeline();
     }, 5 * 60 * 1000);
 
     // 3. Khởi tạo tính năng tương tác
@@ -466,7 +590,14 @@ function initNavigationTabs() {
     // 2. Tự động kích hoạt tab dựa theo URL khi người dùng truy cập trực tiếp
     function routeFromURL() {
         const hash = window.location.hash.replace("#", "");
-        const validRoutes = ["map", "map3d", "forecast", "dss", "hotspots", "analysis", "subscribe", "about", "news"];
+        // #map3d = trang Bản đồ ở chế độ xem 3D (js/map3d.js)
+        if (hash === "map3d") {
+            window.__airhcmStart3D = true;
+            switchTab("tab-map");
+            if (window.AirMap3D) window.AirMap3D.setMode("3d");
+            return;
+        }
+        const validRoutes = ["map", "forecast", "dss", "hotspots", "analysis", "subscribe", "about", "news"];
         const selectedRoute = validRoutes.includes(hash) ? hash : "map";
         switchTab(`tab-${selectedRoute}`);
     }
@@ -493,9 +624,9 @@ function switchTab(targetId) {
         setTimeout(() => map.invalidateSize(), 150);
     }
 
-    // Tab Bản đồ 3D: nạp thư viện 3D + dữ liệu khi mở lần đầu, căn lại khung khi mở lại
-    if (targetId === "tab-map3d" && window.AirMap3D) {
-        setTimeout(() => window.AirMap3D.onShow(), 60);
+    // Trang Bản đồ đang ở chế độ 3D: căn lại khung 3D, tiếp tục hoạt cảnh
+    if (targetId === "tab-map" && window.AirMap3D) {
+        setTimeout(() => window.AirMap3D.onTabShow(), 60);
     }
 
     // Tab Phân tích xác suất & Truy nguồn: khởi tạo/căn lại bản đồ khi mở
@@ -534,7 +665,9 @@ function fetchCurrentAQI() {
             // Cơ chế phòng thủ: nếu thiếu trường nào sẽ lấy giá trị hợp lệ, không bao giờ bị undefined hay NaN
             const pm25 = (data.pm2_5 !== undefined && data.pm2_5 !== null) ? parseFloat(data.pm2_5) : 18.5;
             const pm10 = (data.pm10 !== undefined && data.pm10 !== null) ? parseFloat(data.pm10) : parseFloat((pm25 * 1.35).toFixed(1));
-            const aqi = getDynamicAQI(pm25);
+            // AQI NowCast của máy chủ (VN_AQI: vn_aqi; US AQI tổng hợp: us_aqi_all) = số trên trang Dự báo AI
+            latestServerAQI = { vn: data.vn_aqi, us: data.us_aqi_all, pm10, temp: data.temperature_2m };
+            const aqi = pickAQI(data.vn_aqi, data.us_aqi_all, pm25);
             const aqiLabelEl = document.querySelector("#aqi-indicator-circle small");
             if (aqiLabelEl) aqiLabelEl.innerText = currentAQIStandard === 'VN' ? "VN_AQI" : "US AQI";
             let tempC = (data.temperature_2m !== undefined && data.temperature_2m !== null) ? data.temperature_2m : 31.5;
@@ -581,8 +714,8 @@ function fetchCurrentAQI() {
             if (data.wind_direction) currentWindDeg = parseFloat(data.wind_direction);
             startWindAnimation();
 
-            // Đang xem giờ mô phỏng khác giờ hiện tại -> giữ nguyên chế độ mô phỏng với số liệu mới
-            if (currentHourSimulated !== new Date().getHours()) applyTimeStep(currentHourSimulated);
+            // Áp lại mốc đang xem với số liệu hiện tại mới (thẻ trạm, phường, trạm quan trắc)
+            applyTimeStep(currentTimeIndex);
         })
         .catch(err => {
             console.error("Lỗi nạp current AQI:", err);
@@ -684,7 +817,7 @@ function fetchWardsGeoJSON() {
         })
         .then(geojson => {
             // TỰ ĐỘNG ĐẾM VÀ ĐỒNG BỘ CHÍNH XÁC SỐ LƯỢNG PHƯỜNG/XÃ THỰC TẾ
-            const totalWards = geojson.features ? geojson.features.length : 167;
+            const totalWards = geojson.features ? geojson.features.length : 168;
             const hotspotSubtitle = document.querySelector("#tab-hotspots .panel-header p");
             if (hotspotSubtitle) {
                 hotspotSubtitle.innerText = `Xếp hạng mức độ ô nhiễm không khí tại ${totalWards} Phường/Xã/Thị trấn (Mô hình Vùng đô thị TP.HCM mở rộng)`;
@@ -831,7 +964,7 @@ function renderForecastView(forecastData, hours) {
     // 1. Tự động tính toán lại mảng AQI theo đúng chuẩn đang kích hoạt (VN hoặc US)
     forecastData.forEach(item => {
         item.pm2_5 = parseFloat(item.pm2_5);
-        item.aqi = getDynamicAQI(item.pm2_5);
+        item.aqi = pickAQI(item.vn_aqi, item.us_aqi_all, item.pm2_5);
         const adv = getAdvisoryForAQI(item.aqi, item.pm2_5);
         item.level = adv.level;
     });
@@ -1036,7 +1169,11 @@ function fetchHotspotsSummary() {
             allWardsData = wards;
             // Nguồn số liệu chung cho màu phường + popup trên bản đồ
             wardPmByCode = {};
-            wards.forEach(w => { wardPmByCode[String(w.ma_phuong_xa)] = parseFloat(w.pm2_5_trung_binh); });
+            wardServerAQI = {};
+            wards.forEach(w => {
+                wardPmByCode[String(w.ma_phuong_xa)] = parseFloat(w.pm2_5_trung_binh);
+                wardServerAQI[String(w.ma_phuong_xa)] = { vn: w.vn_aqi, us: w.us_aqi };
+            });
             refreshWardStyles();
             renderHotspotsTable(wards);
             const note = document.getElementById("hotspots-updated");
@@ -1071,7 +1208,7 @@ function renderHotspotsTable(data) {
     let rowsHtml = "";
     data.forEach((w, index) => {
         const pm = parseFloat(w.pm2_5_trung_binh);
-        const aqi = getDynamicAQI(pm);
+        const aqi = pickAQI(w.vn_aqi, w.us_aqi, pm);
         const advisory = getAdvisoryForAQI(aqi, pm);
         const lvl = getAQILevelIndex(aqi);
         const rankCls = index < 3 ? ` r${index + 1}` : "";
@@ -1146,11 +1283,11 @@ function initPlaybackFeature() {
 
     if (!slider || !btnPlay) return;
 
-    // 1. Tự động nhảy thanh thời gian về đúng mốc giờ thực tế hiện tại
-    const currentActualHour = new Date().getHours();
-    currentHourSimulated = currentActualHour;
-    slider.value = currentActualHour;
-    applyTimeStep(currentActualHour);
+    // 1. Thanh thời gian bắt đầu tại mốc hiện tại theo đồng hồ hệ thống, rồi tải dự báo AI theo phường
+    setupTimelineSlider();
+    slider.value = 0;
+    applyTimeStep(0);
+    loadForecastTimeline();
 
     // Kéo thanh trượt bằng tay
     slider.addEventListener("input", e => {
@@ -1179,9 +1316,9 @@ function initPlaybackFeature() {
             let currentVal = parseInt(slider.value);
             if (isNaN(currentVal)) currentVal = 0;
 
-            let nextHour = (currentVal + 1) % 24; // Luôn xoay vòng 0 -> 23 không bao giờ bị NaN
-            slider.value = nextHour;
-            applyTimeStep(nextHour);
+            const next = (currentVal + 1) % timelineLength(); // Hết 48 giờ thì quay lại mốc hiện tại
+            slider.value = next;
+            applyTimeStep(next);
         }, 1000);
     };
 
@@ -1198,7 +1335,12 @@ function initPlaybackFeature() {
     });
 }
 
-function applyTimeStep(hour) {
+function applyTimeStep(index) {
+    // index = số giờ kể từ hiện tại (mốc trên thanh thời gian dự báo)
+    index = Math.max(0, Math.min(parseInt(index, 10) || 0, timelineLength() - 1));
+    currentTimeIndex = index;
+    const when = timelineDate(index);
+    const hour = when.getHours();
     currentHourSimulated = hour;
     setSafeText("playback-time-label", `${String(hour).padStart(2, '0')}:00`);
 
@@ -1222,20 +1364,40 @@ function applyTimeStep(hour) {
         periodText = "Xe tải nặng liên tỉnh & Hoạt động công nghiệp ven đô";
     }
 
-    setSafeText("playback-badge", periodName);
-    setSafeText("playback-period-desc", periodText);
+    setSafeText("playback-badge", index === 0 ? "Hiện tại" : `Dự báo +${index}h`);
+    const badgeEl = document.getElementById("playback-badge");
+    if (badgeEl) badgeEl.classList.toggle("is-forecast", index > 0);
+    setSafeText("playback-period-desc",
+        `${TL_WEEKDAYS[when.getDay()]}, ${tlPad(when.getDate())}/${tlPad(when.getMonth() + 1)}/${when.getFullYear()} · ${periodName} - ${periodText}`);
 
-    // Ở giờ hiện tại = đúng số đo trạm trung tâm; giờ khác = nhân tỉ lệ chu kỳ ngày đêm so với hiện tại
-    const simPM25 = parseFloat((latestBasePM25 * diurnalRatio(hour)).toFixed(1));
-    const simAQI = getDynamicAQI(simPM25); // Tự động tính theo VN_AQI hoặc US AQI
-    const aqiColor = getAQIColor(simAQI);
-    const advisory = getAdvisoryForAQI(simAQI, simPM25);
-
+    // Thẻ Trạm Trung tâm: mốc hiện tại = số đo mới nhất (/aqi/current); mốc tương lai = dự báo cấp TP theo giờ
+    // của trang Dự báo AI (/air/forecast). AQI là NowCast do máy chủ tính -> hai trang luôn cùng một con số.
+    const num = v => (v !== null && v !== undefined && v !== "" && isFinite(v) ? Number(v) : null);
     const isRushHour = (hour >= 6 && hour <= 9) || (hour >= 16 && hour <= 19);
     const pm10Ratio = isRushHour ? 1.55 : 1.35;
-    const simPM10 = (simPM25 * pm10Ratio).toFixed(1);
-
-    const simTemp = (HOURLY_TEMP_ERA5[hour] || 28.5).toFixed(1);
+    const cityHour = index > 0 ? cityHourlyByTime[timelineKey(index)] : null;
+    let simPM25, simAQI, simPM10, tempVal;
+    if (cityHour && num(cityHour.pm2_5) !== null) {
+        simPM25 = parseFloat(num(cityHour.pm2_5).toFixed(1));
+        simAQI = pickAQI(cityHour.vn_aqi, cityHour.us_aqi, simPM25);
+        simPM10 = (num(cityHour.pm10) ?? simPM25 * pm10Ratio).toFixed(1);
+        tempVal = num(cityHour.temperature_2m);
+    } else if (index === 0) {
+        simPM25 = parseFloat(latestBasePM25.toFixed(1));
+        simAQI = pickAQI(latestServerAQI.vn, latestServerAQI.us, simPM25);
+        simPM10 = (num(latestServerAQI.pm10) ?? simPM25 * pm10Ratio).toFixed(1);
+        tempVal = num(latestServerAQI.temp);
+    } else {
+        // Chưa tải được dự báo cấp TP: nhân tỉ lệ biến đổi theo dự báo phường, quy đổi AQI từ PM2.5
+        simPM25 = parseFloat((latestBasePM25 * timelineRatio(index)).toFixed(1));
+        simAQI = getDynamicAQI(simPM25);
+        simPM10 = (simPM25 * pm10Ratio).toFixed(1);
+        tempVal = null;
+    }
+    if (tempVal !== null && tempVal > 100) tempVal -= 273.15; // Kelvin -> °C
+    const simTemp = (tempVal ?? (HOURLY_TEMP_ERA5[hour] || 28.5)).toFixed(1);
+    const aqiColor = getAQIColor(simAQI);
+    const advisory = getAdvisoryForAQI(simAQI, simPM25);
     const simAerosol = (HOURLY_AEROSOL_S5P[hour] || 0.75).toFixed(2);
 
     setSafeText("current-pm25", `${simPM25} µg/m³`);
@@ -1312,7 +1474,7 @@ function applyTimeStep(hour) {
 } // Dấu đóng ngoặc kết thúc hàm applyTimeStep
 
 
-// Điểm bản đồ nhiệt lấy từ API PostGIS (/gis/heatmap): tâm 166 phường + trạm quan trắc
+// Điểm bản đồ nhiệt lấy từ API PostGIS (/gis/heatmap): tâm 168 phường + trạm quan trắc
 let heatmapApiPoints = null;
 
 function fetchHeatmapPoints() {
@@ -1325,7 +1487,10 @@ function fetchHeatmapPoints() {
             // PM2.5 của từng trạm (cùng nguồn máy chủ với app di động)
             (geo.features || []).forEach(f => {
                 const p = f.properties || {};
-                if (p.type === "station" && p.code != null) stationPmByCode[String(p.code)] = parseFloat(p.pm2_5);
+                if (p.type === "station" && p.code != null) {
+                    stationPmByCode[String(p.code)] = parseFloat(p.pm2_5);
+                    if (p.ward_code) stationWardByCode[String(p.code)] = String(p.ward_code);
+                }
             });
             updateStationMarkersHour(currentHourSimulated);
 
@@ -2201,7 +2366,7 @@ function renderPlacePanel(data) {
 
     const pm = data.current ? Number(data.current.pm2_5) : latestBasePM25;
     const pm10 = data.current && data.current.pm10 ? Number(data.current.pm10) : pm * 1.35;
-    const aqi = getDynamicAQI(pm);
+    const aqi = data.current ? pickAQI(data.current.vn_aqi, data.current.us_aqi_all, pm) : getDynamicAQI(pm);
     const lvl = getAQILevelIndex(aqi);
     const adv = getAdvisoryForAQI(aqi, pm);
     const ringColor = (aqi > 50 && aqi <= 100) ? "#eab308" : adv.color;
@@ -2217,7 +2382,7 @@ function renderPlacePanel(data) {
 
     const wardLine = ward
         ? `${escapeHtml(ward.loai_don_vi || "")} ${escapeHtml(ward.ten_phuong_xa)}${ward.inside ? "" : ` (gần nhất, ${formatDistance(ward.distance_m)})`}`
-        : "Ngoài ranh giới 166 phường/xã TP.HCM";
+        : "Ngoài ranh giới 168 phường/xã TP.HCM";
 
     panel.innerHTML = head + `
         <div class="pp-aqi" style="--aqi: ${ringColor};">
@@ -2805,6 +2970,11 @@ function fetchWindField() {
 // Chỉ số mốc giờ trong dữ liệu ứng với giờ đang mô phỏng (trong 24h tới tính từ hiện tại)
 function windTimeIndex(hour) {
     if (!windField) return -1;
+    if (hour === currentHourSimulated) {
+        const d = timelineDate(currentTimeIndex);
+        const exact = windField.times.indexOf(`${d.getFullYear()}-${tlPad(d.getMonth() + 1)}-${tlPad(d.getDate())}T${tlPad(d.getHours())}:00`);
+        if (exact >= 0) return exact;
+    }
     const now = new Date();
     const target = new Date(now);
     if (hour < now.getHours()) target.setDate(target.getDate() + 1);
@@ -3326,9 +3496,9 @@ window.setAQIStandard = function (standard) {
     }
 
     // 6. Đồng bộ lại Bản đồ, Hotspots, thẻ DSS và What-If
-    applyTimeStep(currentHourSimulated);
+    applyTimeStep(currentTimeIndex);
     fetchHotspotsSummary();
-    updateDSSOverview(getDynamicAQI(latestBasePM25), latestBasePM25);
+    updateDSSOverview(pickAQI(latestServerAQI.vn, latestServerAQI.us, latestBasePM25), latestBasePM25);
     if (typeof window.runScenarioSimulation === "function") {
         window.runScenarioSimulation();
     }

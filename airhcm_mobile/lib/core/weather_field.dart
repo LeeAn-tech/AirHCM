@@ -109,13 +109,18 @@ class WeatherField {
   }
 
   /// Mốc giờ trong dữ liệu ứng với giờ mô phỏng (trong 24h tới tính từ hiện tại)
-  static int _timeIndex(int hour) {
+  static int _timeIndex(int hour, [DateTime? at]) {
     final f = _fine;
     if (f == null) return -1;
+    String two(int n) => n.toString().padLeft(2, '0');
+    if (at != null) {
+      // Thanh dự báo 48 giờ: tra đúng ngày giờ của mốc đang xem
+      final exact = f.times.indexOf('${at.year}-${two(at.month)}-${two(at.day)}T${two(at.hour)}:00');
+      if (exact >= 0) return exact;
+    }
     final now = DateTime.now();
     var target = DateTime(now.year, now.month, now.day, hour);
     if (hour < now.hour) target = target.add(const Duration(days: 1));
-    String two(int n) => n.toString().padLeft(2, '0');
     final key = '${target.year}-${two(target.month)}-${two(target.day)}T${two(hour)}:00';
     final idx = f.times.indexOf(key);
     if (idx >= 0) return idx;
@@ -138,8 +143,8 @@ class WeatherField {
   }
 
   /// Nhiệt độ 2m (°C) tại điểm theo giờ mô phỏng
-  static double temperature(LatLng p, int hour) {
-    final t = _timeIndex(hour);
+  static double temperature(LatLng p, int hour, {DateTime? at}) {
+    final t = _timeIndex(hour, at);
     if (t >= 0) {
       final v = _sample('temp', p.latitude, p.longitude, t);
       if (!v.isNaN) return v;
@@ -148,8 +153,8 @@ class WeatherField {
   }
 
   /// Gió 10m tại điểm theo giờ mô phỏng (dự phòng: gió trạm trung tâm /aqi/current)
-  static WindInfo wind(LatLng p, int hour) {
-    final t = _timeIndex(hour);
+  static WindInfo wind(LatLng p, int hour, {DateTime? at}) {
+    final t = _timeIndex(hour, at);
     double u = double.nan, v = double.nan;
     if (t >= 0) {
       u = _sample('u', p.latitude, p.longitude, t);

@@ -1,9 +1,10 @@
 // ==============================================================================
-// BẢN ĐỒ 3D DIỄN BIẾN CHẤT LƯỢNG KHÔNG KHÍ THEO KHÔNG GIAN - THỜI GIAN
-//  - Không gian: 168 phường/xã (GeoJSON) dựng thành khối nổi (MapLibre GL fill-extrusion)
-//  - Chiều cao khối = nồng độ chất ô nhiễm; màu = mức tương đối hoặc mức AQI
-//  - Thời gian: chuỗi giờ quan trắc + dự báo AI (API /api/v1/air/spatial-series), phát hoạt cảnh
-//    có nội suy mượt giữa hai giờ liên tiếp
+// CHẾ ĐỘ XEM 3D CỦA BẢN ĐỒ WEBGIS: DIỄN BIẾN CHẤT LƯỢNG KHÔNG KHÍ THEO KHÔNG GIAN - THỜI GIAN
+//  - Cùng trang với bản đồ 2D (Leaflet); nút "Chế độ xem: Bản đồ 2D | Khối 3D" ở bảng điều khiển
+//  - Không gian: 168 phường/xã dựng thành khối nổi (MapLibre GL fill-extrusion)
+//    chiều cao khối = nồng độ; màu = mức tương đối hoặc mức AQI
+//  - Thời gian: chuỗi giờ quan trắc + dự báo AI (API /api/v1/air/spatial-series), hoạt cảnh nội suy mượt
+//  - Đồng bộ với 2D: vị trí/thu phóng, giờ đang xem, bản đồ nền, tìm kiếm địa điểm, bảng phân tích phường
 // ==============================================================================
 (function () {
     "use strict";
@@ -13,12 +14,20 @@
     const HEIGHT_MAX_M = 9000;            // Chiều cao (m) của khối có nồng độ cao nhất
     const FRAMES_PER_SECOND = 1.6;        // Tốc độ phát ở mức 1x
     const RANGES = {
-        "24-72": { back: 24, ahead: 72, step: 1, label: "24 giờ qua → 3 ngày tới" },
-        "0-168": { back: 0, ahead: 168, step: 2, label: "Hôm nay → 7 ngày tới (dự báo)" },
-        "168-0": { back: 168, ahead: 0, step: 2, label: "7 ngày qua (quan trắc)" },
-        "720-0": { back: 720, ahead: 0, step: 6, label: "30 ngày qua (quan trắc)" },
+        "24-72": { back: 24, ahead: 72, step: 1 },
+        "0-168": { back: 0, ahead: 168, step: 2 },
+        "168-0": { back: 168, ahead: 0, step: 2 },
+        "720-0": { back: 720, ahead: 0, step: 6 },
     };
-    // Thang màu tương đối (xanh -> vàng -> cam -> đỏ) giống bản đồ mẫu: làm nổi khác biệt giữa các phường
+    // Bản đồ nền 3D theo lựa chọn ở bảng "Bản đồ nền" của 2D (Esri - không cần API key)
+    const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services";
+    const BASEMAPS = {
+        light: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+        dark: `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+        osm: `${ESRI}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`,
+        satellite: `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
+    };
+    // Thang màu tương đối (xanh -> vàng -> cam -> đỏ): làm nổi khác biệt giữa các phường
     const REL_STOPS = ["#1a9641", "#73c255", "#c4e687", "#ffffbf", "#fdc980", "#f07c4a", "#d7191c"];
     // Màu mức AQI chuẩn (QĐ 1459/QĐ-TCMT và US EPA dùng cùng bảng màu)
     const AQI_LEVELS = [
@@ -28,17 +37,20 @@
     const WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 
     const st = {
-        map: null, mapReady: false, mlPromise: null, wardsReady: false,
+        mode: "2d", map: null, mlPromise: null, wardsReady: false, controlsBound: false,
         data: null, frame: 0, playing: false, speed: 1, rotate: false,
         pollutant: "pm2_5", range: "24-72", colorMode: "rel",
-        raf: 0, lastTs: 0, lastHudFrame: -1, loadSeq: 0, popup: null, hoverCode: null,
+        raf: 0, lastTs: 0, lastHudFrame: -1, loadSeq: 0, popup: null, hoverCode: null, hoverName: "",
+        pendingSync: false,
     };
     const $ = id => document.getElementById(id);
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const fmt = (v, d = 1) => (v == null || !isFinite(v)) ? "--" : Number(v).toLocaleString("vi-VN", { maximumFractionDigits: d, minimumFractionDigits: d });
     const useUS = () => (typeof currentAQIStandard !== "undefined" && currentAQIStandard === "US");
+    const leaflet = () => (typeof map !== "undefined" && map && typeof map.getCenter === "function") ? map : null;
+    const is3D = () => st.mode === "3d";
 
-    // ------------------------------------------------------------------ thư viện MapLibre (nạp khi mở tab)
+    // ------------------------------------------------------------------ thư viện MapLibre (nạp khi bật 3D)
     function loadMapLibre() {
         if (window.maplibregl) return Promise.resolve();
         if (st.mlPromise) return st.mlPromise;
@@ -76,32 +88,74 @@
         return { color: lv[1], name: lv[2] };
     }
 
-    // ------------------------------------------------------------------ khởi tạo bản đồ
+
+    // Tâm hình học (theo diện tích) của vòng ngoài lớn nhất. Dùng tâm phường thay cho tọa độ điểm chạm:
+    // khi bản đồ nghiêng, chạm vào NÓC khối cao vài km nhưng tọa độ trả về là điểm MẶT ĐẤT dọc tia nhìn (lệch vài km)
+    function featureCenter(geom) {
+        const polys = geom.type === "Polygon" ? [geom.coordinates] : geom.type === "MultiPolygon" ? geom.coordinates : [];
+        let best = null;
+        polys.forEach(poly => {
+            const ring = poly[0] || [];
+            let a = 0, cx = 0, cy = 0;
+            for (let i = 0; i < ring.length - 1; i++) {
+                const [x0, y0] = ring[i], [x1, y1] = ring[i + 1], f = x0 * y1 - x1 * y0;
+                a += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f;
+            }
+            if (a !== 0 && (!best || Math.abs(a) > best.a)) best = { a: Math.abs(a), c: [cx / (3 * a), cy / (3 * a)], ring };
+        });
+        if (!best) return null;
+        // Phường hình lõm: tâm có thể rơi ra ngoài -> lấy điểm giữa đoạn trong phường dài nhất trên đường ngang qua tâm
+        const ring = best.ring, y = best.c[1], xs = [];
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const [xi, yi] = ring[i], [xj, yj] = ring[j];
+            if ((yi > y) !== (yj > y)) {
+                const x = xi + (y - yi) * (xj - xi) / (yj - yi);
+                xs.push(x);
+                if (best.c[0] < x) inside = !inside;
+            }
+        }
+        if (inside || xs.length < 2) return best.c;
+        xs.sort((p, q) => p - q);
+        let seg = [xs[0], xs[1]];
+        for (let k = 2; k + 1 < xs.length; k += 2) if (xs[k + 1] - xs[k] > seg[1] - seg[0]) seg = [xs[k], xs[k + 1]];
+        return [(seg[0] + seg[1]) / 2, y];
+    }
+
+    // ------------------------------------------------------------------ bản đồ 3D
+    function currentBasemap() {
+        const sel = $("select-basemap");
+        return (sel && BASEMAPS[sel.value]) ? sel.value : "light";
+    }
+
+    function setBasemap(key) {
+        if (!st.map || !st.map.getSource) return;
+        if (st.map.getLayer("base")) st.map.removeLayer("base");
+        if (st.map.getSource("base")) st.map.removeSource("base");
+        st.map.addSource("base", {
+            type: "raster", tileSize: 256, maxzoom: 19, tiles: [BASEMAPS[key] || BASEMAPS.light],
+            attribution: "© Esri, HERE, Garmin, OpenStreetMap · Dữ liệu: AirHCM (CAMS, Sentinel-5P, ERA5-Land)"
+        });
+        const before = st.map.getLayer("wards-3d") ? "wards-3d" : undefined;
+        st.map.addLayer({ id: "base", type: "raster", source: "base", paint: { "raster-saturation": key === "satellite" ? 0 : -0.3 } }, before);
+    }
+
     function initMap() {
+        // Mở 3D tại đúng vị trí / mức thu phóng đang xem ở 2D (MapLibre dùng ô 512px -> zoom nhỏ hơn Leaflet 1 bậc)
+        const L2 = leaflet();
+        const c = L2 ? L2.getCenter() : { lat: 10.84, lng: 106.72 };
+        const z = L2 ? L2.getZoom() - 1 : 8.85;
         st.map = new maplibregl.Map({
             container: "map3d",
-            style: {
-                version: 8,
-                sources: {
-                    // Bản đồ nền Esri (cùng nhà cung cấp với bản đồ 2D, không cần API key)
-                    base: {
-                        type: "raster", tileSize: 256, maxzoom: 19,
-                        tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"],
-                        attribution: "© Esri, HERE, Garmin, OpenStreetMap · Dữ liệu: AirHCM (CAMS, Sentinel-5P, ERA5-Land)"
-                    }
-                },
-                layers: [{ id: "base", type: "raster", source: "base", paint: { "raster-saturation": -0.35, "raster-opacity": 0.9 } }]
-            },
-            center: [106.72, 10.84], zoom: 8.85, pitch: 55, bearing: -15, maxPitch: 75, antialias: true,
+            style: { version: 8, sources: {}, layers: [] },
+            center: [c.lng, c.lat], zoom: z, pitch: 55, bearing: -15, maxPitch: 75, antialias: true,
             attributionControl: { compact: true }
         });
-        st.map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
         st.map.on("load", () => {
-            st.mapReady = true;
+            setBasemap(currentBasemap());
             loadWards().then(() => loadSeries()).catch(showError);
         });
-        // Người dùng tự xoay / kéo bản đồ -> tắt xoay tự động
-        st.map.on("dragstart", () => setRotate(false));
+        st.map.on("dragstart", () => setRotate(false)); // Người dùng tự xoay / kéo -> tắt xoay tự động
     }
 
     function loadWards() {
@@ -109,8 +163,11 @@
             .then(r => { if (!r.ok) throw new Error("Không tải được ranh giới phường/xã"); return r.json(); })
             .then(geo => {
                 // Giữ lại thuộc tính cần thiết: mã + tên phường (mã dùng làm id cho feature-state)
+                st.centers = {};
                 const features = geo.features.map(f => {
                     const p = f.properties || {};
+                    const c = featureCenter(f.geometry);
+                    if (c) st.centers[String(p.ma_xa || p.ma_phuong_xa || "")] = c;
                     const type = p.loai || p.loai_don_vi || "";
                     const name = p.ten_xa || p.ten_phuong_xa || "";
                     return {
@@ -123,7 +180,12 @@
                     id: "wards-3d", type: "fill-extrusion", source: "wards",
                     paint: {
                         "fill-extrusion-color": ["coalesce", ["feature-state", "c"], "#cbd5e1"],
-                        "fill-extrusion-height": ["coalesce", ["feature-state", "h"], 0],
+                        // Phóng to vào nội thành -> giảm chiều cao để khối không thành "bức tường" che bản đồ
+                        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"],
+                            9, ["coalesce", ["feature-state", "h"], 0],
+                            11, ["*", 0.45, ["coalesce", ["feature-state", "h"], 0]],
+                            13, ["*", 0.18, ["coalesce", ["feature-state", "h"], 0]],
+                            15, ["*", 0.07, ["coalesce", ["feature-state", "h"], 0]]],
                         "fill-extrusion-base": 0,
                         "fill-extrusion-opacity": 0.93,
                         "fill-extrusion-vertical-gradient": true
@@ -153,13 +215,10 @@
             .then(data => {
                 if (seq !== st.loadSeq) return;
                 st.data = data;
-                st.obsIndex = Math.max(0, data.times.findIndex(t => t > data.observed_until) - 1);
-                if (st.obsIndex < 0 || data.times[data.times.length - 1] <= data.observed_until) st.obsIndex = data.times.length - 1;
-                const slider = $("m3d-slider");
-                slider.max = String(data.times.length - 1);
-                // Bắt đầu tại thời điểm hiện tại (ranh giới quan trắc / dự báo)
-                const start = data.times.findIndex(t => t >= data.observed_until);
-                st.frame = start >= 0 && r.back > 0 && r.ahead > 0 ? start : 0;
+                $("m3d-slider").max = String(data.times.length - 1);
+                const nowIdx = data.times.findIndex(t => t >= data.observed_until);
+                st.frame = nowIdx >= 0 && r.back > 0 && r.ahead > 0 ? nowIdx : 0;
+                if (st.pendingSync) syncFrom2D(); // Mở 3D tại đúng giờ đang xem ở 2D
                 renderMarks();
                 renderLegend();
                 st.lastHudFrame = -1;
@@ -200,11 +259,14 @@
         if (st.hoverCode) refreshPopup();
     }
 
-    // ------------------------------------------------------------------ thông tin trên bản đồ
+    // ------------------------------------------------------------------ thông tin hiển thị
+    function parseTime(s) {
+        return new Date(s.replace(" ", "T") + ":00");
+    }
     function timeLabel(s) {
-        const dt = new Date(s.replace(" ", "T") + ":00");
+        const dt = parseTime(s);
         const dd = String(dt.getDate()).padStart(2, "0"), mm = String(dt.getMonth() + 1).padStart(2, "0");
-        return { hour: `${String(dt.getHours()).padStart(2, "0")}:00`, day: `${WEEKDAYS[dt.getDay()]}, ${dd}/${mm}/${dt.getFullYear()}` };
+        return { hour: `${String(dt.getHours()).padStart(2, "0")}:00`, day: `${WEEKDAYS[dt.getDay()]}, ${dd}/${mm}/${dt.getFullYear()}`, short: `${dd}/${mm}` };
     }
 
     function renderHud(i) {
@@ -216,20 +278,20 @@
         $("m3d-day").textContent = lbl.day;
         const badge = $("m3d-badge");
         badge.textContent = forecast ? "Dự báo AI" : (t === d.observed_until ? "Hiện tại" : "Đã quan trắc");
-        badge.className = `m3d-badge ${forecast ? "is-forecast" : "is-observed"}`;
+        badge.className = `badge-period m3d-badge ${forecast ? "is-forecast" : "is-observed"}`;
 
-        const vals = d.wards.map((w, k) => ({ w, v: d.values[i][k], q: (useUS() ? d.us_aqi : d.vn_aqi)[i][k] }))
-            .filter(x => x.v != null);
+        const aqiArr = useUS() ? d.us_aqi : d.vn_aqi;
+        const vals = d.wards.map((w, k) => ({ w, v: d.values[i][k], q: aqiArr[i][k] })).filter(x => x.v != null);
         const mean = vals.reduce((s, x) => s + x.v, 0) / Math.max(vals.length, 1);
         vals.sort((a, b) => b.v - a.v);
         $("m3d-mean").textContent = `${fmt(mean)} ${d.unit || ""}`;
         $("m3d-max").textContent = vals.length ? `${vals[0].w.name} · ${fmt(vals[0].v)}` : "--";
+        $("m3d-top-title").textContent = `Top 5 phường ${d.name} cao nhất`;
         $("m3d-top").innerHTML = vals.slice(0, 5).map((x, n) => {
             const lv = aqiLevel(x.q);
-            return `<li><span class="m3d-rank">${n + 1}</span><span class="m3d-name">${esc(x.w.name)}</span>
+            return `<li data-code="${esc(x.w.code)}"><span class="m3d-rank">${n + 1}</span><span class="m3d-name">${esc(x.w.name)}</span>
                 <b>${fmt(x.v)}</b><i class="m3d-dot" style="background:${lv.color}" title="${esc(lv.name)}"></i></li>`;
         }).join("");
-        $("m3d-top-title").textContent = `Top 5 phường ${d.name} cao nhất`;
     }
 
     function renderMarks() {
@@ -237,14 +299,11 @@
         const d = st.data, mark = $("m3d-now-mark");
         const n = d.times.length - 1;
         const idx = d.times.findIndex(t => t >= d.observed_until);
-        if (idx > 0 && idx < n) {
-            mark.hidden = false;
-            mark.style.left = `${(idx / n) * 100}%`;
-        } else {
-            mark.hidden = true;
-        }
-        $("m3d-start").textContent = `${timeLabel(d.times[0]).hour} ${timeLabel(d.times[0]).day.split(", ")[1]}`;
-        $("m3d-end").textContent = `${timeLabel(d.times[n]).hour} ${timeLabel(d.times[n]).day.split(", ")[1]}`;
+        mark.hidden = !(idx > 0 && idx < n);
+        if (!mark.hidden) mark.style.left = `${(idx / n) * 100}%`;
+        const a = timeLabel(d.times[0]), b = timeLabel(d.times[n]);
+        $("m3d-start").textContent = `${a.hour} ${a.short}`;
+        $("m3d-end").textContent = `${b.hour} ${b.short}`;
     }
 
     function renderLegend() {
@@ -252,11 +311,11 @@
         if (!d) return;
         const std = useUS() ? "US AQI" : "VN_AQI";
         if (st.colorMode === "aqi") {
-            el.innerHTML = `<div class="m3d-legend-title">Màu: mức ${std} · Cao: nồng độ ${esc(d.name)}</div>
+            el.innerHTML = `<h5>Màu: mức ${std} · cao: ${esc(d.name)}</h5>
                 <div class="m3d-levels">${AQI_LEVELS.map(l => `<span><i style="background:${l[1]}"></i>${l[2]}</span>`).join("")}</div>`;
         } else {
             const vmin = d.range.min ?? 0, vmax = d.range.p98 ?? d.range.max ?? 0;
-            el.innerHTML = `<div class="m3d-legend-title">${esc(d.name)} (${esc(d.unit || "")}) · màu và chiều cao theo nồng độ</div>
+            el.innerHTML = `<h5>${esc(d.name)} (${esc(d.unit || "")}) · màu & chiều cao</h5>
                 <div class="m3d-ramp" style="background: linear-gradient(90deg, ${REL_STOPS.join(", ")});"></div>
                 <div class="m3d-ramp-labels"><span>${fmt(vmin)}</span><span>${fmt((vmin + vmax) / 2)}</span><span>≥ ${fmt(vmax)}</span></div>`;
         }
@@ -279,6 +338,14 @@
             st.hoverCode = null;
             st.popup.remove();
         });
+        // Bấm vào khối phường -> mở bảng phân tích phường như ở bản đồ 2D
+        st.map.on("click", "wards-3d", e => {
+            const f = e.features && e.features[0];
+            if (!f || typeof window.openPlacePanel !== "function") return;
+            const c = st.centers[f.properties.code] || [e.lngLat.lng, e.lngLat.lat];
+            window.openPlacePanel({ kind: "ward", code: f.properties.code, name: f.properties.name,
+                address: "TP. Hồ Chí Minh", lat: c[1], lng: c[0] });
+        });
     }
 
     function refreshPopup() {
@@ -288,14 +355,15 @@
         const std = useUS() ? "US AQI" : "VN_AQI";
         st.popup.setHTML(`<b>${esc(st.hoverName)}</b>
             <div>${esc(st.data.name)}: <b>${fmt(s.v)}</b> ${esc(st.data.unit || "")}</div>
-            <div>${std}: <b>${s.q == null ? "--" : Math.round(s.q)}</b> · <span style="color:${lv.color === "#ffff00" ? "#a16207" : lv.color}">${lv.name}</span></div>`);
+            <div>${std}: <b>${s.q == null ? "--" : Math.round(s.q)}</b> · <span style="color:${lv.color === "#ffff00" ? "#a16207" : lv.color}">${lv.name}</span></div>
+            <small>Bấm để xem phân tích chi tiết</small>`);
     }
 
     // ------------------------------------------------------------------ phát hoạt cảnh
     function tick(ts) {
         st.raf = 0;
-        const tab = $("tab-map3d");
-        if (!tab || !tab.classList.contains("active")) { st.lastTs = 0; return; } // Rời tab: dừng vẽ
+        const tab = $("tab-map");
+        if (!is3D() || !tab || !tab.classList.contains("active")) { st.lastTs = 0; return; } // Không hiển thị: dừng vẽ
         const dt = st.lastTs ? (ts - st.lastTs) / 1000 : 0;
         st.lastTs = ts;
         if (st.playing && st.data) {
@@ -320,6 +388,7 @@
         const btn = $("m3d-play");
         if (btn) {
             btn.innerHTML = st.playing ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+            btn.classList.toggle("playing", st.playing);
             btn.setAttribute("aria-label", st.playing ? "Tạm dừng" : "Phát");
         }
         kick();
@@ -327,8 +396,8 @@
 
     function setRotate(on) {
         st.rotate = !!on;
-        const btn = $("m3d-rotate");
-        if (btn) btn.classList.toggle("active", st.rotate);
+        const chk = $("m3d-rotate");
+        if (chk) chk.checked = st.rotate;
         kick();
     }
 
@@ -348,8 +417,102 @@
             <button type="button" class="btn-forecast" onclick="AirMap3D.reload()"><i class="fa-solid fa-rotate"></i> Thử lại</button>`;
     }
 
+    // ------------------------------------------------------------------ đồng bộ với bản đồ 2D
+    function dayKey(dt) {
+        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    }
+
+    // Mở chế độ 3D luôn ở thời điểm hiện tại (theo đồng hồ hệ thống / dữ liệu mới nhất)
+    function syncFrom2D() {
+        st.pendingSync = false;
+        if (!st.data) return;
+        const i = st.data.times.findIndex(t => t >= st.data.observed_until);
+        st.frame = i >= 0 ? i : 0;
+    }
+
+    // Quay về 2D: nếu giờ đang xem trên 3D nằm trong thanh dự báo 48 giờ của 2D -> 2D nhảy tới đúng giờ đó
+    function syncTo2D() {
+        if (!st.data || typeof applyTimeStep !== "function" || typeof forecastSeries === "undefined" || !forecastSeries) return;
+        const t = st.data.times[Math.round(st.frame)];
+        const idx = t ? forecastSeries.times.indexOf(t) : -1;
+        if (idx < 0) return;
+        const slider = $("time-slider");
+        if (slider) {
+            slider.value = String(idx);
+            if (typeof window.syncRangeFill === "function") window.syncRangeFill(slider);
+        }
+        applyTimeStep(idx);
+    }
+
+    function syncCameraTo2D() {
+        const L2 = leaflet();
+        if (!L2 || !st.map) return;
+        const c = st.map.getCenter();
+        L2.setView([c.lat, c.lng], Math.round(st.map.getZoom() + 1), { animate: false });
+    }
+
+    function syncCameraFrom2D() {
+        const L2 = leaflet();
+        if (!L2 || !st.map) return;
+        const c = L2.getCenter();
+        st.map.jumpTo({ center: [c.lng, c.lat], zoom: L2.getZoom() - 1 });
+    }
+
+    function setMode(mode) {
+        const want3d = mode === "3d";
+        if (want3d === is3D() && (st.map || !want3d)) return;
+        st.mode = want3d ? "3d" : "2d";
+
+        const tab = $("tab-map");
+        if (tab) tab.classList.toggle("is-3d", want3d);
+        [["map3d-wrap", !want3d], ["layers-3d", !want3d], ["panel-playback-3d", !want3d], ["panel-legend-3d", !want3d],
+            ["layers-2d", want3d], ["panel-playback", want3d], ["panel-legend", want3d]]
+            .forEach(([id, hide]) => { const el = $(id); if (el) el.hidden = hide; });
+        document.querySelectorAll("#view-mode [data-view]").forEach(b => {
+            const on = b.dataset.view === st.mode;
+            b.classList.toggle("active", on);
+            b.setAttribute("aria-pressed", String(on));
+        });
+        // Đường dẫn chia sẻ được: #map3d mở thẳng chế độ 3D
+        if (tab && tab.classList.contains("active")) {
+            const hash = want3d ? "#map3d" : "#map";
+            if (location.hash !== hash) history.replaceState(null, "", hash);
+        }
+
+        if (want3d) {
+            if (typeof window.stopPlayback === "function") window.stopPlayback(); // Dừng mô phỏng 2D
+            bindControls();
+            if (!st.map) {
+                if (st.initStarted) return; // Đang khởi tạo (VD mở thẳng #map3d gọi 2 lần)
+                st.initStarted = true;
+                st.pendingSync = true;
+                showLoading("Đang tải bản đồ 3D...");
+                loadMapLibre().then(initMap).catch(err => { st.initStarted = false; showError(err); });
+            } else {
+                syncCameraFrom2D();
+                if (st.data) {
+                    syncFrom2D();
+                    renderFrame(st.frame, true);
+                }
+                requestAnimationFrame(() => st.map.resize());
+                kick();
+            }
+        } else {
+            setPlaying(false);
+            setRotate(false);
+            if (st.map) {
+                syncCameraTo2D();
+                syncTo2D();
+            }
+            const L2 = leaflet();
+            if (L2) setTimeout(() => L2.invalidateSize(), 60);
+        }
+    }
+
     // ------------------------------------------------------------------ điều khiển
     function bindControls() {
+        if (st.controlsBound) return;
+        st.controlsBound = true;
         $("m3d-pollutant").addEventListener("change", e => { st.pollutant = e.target.value; loadSeries(); });
         $("m3d-range").addEventListener("change", e => { st.range = e.target.value; loadSeries(); });
         document.querySelectorAll("#m3d-color button").forEach(b => b.addEventListener("click", () => {
@@ -358,6 +521,7 @@
             renderLegend();
             renderFrame(st.frame, true);
         }));
+        $("m3d-rotate").addEventListener("change", e => setRotate(e.target.checked));
         $("m3d-play").addEventListener("click", () => setPlaying(!st.playing));
         $("m3d-speed").addEventListener("change", e => { st.speed = Number(e.target.value) || 1; });
         $("m3d-slider").addEventListener("input", e => {
@@ -372,37 +536,75 @@
             st.frame = i >= 0 ? i : st.data.times.length - 1;
             renderFrame(st.frame, true);
         });
-        $("m3d-rotate").addEventListener("click", () => setRotate(!st.rotate));
-        $("m3d-view").addEventListener("click", () => {
-            const flat = st.map.getPitch() < 10;
-            st.map.easeTo({ pitch: flat ? 55 : 0, bearing: flat ? -15 : 0, duration: 900 });
-            $("m3d-view").innerHTML = flat ? '<i class="fa-solid fa-cube"></i> 3D' : '<i class="fa-solid fa-map"></i> 2D';
+        // Top 5: bấm tên phường -> camera bay tới phường đó
+        $("m3d-top").addEventListener("click", e => {
+            const li = e.target.closest("li[data-code]");
+            const c = li && st.map && st.centers && st.centers[li.dataset.code];
+            if (c) st.map.flyTo({ center: c, zoom: Math.max(st.map.getZoom(), 11), duration: 1200 });
         });
-        // Đổi chuẩn VN_AQI / US AQI ở thanh trên cùng -> cập nhật màu, chú giải
-        document.addEventListener("click", e => {
-            if (e.target.closest && e.target.closest("[onclick*='AQIStandard'], .aqi-standard-btn, #btn-std-vn, #btn-std-us")) {
-                setTimeout(() => { renderLegend(); renderFrame(st.frame, true); }, 50);
-            }
+    }
+
+    function bindShared() {
+        // Nút chế độ xem 2D | 3D
+        document.querySelectorAll("#view-mode [data-view]").forEach(b =>
+            b.addEventListener("click", () => setMode(b.dataset.view)));
+        // Bản đồ nền dùng chung: chọn ở bảng "Bản đồ nền" -> đổi luôn nền 3D
+        const sel = $("select-basemap");
+        if (sel) sel.addEventListener("change", () => { if (st.map && st.map.isStyleLoaded()) setBasemap(currentBasemap()); });
+        // Nút thu phóng (+/-) ở bảng điều khiển: ở chế độ 3D điều khiển camera 3D
+        const zoomSlot = $("custom-zoom-slot");
+        if (zoomSlot) zoomSlot.addEventListener("click", e => {
+            if (!is3D() || !st.map) return;
+            const btn = e.target.closest("a, button");
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (btn.classList.contains("leaflet-control-zoom-in")) st.map.zoomIn();
+            else if (btn.classList.contains("leaflet-control-zoom-out")) st.map.zoomOut();
+        }, true);
+        // Đổi chuẩn VN_AQI / US AQI ở thanh trên cùng -> cập nhật màu, chú giải 3D
+        ["btn-std-vn", "btn-std-us"].forEach(id => {
+            const b = $(id);
+            if (b) b.addEventListener("click", () => setTimeout(() => {
+                if (st.data) { renderLegend(); renderFrame(st.frame, true); }
+            }, 30));
         });
+        // Tìm kiếm / chọn địa điểm khi đang ở 3D -> camera 3D bay tới địa điểm đó
+        if (typeof window.openPlacePanel === "function" && !window.openPlacePanel.__m3d) {
+            const original = window.openPlacePanel;
+            const wrapped = function (place) {
+                const out = original.apply(this, arguments);
+                if (is3D() && st.map && place && isFinite(place.lat) && isFinite(place.lng)) {
+                    st.map.flyTo({ center: [place.lng, place.lat], zoom: Math.max(st.map.getZoom(), 10.5), duration: 1200 });
+                }
+                return out;
+            };
+            wrapped.__m3d = true;
+            window.openPlacePanel = wrapped;
+        }
     }
 
     // ------------------------------------------------------------------ API công khai
     window.AirMap3D = {
-        onShow() {
-            if (!$("map3d")) return;
-            if (st.map) {
-                st.map.resize();
-                kick();
-                return;
-            }
-            bindControls();
-            showLoading("Đang tải bản đồ 3D...");
-            loadMapLibre().then(initMap).catch(showError);
+        setMode,
+        // Mở lại tab Bản đồ: căn lại khung 3D, tiếp tục hoạt cảnh
+        onTabShow() {
+            if (!is3D() || !st.map) return;
+            requestAnimationFrame(() => st.map.resize());
+            if (location.hash !== "#map3d") history.replaceState(null, "", "#map3d");
+            kick();
         },
         reload() {
-            if (!st.map) return this.onShow();
+            if (!st.map) return setMode("3d");
             if (!st.wardsReady) return loadWards().then(loadSeries).catch(showError);
             loadSeries();
         }
     };
+
+    function boot() {
+        bindShared();
+        if (location.hash === "#map3d" || window.__airhcmStart3D) setMode("3d");
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
 })();

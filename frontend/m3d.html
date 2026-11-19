@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>AirHCM 3D</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!--
+        BẢN ĐỒ 3D CHO ỨNG DỤNG DI ĐỘNG AirHCM (mở trong WebView của app Flutter)
+        Cùng dữ liệu & giải thuật với chế độ 3D của WebGIS: khối nổi 168 phường, chiều cao = nồng độ,
+        hoạt cảnh theo giờ quan trắc + dự báo AI (API /api/v1/air/spatial-series).
+        Tham số URL: lat, lng, zoom (thang Leaflet/flutter_map), hour, pollutant, standard (VN|US), basemap
+    -->
+    <style>
+        :root {
+            --brand: #0284c7;
+            --text: #0f172a;
+            --text-2: #334155;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --glass: rgba(255, 255, 255, 0.92);
+            --shadow: 0 10px 28px -12px rgba(15, 23, 42, 0.35);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #e8eef5;
+            color: var(--text);
+            font-family: Roboto, "Segoe UI", system-ui, sans-serif;
+        }
+
+        #map {
+            position: absolute;
+            inset: 0;
+        }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Đồng hồ + chip chất ô nhiễm */
+        .top {
+            position: absolute;
+            top: calc(10px + var(--safe-top));
+            left: 10px;
+            right: 10px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .top>* {
+            pointer-events: auto;
+        }
+
+        .clock {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+        }
+
+        .clock .h {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .clock .d {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .clock .d small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .clock .mean {
+            margin-left: auto;
+            text-align: right;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .clock .mean b {
+            display: block;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .badge {
+            align-self: flex-start;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: var(--text-2);
+        }
+
+        .badge.obs {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.fc {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+        }
+
+        .chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            flex-shrink: 0;
+            padding: 7px 13px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--glass);
+            box-shadow: 0 4px 12px -6px rgba(15, 23, 42, 0.35);
+            color: var(--text-2);
+            font: 700 12.5px inherit;
+            font-family: inherit;
+        }
+
+        .chip.active {
+            background: var(--brand);
+            color: #fff;
+        }
+
+        /* Nút nổi bên phải */
+        .side {
+            position: absolute;
+            right: 10px;
+            top: calc(150px + var(--safe-top));
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .fab {
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 14px;
+            background: var(--glass);
+            box-shadow: var(--shadow);
+            color: var(--brand);
+            font-size: 16px;
+            display: grid;
+            place-items: center;
+        }
+
+        .fab.active {
+            background: var(--brand);
+            color: #fff;
+        }
+
+        .fab small {
+            display: block;
+            font-size: 8.5px;
+            font-weight: 800;
+            margin-top: -2px;
+        }
+
+        /* Bảng dưới: chú giải + thanh thời gian */
+        .bottom {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: calc(10px + var(--safe-bottom));
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend {
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .legend-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--text-2);
+        }
+
+        .legend-head i {
+            color: var(--muted);
+            transition: transform .2s;
+        }
+
+        .legend.open .legend-head i {
+            transform: rotate(180deg);
+        }
+
+        .ramp {
+            height: 9px;
+            margin-top: 8px;
+            border-radius: 999px;
+        }
+
+        .ramp-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .levels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px 8px;
+            margin-top: 8px;
+        }
+
+        .levels span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+        }
+
+        .levels i {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            border: 1px solid rgba(15, 23, 42, .15);
+        }
+
+        .top5 {
+            display: none;
+            margin: 8px 0 0;
+            padding: 8px 0 0;
+            list-style: none;
+            border-top: 1px solid var(--line);
+        }
+
+        .legend.open .top5 {
+            display: grid;
+            gap: 5px;
+        }
+
+        .top5 li {
+            display: grid;
+            grid-template-columns: 18px 1fr auto 10px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .top5 .r {
+            display: grid;
+            place-items: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            background: #f1f5f9;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .top5 .n {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .top5 .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .timeline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+        }
+
+        .play {
+            flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e40af, #0284c7, #06b6d4);
+            color: #fff;
+            font-size: 16px;
+            box-shadow: 0 8px 18px -8px rgba(2, 132, 199, .9);
+        }
+
+        .track {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .track input {
+            width: 100%;
+            margin: 6px 0 2px;
+            accent-color: var(--brand);
+        }
+
+        .now-mark {
+            position: absolute;
+            top: 6px;
+            width: 2px;
+            height: 16px;
+            margin-left: -1px;
+            background: #7c3aed;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        .track-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: var(--muted);
+        }
+
+        .mini {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .mini button {
+            border: 0;
+            border-radius: 10px;
+            padding: 6px 8px;
+            background: #f1f5f9;
+            color: var(--brand);
+            font: 800 11px inherit;
+            font-family: inherit;
+        }
+
+        /* Thẻ phường khi chạm */
+        .ward-card {
+            position: absolute;
+            left: 10px;
+            right: 62px;             /* Chừa cột nút nổi bên phải */
+            top: calc(122px + var(--safe-top));
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+        }
+
+        .ward-card[hidden] {
+            display: none;
+        }
+
+        .ward-card .wi {
+            flex: 1;
+            min-width: 0;
+            font-size: 12.5px;
+            color: var(--text-2);
+        }
+
+        .ward-card .wi b.t {
+            display: block;
+            font-size: 15px;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .ward-card .go {
+            flex-shrink: 0;
+            border: 0;
+            border-radius: 12px;
+            padding: 9px 12px;
+            background: var(--brand);
+            color: #fff;
+            font: 700 12px inherit;
+            font-family: inherit;
+        }
+
+        .ward-card .x {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            border: 0;
+            background: none;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        /* Chờ tải / lỗi */
+        .loading {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(241, 245, 249, .9);
+            color: var(--text-2);
+            font-weight: 600;
+        }
+
+        .loading[hidden] {
+            display: none;
+        }
+
+        .loading small {
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .loading.err {
+            color: #b91c1c;
+        }
+
+        .loading button {
+            border: 0;
+            border-radius: 12px;
+            padding: 9px 16px;
+            background: var(--brand);
+            color: #fff;
+            font: 700 13px inherit;
+            font-family: inherit;
+        }
+
+        .spinner {
+            width: 34px;
+            height: 34px;
+            border: 3px solid #cbd5e1;
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin .9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .maplibregl-ctrl-attrib {
+            font-size: 9px !important;
+        }
+
+        /* Thanh chọn khoảng thời gian */
+        .sheet {
+            position: absolute;
+            inset: 0;
+            z-index: 8;
+            display: flex;
+            align-items: flex-end;
+            background: rgba(15, 23, 42, .35);
+        }
+
+        .sheet[hidden] {
+            display: none;
+        }
+
+        .sheet-box {
+            width: 100%;
+            padding: 14px 14px calc(14px + var(--safe-bottom));
+            border-radius: 20px 20px 0 0;
+            background: #fff;
+        }
+
+        .sheet-box h4 {
+            margin: 2px 4px 10px;
+            font-size: 15px;
+        }
+
+        .sheet-box button {
+            display: block;
+            width: 100%;
+            margin-bottom: 6px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--text);
+            text-align: left;
+            font: 600 14px inherit;
+            font-family: inherit;
+        }
+
+        .sheet-box button.active {
+            border-color: var(--brand);
+            background: #e0f2fe;
+            color: var(--brand);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <div class="top">
+        <div class="clock glass">
+            <span class="h" id="hour">--:--</span>
+            <div class="d">
+                <span class="badge" id="badge">--</span>
+                <small id="day">--</small>
+            </div>
+            <div class="mean">TB 168 phường<b id="mean">--</b></div>
+        </div>
+        <div class="chips" id="pollutants">
+            <button class="chip active" data-p="pm2_5">PM2.5</button>
+            <button class="chip" data-p="pm10">PM10</button>
+            <button class="chip" data-p="no2">NO2</button>
+            <button class="chip" data-p="so2">SO2</button>
+            <button class="chip" data-p="co">CO</button>
+            <button class="chip" data-p="o3">O3</button>
+        </div>
+    </div>
+
+    <div class="side">
+        <button class="fab" id="btn-rotate" title="Xoay camera"><i class="fa-solid fa-arrows-spin"></i></button>
+        <button class="fab" id="btn-color" title="Đổi cách tô màu"><span><i class="fa-solid fa-palette"></i><small id="color-label">TĐ</small></span></button>
+        <button class="fab" id="btn-range" title="Khoảng thời gian"><i class="fa-regular fa-calendar"></i></button>
+        <button class="fab" id="btn-reset" title="Toàn thành phố"><i class="fa-solid fa-expand"></i></button>
+    </div>
+
+    <div class="ward-card glass" id="ward-card" hidden>
+        <button class="x" id="ward-close" aria-label="Đóng">&times;</button>
+        <div class="wi" id="ward-info"></div>
+        <button class="go" id="ward-go"><i class="fa-solid fa-magnifying-glass-chart"></i> Phân tích</button>
+    </div>
+
+    <div class="bottom">
+        <div class="legend glass" id="legend">
+            <div class="legend-head" id="legend-head"><span id="legend-title">--</span><i class="fa-solid fa-chevron-up"></i></div>
+            <div id="legend-body"></div>
+            <ol class="top5" id="top5"></ol>
+        </div>
+        <div class="timeline glass">
+            <button class="play" id="btn-play" aria-label="Phát"><i class="fa-solid fa-play"></i></button>
+            <div class="track">
+                <input type="range" id="slider" min="0" max="1" step="any" value="0" aria-label="Thời điểm">
+                <span class="now-mark" id="now-mark" hidden></span>
+                <div class="track-labels"><span id="t-start">--</span><span>Quan trắc ┃ Dự báo</span><span id="t-end">--</span></div>
+            </div>
+            <div class="mini">
+                <button id="btn-speed">1×</button>
+                <button id="btn-now">Nay</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sheet" id="range-sheet" hidden>
+        <div class="sheet-box">
+            <h4>Khoảng thời gian</h4>
+            <button data-r="24-72" class="active">24 giờ qua → 3 ngày tới</button>
+            <button data-r="0-168">Hôm nay → 7 ngày tới (dự báo)</button>
+            <button data-r="168-0">7 ngày qua (quan trắc)</button>
+            <button data-r="720-0">30 ngày qua (quan trắc)</button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading"><div class="spinner"></div><span>Đang tải bản đồ 3D...</span></div>
+
+    <script src="js/m3d-mobile.js?v=20261120c"></script>
+</body>
+
+</html>

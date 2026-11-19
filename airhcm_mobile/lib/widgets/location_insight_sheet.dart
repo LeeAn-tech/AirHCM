@@ -11,7 +11,7 @@ import 'ui.dart';
 class LocationInsightSheet {
   LocationInsightSheet._();
 
-  static Future<void> show(BuildContext context, LatLng point, {String title = 'Phân tích vị trí'}) {
+  static Future<void> show(BuildContext context, LatLng point, {String title = 'Phân tích vị trí', String? wardCode}) {
     AppState.lastLocation.value = point;
     return showModalBottomSheet(
       context: context,
@@ -23,7 +23,7 @@ class LocationInsightSheet {
         initialChildSize: 0.62,
         minChildSize: 0.35,
         maxChildSize: 0.92,
-        builder: (ctx, scroll) => _InsightBody(point: point, title: title, scrollController: scroll),
+        builder: (ctx, scroll) => _InsightBody(point: point, title: title, wardCode: wardCode, scrollController: scroll),
       ),
     );
   }
@@ -32,8 +32,9 @@ class LocationInsightSheet {
 class _InsightBody extends StatefulWidget {
   final LatLng point;
   final String title;
+  final String? wardCode;
   final ScrollController scrollController;
-  const _InsightBody({required this.point, required this.title, required this.scrollController});
+  const _InsightBody({required this.point, required this.title, this.wardCode, required this.scrollController});
 
   @override
   State<_InsightBody> createState() => _InsightBodyState();
@@ -55,7 +56,7 @@ class _InsightBodyState extends State<_InsightBody> {
       _error = null;
     });
     try {
-      final data = await ApiService.locationInsight(widget.point.latitude, widget.point.longitude);
+      final data = await ApiService.locationInsight(widget.point.latitude, widget.point.longitude, wardCode: widget.wardCode);
       final ward = data['ward'] as Map?;
       AppState.lastWardName = ward?['ten_phuong_xa']?.toString();
       if (mounted) setState(() => _data = data);
@@ -118,7 +119,7 @@ class _InsightBodyState extends State<_InsightBody> {
     final alert = d['alert'] as Map<String, dynamic>?;
 
     final pm = AqiUtils.toDouble(current['pm2_5']);
-    final aqi = AqiUtils.compute(pm, useUS: useUS);
+    final aqi = AqiUtils.pick(current['vn_aqi'], current['us_aqi_all'], pm, useUS: useUS);
     final peak = fs['peak'] as Map?;
     final best = fs['best_window'] as Map?;
     final worst = fs['worst_window'] as Map?;
@@ -127,7 +128,7 @@ class _InsightBodyState extends State<_InsightBody> {
         ? 'Ngoài phạm vi TP.HCM'
         : '${ward['loai_don_vi'] ?? ''} ${ward['ten_phuong_xa']}'.trim();
     final wardSub = ward == null
-        ? 'Không thuộc ranh giới 166 phường/xã'
+        ? 'Không thuộc ranh giới 168 phường/xã'
         : (ward['inside'] == true
             ? 'Vị trí thuộc ranh giới phường/xã này'
             : 'Phường/xã gần nhất (cách ${((ward['distance_m'] ?? 0) / 1000).toStringAsFixed(1)} km)');

@@ -88,14 +88,22 @@ class ApiService {
 
   static Future<Map<String, dynamic>> heatmap() async => _map(await _get('/gis/heatmap'));
 
+  /// Dự báo AI theo giờ cho 168 phường (ma trận [giờ][phường]) - thanh dự báo realtime của bản đồ
+  static Future<Map<String, dynamic>> spatialSeries({String pollutant = 'pm2_5', int back = 0, int ahead = 48, int step = 1}) async =>
+      _map(await _get('/air/spatial-series',
+          query: {'pollutant': pollutant, 'back': '$back', 'ahead': '$ahead', 'step': '$step'},
+          timeout: const Duration(seconds: 60)));
+
   /// Trường gió 10m & nhiệt độ 2m theo giờ (48h) - lưới TP.HCM + lưới khu vực (giống WebGIS)
   static Future<Map<String, dynamic>> windField() async =>
       _map(await _get('/weather/wind-field', timeout: const Duration(seconds: 45)));
 
   /// Sequence Diagram: gửi tọa độ -> Backend (PostGIS + AI Engine) -> JSON tổng hợp
-  static Future<Map<String, dynamic>> locationInsight(double lat, double lng) async => _map(await _get(
+  /// [wardCode]: đã biết người dùng chọn phường nào (VD chạm khối phường trên bản đồ 3D) -> máy chủ phân tích
+  /// đúng phường đó thay vì đoán theo tọa độ
+  static Future<Map<String, dynamic>> locationInsight(double lat, double lng, {String? wardCode}) async => _map(await _get(
         '/gis/location-insight',
-        query: {'lat': lat.toStringAsFixed(6), 'lng': lng.toStringAsFixed(6)},
+        query: {'lat': lat.toStringAsFixed(6), 'lng': lng.toStringAsFixed(6), 'ward_code': ?wardCode},
         timeout: const Duration(seconds: 30),
       ));
 

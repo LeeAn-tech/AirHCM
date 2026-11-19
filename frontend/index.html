@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="assets/css/style.css?v=20261119a">
     <link rel="stylesheet" href="assets/css/air-forecast.css?v=20261117a">
     <link rel="stylesheet" href="assets/css/air-analysis.css?v=20261119a">
-    <link rel="stylesheet" href="assets/css/map3d.css?v=20261119b">
+    <link rel="stylesheet" href="assets/css/map3d.css?v=20261120a">
 </head>
 
 <body class="app-body">
@@ -61,10 +61,6 @@
             <li class="nav-item active" data-tab="tab-map">
                 <i class="fa-solid fa-map-location-dot"></i>
                 <span class="tooltip">Bản đồ WebGIS</span>
-            </li>
-            <li class="nav-item" data-tab="tab-map3d">
-                <i class="fa-solid fa-cubes"></i>
-                <span class="tooltip">Bản đồ 3D không gian - thời gian</span>
             </li>
             <li class="nav-item" data-tab="tab-forecast">
                 <i class="fa-solid fa-chart-line"></i>
@@ -163,6 +159,11 @@
         <!-- ====================================================================== -->
         <section id="tab-map" class="tab-content active">
             <div id="map"></div>
+            <!-- Chế độ xem 3D (js/map3d.js): khối nổi 168 phường, chiều cao = nồng độ, hoạt cảnh theo giờ -->
+            <div id="map3d-wrap" class="map3d-layer" hidden>
+                <div id="map3d"></div>
+                <div id="m3d-loading" class="m3d-loading" hidden></div>
+            </div>
 
             <!-- Thanh tìm kiếm địa điểm + định vị (giống bản đồ thật) -->
             <div id="place-search" class="place-search">
@@ -250,19 +251,45 @@
                         </div>
                         <small id="playback-period-desc">Giờ cao điểm sáng - Ùn tắc giao thông</small>
                     </div>
-                    <span class="playback-tag"><i class="fa-solid fa-clock-rotate-left"></i> Mô phỏng 24h</span>
+                    <span class="playback-tag"><i class="fa-solid fa-chart-line"></i> Dự báo 48 giờ</span>
                 </div>
                 <div class="slider-wrapper">
-                    <input type="range" id="time-slider" min="0" max="23" value="8" step="1"
-                        class="time-range-slider" aria-label="Chọn giờ mô phỏng">
+                    <input type="range" id="time-slider" min="0" max="48" value="0" step="1"
+                        class="time-range-slider" aria-label="Chọn mốc dự báo (từ giờ hiện tại)">
                     <div class="slider-marks">
-                        <span>00:00</span>
-                        <span>06:00</span>
-                        <span>12:00</span>
-                        <span>15:00</span>
-                        <span>18:00</span>
-                        <span>23:00</span>
+                        <span>Hiện tại</span>
+                        <span>+12h</span>
+                        <span>+24h</span>
+                        <span>+36h</span>
+                        <span>+48h</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Thanh thời gian chế độ 3D: quan trắc + dự báo AI -->
+            <div id="panel-playback-3d" class="panel glass floating-playback m3d-playback" hidden>
+                <div class="playback-header">
+                    <button id="m3d-play" class="btn-circle-play" type="button" title="Phát/Tạm dừng hoạt cảnh 3D"
+                        aria-label="Phát"><i class="fa-solid fa-play"></i></button>
+                    <div class="time-display">
+                        <div class="time-main">
+                            <span id="m3d-hour" class="time-label">--:--</span>
+                            <span id="m3d-badge" class="badge-period m3d-badge">--</span>
+                        </div>
+                        <small id="m3d-day">--</small>
+                    </div>
+                    <select id="m3d-speed" class="air-select an-small m3d-speed" aria-label="Tốc độ phát" title="Tốc độ phát">
+                        <option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+                    </select>
+                </div>
+                <div class="slider-wrapper m3d-track">
+                    <input type="range" id="m3d-slider" class="time-range-slider" min="0" max="1" step="any" value="0" aria-label="Thời điểm">
+                    <span id="m3d-now-mark" class="m3d-now-mark" hidden title="Hiện tại: bên trái là quan trắc, bên phải là dự báo"></span>
+                    <div class="slider-marks"><span id="m3d-start">--</span><span>Quan trắc ┃ Dự báo AI</span><span id="m3d-end">--</span></div>
+                </div>
+                <div class="m3d-play-foot">
+                    <button type="button" id="m3d-now" class="m3d-link"><i class="fa-solid fa-clock-rotate-left"></i> Về hiện tại</button>
+                    <span>TB 168 phường: <b id="m3d-mean">--</b></span>
                 </div>
             </div>
 
@@ -281,7 +308,47 @@
                     <div id="custom-zoom-slot"></div>
                 </div>
 
-                <div class="layer-section">
+                <div class="layer-section view-mode-section">
+                    <div class="layer-group-title"><i class="fa-solid fa-cube"></i> Chế độ xem</div>
+                    <div class="segmented view-mode" id="view-mode" role="group" aria-label="Chế độ xem bản đồ">
+                        <button type="button" class="btn-forecast active" data-view="2d" aria-pressed="true"><i class="fa-solid fa-map"></i> Bản đồ 2D</button>
+                        <button type="button" class="btn-forecast" data-view="3d" aria-pressed="false"><i class="fa-solid fa-cubes"></i> Khối 3D</button>
+                    </div>
+                </div>
+
+                <div class="layer-section" id="layers-3d" hidden>
+                    <div class="layer-group-title"><i class="fa-solid fa-sliders"></i> Tùy chọn 3D</div>
+                    <div class="m3d-opt">
+                        <span>Chất ô nhiễm</span>
+                        <select id="m3d-pollutant" class="air-select an-small" aria-label="Chất ô nhiễm">
+                            <option value="pm2_5">PM2.5</option><option value="pm10">PM10</option><option value="no2">NO2</option>
+                            <option value="so2">SO2</option><option value="co">CO</option><option value="o3">O3</option>
+                        </select>
+                    </div>
+                    <div class="m3d-opt">
+                        <span>Thời gian</span>
+                        <select id="m3d-range" class="air-select an-small" aria-label="Khoảng thời gian">
+                            <option value="24-72">24 giờ qua → 3 ngày tới</option>
+                            <option value="0-168">Hôm nay → 7 ngày tới</option>
+                            <option value="168-0">7 ngày qua</option>
+                            <option value="720-0">30 ngày qua</option>
+                        </select>
+                    </div>
+                    <div class="m3d-opt">
+                        <span>Tô màu</span>
+                        <div class="segmented" id="m3d-color" role="group" aria-label="Cách tô màu">
+                            <button type="button" class="btn-forecast active" data-color="rel" title="Màu theo nồng độ tương đối giữa các phường">Tương đối</button>
+                            <button type="button" class="btn-forecast" data-color="aqi" title="Màu theo mức AQI chuẩn">Mức AQI</button>
+                        </div>
+                    </div>
+                    <label class="layer-item">
+                        <span class="layer-name"><span class="li-ico li-teal"><i class="fa-solid fa-arrows-spin"></i></span>
+                            Xoay camera tự động</span>
+                        <input type="checkbox" id="m3d-rotate" class="switch">
+                    </label>
+                </div>
+
+                <div class="layer-section" id="layers-2d">
                     <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
                     <label class="layer-item">
                         <span class="layer-name"><span class="li-ico"><i class="fa-solid fa-tower-broadcast"></i></span>
@@ -348,6 +415,14 @@
                 <button type="button" class="ab-close" title="Thu gọn" aria-label="Thu gọn">&times;</button>
             </div>
 
+            <!-- Chú giải chế độ 3D + Top 5 phường -->
+            <div id="panel-legend-3d" class="panel glass floating-bottom-right m3d-legend-panel" hidden>
+                <div id="m3d-legend"></div>
+                <h5 id="m3d-top-title" class="m3d-top-title">Top 5 phường cao nhất</h5>
+                <ol id="m3d-top" class="m3d-top"></ol>
+                <p class="m3d-maxline">Cao nhất: <b id="m3d-max">--</b></p>
+            </div>
+
             <!-- Chú giải -->
             <div id="panel-legend" class="panel glass floating-bottom-right">
                 <h5>Mức độ AQI (QĐ 1459/QĐ-TCMT)</h5>
@@ -364,84 +439,6 @@
                     <div class="wind-legend-bar"></div>
                     <div class="wind-legend-scale"><span>0</span><span>3</span><span>6</span><span>10+ m/s</span></div>
                     <p id="wind-legend-text"><i class="fa-solid fa-wind"></i> Đang tải trường gió...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====================================================================== -->
-        <!-- VIEW 1b: BẢN ĐỒ 3D DIỄN BIẾN KHÔNG GIAN - THỜI GIAN (js/map3d.js)       -->
-        <!--   Khối nổi 168 phường: chiều cao = nồng độ, màu = mức ô nhiễm;          -->
-        <!--   hoạt cảnh theo giờ quan trắc + dự báo (API /api/v1/air/spatial-series) -->
-        <!-- ====================================================================== -->
-        <section id="tab-map3d" class="tab-content">
-            <div class="content-wrapper m3d-wrapper">
-                <div class="panel m3d-panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span class="icon-chip"><i class="fa-solid fa-cubes"></i></span>
-                            <div>
-                                <h3>Bản đồ 3D diễn biến chất lượng không khí</h3>
-                                <p>168 phường/xã · chiều cao khối = nồng độ · hoạt cảnh theo giờ quan trắc và dự báo AI</p>
-                            </div>
-                        </div>
-                        <div class="an-tools">
-                            <select id="m3d-pollutant" class="air-select an-small" aria-label="Chất ô nhiễm">
-                                <option value="pm2_5">PM2.5</option><option value="pm10">PM10</option><option value="no2">NO2</option>
-                                <option value="so2">SO2</option><option value="co">CO</option><option value="o3">O3</option>
-                            </select>
-                            <select id="m3d-range" class="air-select" aria-label="Khoảng thời gian">
-                                <option value="24-72">24 giờ qua → 3 ngày tới</option>
-                                <option value="0-168">Hôm nay → 7 ngày tới (dự báo)</option>
-                                <option value="168-0">7 ngày qua (quan trắc)</option>
-                                <option value="720-0">30 ngày qua (quan trắc)</option>
-                            </select>
-                            <div class="segmented" id="m3d-color" role="group" aria-label="Cách tô màu">
-                                <button type="button" class="btn-forecast active" data-color="rel" title="Màu theo nồng độ tương đối giữa các phường">Tương đối</button>
-                                <button type="button" class="btn-forecast" data-color="aqi" title="Màu theo mức AQI chuẩn">Mức AQI</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="m3d-stage">
-                        <div id="map3d" class="m3d-canvas"></div>
-
-                        <div class="m3d-hud">
-                            <div class="m3d-clock">
-                                <span id="m3d-badge" class="m3d-badge">--</span>
-                                <b id="m3d-hour">--:--</b>
-                                <span id="m3d-day">--</span>
-                            </div>
-                            <div class="m3d-stats">
-                                <div><small>Trung bình 168 phường</small><b id="m3d-mean">--</b></div>
-                                <div><small>Cao nhất</small><b id="m3d-max">--</b></div>
-                            </div>
-                        </div>
-
-                        <div class="m3d-side">
-                            <div class="m3d-card">
-                                <div class="m3d-card-title" id="m3d-top-title">Top 5 phường cao nhất</div>
-                                <ol id="m3d-top" class="m3d-top"></ol>
-                            </div>
-                            <div class="m3d-card" id="m3d-legend"></div>
-                        </div>
-
-                        <div id="m3d-loading" class="m3d-loading" hidden></div>
-                    </div>
-
-                    <div class="m3d-timeline">
-                        <button type="button" id="m3d-play" class="m3d-play" aria-label="Phát"><i class="fa-solid fa-play"></i></button>
-                        <div class="m3d-track">
-                            <input type="range" id="m3d-slider" min="0" max="1" step="any" value="0" aria-label="Thời điểm">
-                            <span id="m3d-now-mark" class="m3d-now-mark" hidden title="Hiện tại: bên trái là quan trắc, bên phải là dự báo"></span>
-                            <div class="m3d-track-labels"><span id="m3d-start">--</span><span>Quan trắc ┃ Dự báo AI</span><span id="m3d-end">--</span></div>
-                        </div>
-                        <select id="m3d-speed" class="air-select an-small" aria-label="Tốc độ phát">
-                            <option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
-                        </select>
-                        <button type="button" id="m3d-now" class="btn-forecast" title="Về thời điểm hiện tại"><i class="fa-solid fa-clock-rotate-left"></i> Hiện tại</button>
-                        <button type="button" id="m3d-rotate" class="btn-forecast" title="Xoay camera tự động"><i class="fa-solid fa-arrows-spin"></i> Xoay</button>
-                        <button type="button" id="m3d-view" class="btn-forecast" title="Chuyển góc nhìn 2D / 3D"><i class="fa-solid fa-map"></i> 2D</button>
-                    </div>
                 </div>
             </div>
         </section>
@@ -843,7 +840,7 @@
                             <span class="icon-chip rose"><i class="fa-solid fa-fire-flame-curved"></i></span>
                             <div>
                                 <h3>Phân tích Điểm nóng Ô nhiễm (Hotspots)</h3>
-                                <p>Xếp hạng mức độ ô nhiễm không khí tại 167 Phường/Xã/Thị trấn (Mô hình Vùng đô thị
+                                <p>Xếp hạng mức độ ô nhiễm không khí tại 168 Phường/Xã/Thị trấn (Mô hình Vùng đô thị
                                     TP.HCM mở rộng)</p>
                                 <small id="hotspots-updated" class="hotspots-updated"></small>
                             </div>
@@ -1329,7 +1326,7 @@
                                 </tr>
                                 <tr>
                                     <td><b>Bản đồ WebGIS Phân vùng Hành chính</b></td>
-                                    <td><b>166/167 Phường/Xã/Thị trấn</b><br><span class="chip chip-warning"
+                                    <td><b>168 Phường/Xã/Thị trấn</b><br><span class="chip chip-warning"
                                             style="margin-top: 4px;">Ranh giới đa giác WGS84</span></td>
                                     <td><b>Biến thiên 24 Giờ & Dự báo 7 Ngày</b></td>
                                     <td>Hợp nhất dữ liệu (Data Fusion), hạ tỉ lệ không gian và thống kê vùng (Zonal
@@ -1413,7 +1410,7 @@
         <div class="doc-title-box">
             <h2 class="doc-main-title">BẢN TIN DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ & CẢNH BÁO SỨC KHỎE</h2>
             <p style="font-size: 12px; margin: 4px 0 0 0; font-style: italic;">
-                (Theo dõi nồng độ bụi mịn PM2.5 trên 167 Phường/Xã/Thị trấn Vùng đô thị TP.HCM)
+                (Theo dõi nồng độ bụi mịn PM2.5 trên 168 Phường/Xã/Thị trấn Vùng đô thị TP.HCM)
             </p>
             <p style="font-size: 11px; color: #333; margin-top: 3px;">
                 Thời điểm xuất bản dữ liệu: <b id="doc-publish-time">--</b>
@@ -1629,10 +1626,10 @@
     </div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/app.js?v=20261119d"></script>
+    <script src="js/app.js?v=20261120c"></script>
     <script src="js/air-forecast.js?v=20261117a"></script>
     <script src="js/air-analysis.js?v=20261119a"></script>
-    <script src="js/map3d.js?v=20261119c"></script>
+    <script src="js/map3d.js?v=20261120c"></script>
     <script src="js/ai-agent.js?v=20261112e"></script>
 </body>
 

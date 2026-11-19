@@ -45,6 +45,14 @@ class AqiUtils {
 
   static int compute(double pm, {required bool useUS}) => useUS ? us(pm) : vn(pm);
 
+  /// AQI giờ chính thức do máy chủ tính: bụi theo NowCast 12 giờ (QĐ 1459/QĐ-TCMT, US EPA), lấy max các chất
+  /// -> cùng con số với trang Dự báo AI và WebGIS. Chỉ khi thiếu số liệu máy chủ mới quy đổi thẳng từ PM2.5.
+  static int pick(dynamic vnAqi, dynamic usAqi, double pm, {required bool useUS}) {
+    final v = useUS ? usAqi : vnAqi;
+    final n = v is num ? v.toDouble() : double.tryParse('${v ?? ''}');
+    return n != null && n.isFinite ? n.round() : compute(pm, useUS: useUS);
+  }
+
   static String standardLabel(bool useUS) => useUS ? 'US AQI' : 'VN_AQI';
 
   /// Cấp độ 1..6

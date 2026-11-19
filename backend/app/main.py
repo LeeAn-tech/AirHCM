@@ -285,7 +285,7 @@ subscribers_db = load_subscribers_from_disk()
 # ==============================================================================
 @app.get("/api/v1/gis/wards-geojson", tags=["WebGIS Không Gian"])
 def get_wards_geojson():
-    """Xuất ranh giới 166 phường/xã TP.HCM dưới định dạng GeoJSON chuẩn WGS84 cho Leaflet"""
+    """Xuất ranh giới 168 phường/xã TP.HCM dưới định dạng GeoJSON chuẩn WGS84 cho Leaflet"""
     query = text("""
         SELECT json_build_object(
             'type', 'FeatureCollection',
@@ -626,7 +626,8 @@ def get_spatial_summary(date_str: Optional[str] = Query(None, description="Ngày
                     "ma_phuong_xa": w["ma_phuong_xa"], "ten_phuong_xa": w["ten_phuong_xa"],
                     "dien_tich_km2": float((ward_index.by_code(w["ma_phuong_xa"]) or {}).get("dien_tich_km2") or 0),
                     "so_luong_tram": 0, "pm2_5_trung_binh": pm, "aqi_trung_binh": DSSEngine.calculate_us_aqi(pm),
-                    "vn_aqi": w.get("vn_aqi"), "chat_chi_phoi": w.get("vn_dominant"), "nguon": "airdata",
+                    "vn_aqi": w.get("vn_aqi"), "us_aqi": w.get("us_aqi"),  # AQI giờ NowCast (QĐ 1459 / US EPA)
+                    "chat_chi_phoi": w.get("vn_dominant"), "nguon": "airdata",
                 })
             if rows:
                 rows.sort(key=lambda x: x["pm2_5_trung_binh"], reverse=True)
@@ -637,7 +638,7 @@ def get_spatial_summary(date_str: Optional[str] = Query(None, description="Ngày
     current_data = get_current_aqi()
     base_pm25 = float(current_data.get("pm2_5", 22.5))
     
-    # 2. Truy vấn danh sách 166 Phường/Xã từ CSDL PostGIS
+    # 2. Truy vấn danh sách 168 Phường/Xã từ CSDL PostGIS
     wards_list = []
     try:
         query = text("""
@@ -1452,20 +1453,26 @@ def broadcast_alert_to_all(req: BroadcastAlertRequest):
 # ==============================================================================
 _forecast_cache = {}
 FORECAST_CACHE_TTL = 600  # 10 phút
+FALLBACK_CACHE_TTL = 60   # Dự báo dự phòng (mô hình PM2.5 cũ) chỉ giữ 1 phút -> sớm quay lại AirData
 
 def get_cached_forecast(hours: int = 24) -> list:
     """Chuỗi dự báo AI dùng chung cho cảnh báo, trợ lý AI và phân tích vị trí (cache 10 phút)"""
     cached = _forecast_cache.get(hours)
-    if cached and time.time() - cached[0] < FORECAST_CACHE_TTL:
+    if cached and time.time() - cached[0] < cached[2]:
         return cached[1]
     data = None
     try:
         data = AIR_ENGINE.legacy_hourly(hours)  # mô hình đa chất trực tiếp đa hạn (AirData)
     except Exception as e:
         print(f"-> [AirData] dự báo dự phòng sang mô hình PM2.5 cũ: {e}")
+    ttl = FORECAST_CACHE_TTL
     if not data:
+        # AirData tạm chưa sẵn sàng (vừa khởi động lại / đang nạp lại mô hình): dùng mô hình cũ nhưng chỉ giữ
+        # trong thời gian ngắn - tránh suốt 10 phút trả dự báo lệch (và cảnh báo nhầm) khi AirData đã chạy lại
         data = ai_service.predict_future_hours(hours_ahead=hours)
-    _forecast_cache[hours] = (time.time(), data)
+        ttl = FALLBACK_CACHE_TTL
+        print(f"-> [Dự báo] AirData chưa sẵn sàng - tạm dùng mô hình PM2.5 cũ trong {ttl} giây")
+    _forecast_cache[hours] = (time.time(), data, ttl)
     return data
 
 def run_scheduled_etl():
@@ -1681,10 +1688,13 @@ def compute_location_insight(lat: float, lng: float, ward_code: Optional[str] = 
     current = get_current_aqi()
     base_pm25 = float(current.get("pm2_5", 22.5)) or 22.5
     ward_pm25 = base_pm25
+    # AQI giờ chính thức = NowCast 12h (QĐ 1459), không quy đổi thẳng từ PM2.5 của 1 giờ
+    ward_vn_aqi, ward_us_aqi = current.get("vn_aqi"), current.get("us_aqi_all")
     if ward:
         ward_row = _ward_pm_lookup().get(ward["ma_phuong_xa"])
         if ward_row:
             ward_pm25 = float(ward_row["pm2_5_trung_binh"])
+            ward_vn_aqi, ward_us_aqi = ward_row.get("vn_aqi"), ward_row.get("us_aqi")
     scale = ward_pm25 / base_pm25 if base_pm25 else 1.0
 
     # 4. Chuỗi dự báo AI 24h hiệu chỉnh theo phường
@@ -1700,6 +1710,8 @@ def compute_location_insight(lat: float, lng: float, ward_code: Optional[str] = 
             "pm2_5": round(ward_pm25, 1),
             "pm10": round(ward_pm25 * 1.35, 1),
             "us_aqi": ward_aqi,
+            "vn_aqi": ward_vn_aqi,
+            "us_aqi_all": ward_us_aqi,
             "temperature_2m": current.get("temperature_2m"),
             "timestamp": current.get("timestamp"),
         },
@@ -1719,13 +1731,13 @@ def api_location_insight(
 
 @app.get("/api/v1/gis/heatmap", tags=["WebGIS Không Gian"])
 def api_heatmap_points():
-    """Điểm dữ liệu bản đồ nhiệt (GeoJSON): tâm 166 phường + trạm quan trắc, trọng số theo PM2.5"""
+    """Điểm dữ liệu bản đồ nhiệt (GeoJSON): tâm 168 phường + trạm quan trắc, trọng số theo PM2.5"""
     current = get_current_aqi()
     base_pm25 = float(current.get("pm2_5", 22.5))
     ward_lookup = _ward_pm_lookup()
     features = []
 
-    def add_point(lat, lng, pm25, kind, name, code):
+    def add_point(lat, lng, pm25, kind, name, code, ward_code=None):
         if lat is None or lng is None:
             return
         features.append({
@@ -1737,6 +1749,7 @@ def api_heatmap_points():
                 "code": code,
                 "pm2_5": round(float(pm25), 1),
                 "us_aqi": DSSEngine.calculate_us_aqi(pm25),
+                "ward_code": ward_code,
                 # 75 µg/m³ ~ trọng số tối đa (QCVN 50 µg/m³ ~ 0.67)
                 "weight": round(min(1.0, float(pm25) / 75.0), 3),
             },
@@ -1748,7 +1761,7 @@ def api_heatmap_points():
     for w in ward_index.representative_points():
         info = ward_lookup.get(w["code"])
         if info and w["code"] not in added_wards:
-            add_point(w["lat"], w["lng"], info["pm2_5_trung_binh"], "ward", w["name"], w["code"])
+            add_point(w["lat"], w["lng"], info["pm2_5_trung_binh"], "ward", w["name"], w["code"], w["code"])
             added_wards.add(w["code"])
 
     try:
@@ -1762,7 +1775,7 @@ def api_heatmap_points():
                 located = ward_index.locate(float(s.lat), float(s.lng), max_distance_m=0)
                 info = ward_lookup.get(located["ma_phuong_xa"]) if located else None
                 pm = info["pm2_5_trung_binh"] if info else base_pm25
-                add_point(s.lat, s.lng, pm, "station", s.ten_tram, s.ma_tram)
+                add_point(s.lat, s.lng, pm, "station", s.ten_tram, s.ma_tram, located["ma_phuong_xa"] if located else None)
     except Exception as e:
         print(f"-> [Lỗi truy vấn heatmap PostGIS]: {e}")
 
@@ -1774,7 +1787,8 @@ def api_heatmap_points():
                 located = None
             info = ward_lookup.get(located["ma_phuong_xa"]) if located else None
             pm = info["pm2_5_trung_binh"] if info else base_pm25
-            add_point(s.get("lat"), s.get("lng"), pm, "station", s.get("ten_tram"), s.get("ma_tram"))
+            add_point(s.get("lat"), s.get("lng"), pm, "station", s.get("ten_tram"), s.get("ma_tram"),
+                      located["ma_phuong_xa"] if located else None)
 
     return {
         "type": "FeatureCollection",

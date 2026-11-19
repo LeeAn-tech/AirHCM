@@ -17,9 +17,10 @@ import '../widgets/location_insight_sheet.dart';
 import '../widgets/my_areas.dart';
 import '../widgets/ui.dart';
 import 'auth_screen.dart';
+import 'map3d_screen.dart';
 
 /// Bản đồ WebGIS di động - đồng bộ dữ liệu với WebGIS AirHCM:
-/// trạm quan trắc PostGIS, chỉ số theo 166 phường, bản đồ nhiệt, mô phỏng 24h, cảnh báo DSS,
+/// trạm quan trắc PostGIS, chỉ số theo 168 phường, bản đồ nhiệt, mô phỏng 24h, cảnh báo DSS,
 /// 4 lớp bản đồ nền như WebGIS, chạm vào bản đồ để xem nhanh AQI / PM2.5 / nhiệt độ / gió,
 /// nhấn giữ để phân tích chi tiết theo tọa độ.
 class MapScreen extends StatefulWidget {
@@ -35,13 +36,17 @@ class _Selection {
   final double pmNow;
   final LatLng point;
   final IconData icon;
-  const _Selection(this.title, this.subtitle, this.pmNow, this.point, this.icon);
+
+  /// true = Trạm Trung tâm TP.HCM (số liệu cấp thành phố, không phải phường chứa điểm)
+  final bool city;
+  const _Selection(this.title, this.subtitle, this.pmNow, this.point, this.icon, {this.city = false});
 }
 
 class _HeatPoint {
   final LatLng point;
   final double pmNow;
-  const _HeatPoint(this.point, this.pmNow);
+  final String? wardCode;
+  const _HeatPoint(this.point, this.pmNow, [this.wardCode]);
 }
 
 /// Popup thông tin tại điểm chạm (giống popup phường của WebGIS)
@@ -105,8 +110,10 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   List<WardShape> _wards = [];
   final Map<String, double> _wardPm = {};
+  final Map<String, (int?, int?)> _wardAqiNow = {}; // mã phường -> (VN_AQI, US AQI) NowCast hiện tại
   List<Map<String, dynamic>> _stations = [];
   final Map<String, double> _stationPm = {};
+  final Map<String, String> _stationWard = {}; // mã trạm -> mã phường chứa trạm
   List<_HeatPoint> _heat = [];
   bool _loading = true;
   bool _offline = false;
@@ -122,7 +129,28 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   _MapPopup? _popup;
   bool _locating = false;
 
-  int _hour = DateTime.now().hour;
+  // Thanh dự báo realtime: mốc 0 = giờ hiện tại theo đồng hồ hệ thống, tới 48 giờ tới.
+  // PM2.5 từng phường lấy từ dự báo AI (/air/spatial-series - cùng nguồn với WebGIS và bản đồ 3D).
+  static const _forecastHours = 48;
+  int _frame = 0;
+  List<String> _fcTimes = const [];
+  final Map<String, List<double?>> _fcWard = {};
+  final Map<String, List<int?>> _fcVn = {}; // AQI NowCast theo phường & giờ (máy chủ tính)
+  final Map<String, List<int?>> _fcUs = {};
+  List<double?> _fcCityMean = const [];
+  // Chuỗi giờ cấp TP của trang Dự báo AI (/air/forecast): "YYYY-MM-DD HH:00" -> PM2.5, VN_AQI, US AQI...
+  final Map<String, Map<String, dynamic>> _cityHourly = {};
+  int get _frameCount => _fcTimes.isNotEmpty ? _fcTimes.length : _forecastHours + 1;
+  DateTime get _frameTime {
+    if (_frame < _fcTimes.length) {
+      final t = DateTime.tryParse('${_fcTimes[_frame].replaceFirst(' ', 'T')}:00');
+      if (t != null) return t;
+    }
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day, n.hour).add(Duration(hours: _frame));
+  }
+
+  int get _hour => _frameTime.hour;
   bool _playing = false;
   Timer? _playTimer;
   Timer? _refreshTimer;
@@ -199,8 +227,18 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       _safe(ApiService.stations()),
       _safe(ApiService.spatialSummary()),
       _safe(ApiService.heatmap()),
+      _safe(ApiService.spatialSeries(ahead: _forecastHours)),
+      _safe(ApiService.airForecast()),
     ]);
     if (!mounted) return;
+    _applyForecastSeries(results[3] as Map<String, dynamic>?);
+    final city = results[4] as Map<String, dynamic>?;
+    if (city != null && city['hourly'] is List) {
+      _cityHourly.clear();
+      for (final h in city['hourly'] as List) {
+        if (h is Map && h['time'] != null) _cityHourly['${h['time']}'] = Map<String, dynamic>.from(h);
+      }
+    }
 
     final stations = results[0] as List<dynamic>?;
     final summary = results[1] as List<dynamic>?;
@@ -217,21 +255,29 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
       if (summary != null) {
         _wardPm.clear();
+        _wardAqiNow.clear();
+        int? asInt(dynamic v) => v is num ? v.round() : null;
         for (final w in summary) {
           _wardPm['${w['ma_phuong_xa']}'] = AqiUtils.toDouble(w['pm2_5_trung_binh']);
+          _wardAqiNow['${w['ma_phuong_xa']}'] = (asInt(w['vn_aqi']), asInt(w['us_aqi']));
         }
       }
 
       if (heat != null) {
         final points = <_HeatPoint>[];
         _stationPm.clear();
+        _stationWard.clear();
         for (final f in (heat['features'] as List? ?? const [])) {
           final c = f['geometry']?['coordinates'] as List?;
           final p = Map<String, dynamic>.from(f['properties'] ?? {});
           if (c == null || c.length < 2) continue;
           final pm = AqiUtils.toDouble(p['pm2_5']);
-          points.add(_HeatPoint(LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()), pm));
-          if (p['type'] == 'station') _stationPm['${p['code']}'] = pm;
+          final ward = p['ward_code'] == null ? null : '${p['ward_code']}';
+          points.add(_HeatPoint(LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble()), pm, ward));
+          if (p['type'] == 'station') {
+            _stationPm['${p['code']}'] = pm;
+            if (ward != null) _stationWard['${p['code']}'] = ward;
+          }
         }
         _heat = points;
       }
@@ -287,10 +333,109 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     return weight > 0 ? sum / weight : _basePm;
   }
 
-  int _aqiAt(double pmNow) => AqiUtils.compute(AqiUtils.atHour(pmNow, _hour), useUS: _useUS);
+  /// PM2.5 tại mốc đang xem trên thanh dự báo: phường có dự báo AI -> giá trị hiện tại x tỉ lệ dự báo của
+  /// chính phường đó; không rõ phường -> tỉ lệ dự báo TB thành phố; chưa tải được dự báo -> chu kỳ ngày đêm
+  double _pmAt(double pmNow, [String? wardCode]) {
+    if (_frame == 0) return pmNow;
+    final ws = wardCode == null ? null : _fcWard[wardCode];
+    final a = ws != null && ws.isNotEmpty ? ws[0] : null;
+    final b = ws != null && _frame < ws.length ? ws[_frame] : null;
+    if (a != null && b != null && a > 0) return pmNow * b / a;
+    final ca = _fcCityMean.isNotEmpty ? _fcCityMean[0] : null;
+    final cb = _frame < _fcCityMean.length ? _fcCityMean[_frame] : null;
+    if (ca != null && cb != null && ca > 0) return pmNow * cb / ca;
+    return AqiUtils.atHour(pmNow, _hour);
+  }
+
+  /// AQI giờ chính thức của phường tại mốc đang xem (NowCast do máy chủ tính - cùng số với WebGIS và
+  /// trang Dự báo AI); null nếu chưa có
+  int? _serverWardAqi(String? code) {
+    if (code == null) return null;
+    final series = (_useUS ? _fcUs : _fcVn)[code];
+    final v = series != null && _frame < series.length ? series[_frame] : null;
+    if (v != null) return v;
+    if (_frame == 0) {
+      final now = _wardAqiNow[code];
+      return _useUS ? now?.$2 : now?.$1;
+    }
+    return null;
+  }
+
+  int _aqiAt(double pmNow, [String? wardCode]) =>
+      _serverWardAqi(wardCode) ?? AqiUtils.compute(_pmAt(pmNow, wardCode), useUS: _useUS);
+
+  /// PM2.5 & AQI tại một điểm (phường chứa điểm) ở mốc đang xem
+  (double, int) _pointStats(double pmNow, LatLng point) {
+    final code = WardCatalog.locate(point)?.code;
+    final pm = _pmAt(pmNow, code);
+    return (pm, _serverWardAqi(code) ?? AqiUtils.compute(pm, useUS: _useUS));
+  }
+
+  String get _frameKey {
+    if (_frame < _fcTimes.length) return _fcTimes[_frame];
+    final t = _frameTime;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${t.year}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:00';
+  }
+
+  /// Trạm Trung tâm TP.HCM: mốc hiện tại = số đo mới nhất (/aqi/current); mốc tương lai = dự báo cấp TP theo giờ
+  /// của trang Dự báo AI (/air/forecast) -> cùng PM2.5 & AQI với trang Dự báo AI
+  (double, int) _cityStats() {
+    if (_frame == 0) {
+      final cur = AppState.current.value;
+      return (_basePm, AqiUtils.pick(cur?['vn_aqi'], cur?['us_aqi_all'], _basePm, useUS: _useUS));
+    }
+    final h = _cityHourly[_frameKey];
+    final hp = h?['pm2_5'];
+    if (h != null && hp is num) {
+      final pm = hp.toDouble();
+      return (pm, AqiUtils.pick(h['vn_aqi'], h['us_aqi'], pm, useUS: _useUS));
+    }
+    final pm = _pmAt(_basePm);
+    return (pm, AqiUtils.compute(pm, useUS: _useUS));
+  }
+
+  /// PM10 cấp TP do máy chủ đo/dự báo tại mốc đang xem (null nếu chưa có)
+  double? _cityPm10() {
+    final Map<String, dynamic>? src = _frame == 0 ? AppState.current.value : _cityHourly[_frameKey];
+    final v = src?['pm10'];
+    return v is num ? v.toDouble() : null;
+  }
+
+  /// Nạp chuỗi dự báo theo phường; đang xem "Hiện tại" thì đi theo đồng hồ, đang xem mốc dự báo thì giữ đúng giờ đó
+  void _applyForecastSeries(Map<String, dynamic>? data) {
+    final times = (data?['times'] as List?)?.map((t) => '$t').toList();
+    final wards = data?['wards'] as List?;
+    final values = data?['values'] as List?;
+    if (times == null || times.isEmpty || wards == null || values == null) return;
+    final keep = _frame > 0 && _frame < _fcTimes.length ? _fcTimes[_frame] : null;
+    _fcTimes = times;
+    _fcWard.clear();
+    _fcVn.clear();
+    _fcUs.clear();
+    final vnRows = data?['vn_aqi'] as List?;
+    final usRows = data?['us_aqi'] as List?;
+    List<int?> column(List? rows, int k) =>
+        rows == null ? const [] : [for (final row in rows) (row is List && row[k] is num) ? (row[k] as num).round() : null];
+    for (var k = 0; k < wards.length; k++) {
+      final code = '${(wards[k] as Map)['code']}';
+      _fcWard[code] = [for (final row in values) (row as List)[k] == null ? null : ((row[k]) as num).toDouble()];
+      _fcVn[code] = column(vnRows, k);
+      _fcUs[code] = column(usRows, k);
+    }
+    _fcCityMean = [
+      for (final row in values)
+        () {
+          final v = (row as List).whereType<num>().map((x) => x.toDouble()).toList();
+          return v.isEmpty ? null : v.reduce((a, b) => a + b) / v.length;
+        }()
+    ];
+    final idx = keep == null ? 0 : times.indexOf(keep);
+    _frame = idx > 0 ? idx : 0;
+  }
 
   _Selection get _current {
-    return _selection ?? _Selection('Trạm Trung tâm TP.HCM', 'Số liệu quan trắc thời gian thực', _basePm, _hcmCenter, Icons.cell_tower);
+    return _selection ?? _Selection('Trạm Trung tâm TP.HCM', 'Số liệu quan trắc thời gian thực', _basePm, _hcmCenter, Icons.cell_tower, city: true);
   }
 
   // ---------------------------------------------------------------------------
@@ -301,9 +446,26 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     _playTimer?.cancel();
     if (_playing) {
       _playTimer = Timer.periodic(const Duration(milliseconds: 1100), (_) {
-        if (mounted) setState(() => _hour = (_hour + 1) % 24);
+        if (mounted) setState(() => _frame = (_frame + 1) % _frameCount); // Hết 48 giờ -> quay lại hiện tại
       });
     }
+  }
+
+  /// Bản đồ 3D (giống chế độ 3D của WebGIS): mở tại vị trí, giờ, chuẩn AQI, bản đồ nền đang xem;
+  /// quay lại thì thanh mô phỏng 24h nhảy tới giờ vừa xem trên 3D (nếu thuộc hôm nay)
+  Future<void> _open3D() async {
+    if (_playing) _togglePlay();
+    final cam = _mapController.camera;
+    // 3D luôn mở ở thời điểm hiện tại; quay lại thì thanh dự báo nhảy tới giờ vừa xem trên 3D (nếu trong 48 giờ)
+    final viewed = await Map3DScreen.open(
+      context,
+      center: cam.center,
+      zoom: cam.zoom,
+      basemap: _basemapId,
+      useUS: _useUS,
+    );
+    final idx = viewed == null ? -1 : _fcTimes.indexOf(viewed);
+    if (idx >= 0 && mounted) setState(() => _frame = idx);
   }
 
   void _selectStation(Map<String, dynamic> st, {double? zoom}) {
@@ -490,6 +652,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
               const Divider(height: 28),
               MyAreasSection(
                 wardPm: _wardPm,
+                wardAqi: _wardAqiNow,
                 useUS: _useUS,
                 onShowOnMap: (ward) {
                   Navigator.pop(ctx);
@@ -745,6 +908,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           bottom: popup == null ? 330 : 128,
           child: Column(
             children: [
+              _fab(icon: Icons.view_in_ar, tooltip: 'Bản đồ 3D', onTap: _open3D),
+              const SizedBox(height: 10),
               _fab(icon: Icons.layers_outlined, tooltip: 'Bản đồ nền & lớp dữ liệu', onTap: _openLayers),
               const SizedBox(height: 10),
               _fab(icon: Icons.center_focus_strong, tooltip: 'Về TP.HCM', onTap: () {
@@ -805,7 +970,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     final polys = <Polygon>[];
     final dark = _basemapId == 'dark' || _basemapId == 'satellite';
     for (final w in _wards) {
-      final aqi = _aqiAt(_wardPm[w.code] ?? _basePm);
+      final aqi = _aqiAt(_wardPm[w.code] ?? _basePm, w.code);
       final color = AqiUtils.color(aqi);
       final selected = identical(w, _highlight);
       for (final ring in w.rings) {
@@ -824,7 +989,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   List<CircleMarker> _buildHeatCircles() {
     final circles = <CircleMarker>[];
     for (final h in _heat) {
-      final color = AqiUtils.color(_aqiAt(h.pmNow));
+      final color = AqiUtils.color(_aqiAt(h.pmNow, h.wardCode));
       circles.add(CircleMarker(point: h.point, radius: 1600, useRadiusInMeter: true, color: color.withValues(alpha: 0.10)));
       circles.add(CircleMarker(point: h.point, radius: 800, useRadiusInMeter: true, color: color.withValues(alpha: 0.16)));
     }
@@ -833,7 +998,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   List<Marker> _buildStationMarkers() {
     return _stations.map((st) {
-      final aqi = _aqiAt(_stationPmNow(st));
+      final aqi = _aqiAt(_stationPmNow(st), _stationWard['${st['ma_tram']}']);
       final color = AqiUtils.color(aqi);
       final maintenance = st['status'] == 'BẢO TRÌ';
       return Marker(
@@ -864,12 +1029,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   // POPUP CHỈ SỐ TẠI ĐIỂM CHẠM (AQI · PM2.5 · NHIỆT ĐỘ · GIÓ · DSS)
   // ---------------------------------------------------------------------------
   Widget _popupCard(_MapPopup pop) {
-    final pm = AqiUtils.atHour(pop.pmNow, _hour);
-    final aqi = AqiUtils.compute(pm, useUS: _useUS);
+    final (pm, aqi) = _pointStats(pop.pmNow, pop.point);
     final color = AqiUtils.color(aqi);
     final ring = AqiUtils.levelIndex(aqi) == 2 ? const Color(0xFFEAB308) : color;
-    final temp = WeatherField.temperature(pop.point, _hour);
-    final wind = WeatherField.wind(pop.point, _hour);
+    final temp = WeatherField.temperature(pop.point, _hour, at: _frameTime);
+    final wind = WeatherField.wind(pop.point, _hour, at: _frameTime);
     final advice = AqiUtils.advice(aqi);
     final alert = AppState.alert.value;
     final bestWindow = alert?['status'] == 'WARNING' && alert?['best_window'] is Map ? '${alert!['best_window']['label'] ?? ''}' : '';
@@ -1215,8 +1379,14 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 
+  static const _weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  /// Thanh dự báo realtime: mốc 0 = giờ hiện tại (đồng hồ hệ thống) -> 48 giờ tới, có ngày tháng
   Widget _timelineBar() {
-    final isNow = _hour == DateTime.now().hour;
+    final isNow = _frame == 0;
+    final t = _frameTime;
+    String two(int n) => n.toString().padLeft(2, '0');
+    final day = '${_weekdays[t.weekday - 1]}, ${two(t.day)}/${two(t.month)}';
     return Container(
       padding: const EdgeInsets.fromLTRB(6, 6, 14, 2),
       decoration: BoxDecoration(
@@ -1235,34 +1405,53 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 icon: Icon(_playing ? Icons.pause_circle_filled : Icons.play_circle_fill,
                     color: _playing ? const Color(0xFFF59E0B) : AppColors.brand),
               ),
-              Text('${_hour.toString().padLeft(2, '0')}:00',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: AppColors.text)),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: const Color(0xFFE0F2FE), borderRadius: BorderRadius.circular(20)),
-                child: Text(AqiUtils.periodLabel(_hour),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0369A1))),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${two(t.hour)}:00',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: AppColors.text, height: 1.1)),
+                  Text(day, style: const TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                ],
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
+              // Nhãn chiếm phần còn lại của hàng (không chia đôi với khoảng trống) -> không bị cắt khi chữ to
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isNow ? const Color(0xFFDCFCE7) : const Color(0xFFEDE9FE),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(isNow ? 'Hiện tại · dự báo ${_frameCount - 1} giờ' : 'Dự báo +${_frame}h',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isNow ? const Color(0xFF166534) : const Color(0xFF5B21B6))),
+                  ),
+                ),
+              ),
               if (!isNow)
-                TextButton(
-                  onPressed: () => setState(() => _hour = DateTime.now().hour),
-                  child: const Text('Hiện tại', style: TextStyle(fontSize: 12)),
-                )
-              else
-                const Text('Mô phỏng 24h', style: TextStyle(fontSize: 11, color: AppColors.muted, fontWeight: FontWeight.w700)),
+                IconButton(
+                  tooltip: 'Về hiện tại',
+                  onPressed: () => setState(() => _frame = 0),
+                  icon: const Icon(Icons.restore, color: AppColors.brand),
+                ),
             ],
           ),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(trackHeight: 5, overlayShape: SliderComponentShape.noOverlay),
             child: Slider(
-              value: _hour.toDouble(),
+              value: _frame.clamp(0, _frameCount - 1).toDouble(),
               min: 0,
-              max: 23,
-              divisions: 23,
-              label: '${_hour.toString().padLeft(2, '0')}:00',
-              onChanged: (v) => setState(() => _hour = v.toInt()),
+              max: (_frameCount - 1).toDouble(),
+              divisions: _frameCount - 1,
+              label: '${two(t.hour)}:00 $day',
+              onChanged: (v) => setState(() => _frame = v.toInt()),
             ),
           ),
           const SizedBox(height: 6),
@@ -1273,10 +1462,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   Widget _infoCard() {
     final sel = _current;
-    final pm = AqiUtils.atHour(sel.pmNow, _hour);
-    final aqi = AqiUtils.compute(pm, useUS: _useUS);
+    final (pm, aqi) = sel.city ? _cityStats() : _pointStats(sel.pmNow, sel.point);
     final color = AqiUtils.color(aqi);
-    final temp = WeatherField.temperature(sel.point, _hour);
+    final temp = WeatherField.temperature(sel.point, _hour, at: _frameTime);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1357,7 +1545,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             children: [
               Expanded(child: _metric('PM2.5', '${pm.toStringAsFixed(1)} µg/m³', AppColors.brand)),
               const SizedBox(width: 6),
-              Expanded(child: _metric('PM10', '${(pm * 1.35).toStringAsFixed(1)} µg/m³', const Color(0xFF7C3AED))),
+              Expanded(child: _metric('PM10', '${((sel.city ? _cityPm10() : null) ?? pm * 1.35).toStringAsFixed(1)} µg/m³', const Color(0xFF7C3AED))),
               const SizedBox(width: 6),
               Expanded(child: _metric('Nhiệt độ', '${temp.toStringAsFixed(1)} °C', const Color(0xFFEA580C))),
             ],

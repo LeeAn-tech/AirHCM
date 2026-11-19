@@ -223,7 +223,7 @@ function getAdminAQILevel(aqi) {
     return 6;
 }
 
-// TỰ ĐỘNG NẠP VÀ HIỂN THỊ RANH GIỚI 166 PHƯỜNG/XÃ LÊN BẢN ĐỒ ADMIN
+// TỰ ĐỘNG NẠP VÀ HIỂN THỊ RANH GIỚI 168 PHƯỜNG/XÃ LÊN BẢN ĐỒ ADMIN
 function loadAdminWards() {
     fetch('assets/data/hcm_wards.json')
         .then(res => {
@@ -232,6 +232,18 @@ function loadAdminWards() {
         })
         .then(geojson => {
             if (adminWardsLayer && adminMap) adminMap.removeLayer(adminWardsLayer);
+
+            // Phạm vi giám sát = số đơn vị hành chính thực có trong ranh giới (cùng file với giao diện người dùng)
+            const codes = new Set((geojson.features || []).map(f => {
+                const p = f.properties || {};
+                return String(p.ma_xa || p.ma_phuong_xa || p.ten_phuong_xa || "");
+            }).filter(Boolean));
+            if (codes.size) {
+                const kpi = document.getElementById("adm-ward-count");
+                if (kpi) kpi.textContent = `${codes.size} Phường/Xã`;
+                const sub = document.getElementById("adm-ward-scope");
+                if (sub) sub.textContent = `Phạm vi ${codes.size} Phường/Xã/Thị trấn Vùng đô thị TP.HCM mở rộng`;
+            }
 
             adminWardsLayer = L.geoJSON(geojson, {
                 style: {
@@ -377,19 +389,24 @@ function fetchAdminMetrics() {
         .then(res => res.json())
         .then(data => {
             const pm25 = parseFloat(data.pm2_5) || 29.4;
-            const usAqi = parseInt(data.us_aqi) || 106;
+            // AQI giờ NowCast do máy chủ tính (giống trang Dự báo AI & bản đồ WebGIS)
+            const usAqi = parseInt(data.us_aqi_all ?? data.us_aqi) || 106;
 
-            // Tính toán nhanh VN_AQI theo QĐ 1459/QĐ-TCMT
-            let vnAqi = 50;
-            if (pm25 <= 25.0) vnAqi = Math.round((50.0 / 25.0) * pm25);
-            else if (pm25 <= 50.0) vnAqi = Math.round(((100.0 - 51.0) / (50.0 - 25.1)) * (pm25 - 25.1) + 51.0);
-            else if (pm25 <= 80.0) vnAqi = Math.round(((150.0 - 101.0) / (80.0 - 50.1)) * (pm25 - 50.1) + 101.0);
-            else vnAqi = Math.round(((200.0 - 151.0) / (150.0 - 80.1)) * (pm25 - 80.1) + 151.0);
+            // Dự phòng khi máy chủ chưa có VN_AQI: tính nhanh theo QĐ 1459/QĐ-TCMT từ PM2.5
+            let vnAqi = parseInt(data.vn_aqi);
+            if (isNaN(vnAqi)) {
+                if (pm25 <= 25.0) vnAqi = Math.round((50.0 / 25.0) * pm25);
+                else if (pm25 <= 50.0) vnAqi = Math.round(((100.0 - 51.0) / (50.0 - 25.1)) * (pm25 - 25.1) + 51.0);
+                else if (pm25 <= 80.0) vnAqi = Math.round(((150.0 - 101.0) / (80.0 - 50.1)) * (pm25 - 50.1) + 101.0);
+                else vnAqi = Math.round(((200.0 - 151.0) / (150.0 - 80.1)) * (pm25 - 80.1) + 151.0);
+            }
 
             document.getElementById("adm-pm25").innerText = `${pm25.toFixed(1)} µg/m³`;
             document.getElementById("adm-aqi").innerText = `VN: ${vnAqi} | US: ${usAqi}`;
             const levelEl = document.getElementById("adm-aqi-level");
-            if (levelEl) levelEl.innerText = data.advisory ? data.advisory.level : "Kém (Nhóm nhạy cảm lưu ý)";
+            // Mức độ theo đúng VN_AQI đang hiển thị (QĐ 1459/QĐ-TCMT), không theo US AQI quy đổi thô
+            const VN_LEVELS = ["Tốt", "Trung bình", "Kém", "Xấu", "Rất xấu", "Nguy hại"];
+            if (levelEl) levelEl.innerText = `${VN_LEVELS[getAdminAQILevel(vnAqi) - 1]} (theo VN_AQI - QĐ 1459)`;
         })
         .catch(() => {
             document.getElementById("adm-pm25").innerText = "29.4 µg/m³";
@@ -858,7 +875,7 @@ function renderAdminHotspots(wards) {
     let rowsHtml = "";
     wards.slice(0, 5).forEach((w, idx) => {
         const pm = parseFloat(w.pm2_5_trung_binh);
-        const aqi = parseInt(w.aqi_trung_binh);
+        const aqi = parseInt(w.us_aqi ?? w.aqi_trung_binh);
         const lvl = getAdminAQILevel(aqi);
         const rankCls = idx < 3 ? ` r${idx + 1}` : "";
 

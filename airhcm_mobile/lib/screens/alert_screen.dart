@@ -299,7 +299,7 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
     final useUS = AppState.useUSAQI.value;
     return SectionCard(
       title: 'Top điểm nóng ô nhiễm',
-      subtitle: 'Cập nhật thời gian thực từ 166 phường/xã',
+      subtitle: 'Cập nhật thời gian thực từ 168 phường/xã',
       icon: Icons.local_fire_department_outlined,
       iconColor: const Color(0xFFEA580C),
       child: _loadingLists
@@ -316,7 +316,7 @@ class _AlertSubscriptionScreenState extends State<AlertSubscriptionScreen> {
 
   Widget _hotspotRow(int i, dynamic w, bool useUS) {
     final pm = AqiUtils.toDouble(w['pm2_5_trung_binh']);
-    final aqi = AqiUtils.compute(pm, useUS: useUS);
+    final aqi = AqiUtils.pick(w['vn_aqi'], w['us_aqi'], pm, useUS: useUS);
     const medals = [Color(0xFFF59E0B), Color(0xFF94A3B8), Color(0xFFEA580C)];
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
