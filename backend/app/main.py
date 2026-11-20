@@ -13,8 +13,8 @@ from app.services.alert_service import (
     evaluate_forecast_and_alert,
 )
 from app.services.forecast_insight import summarize_forecast
-from app.services import avatar_store, news_service, ward_index
-from app.services.social_auth import SocialAuthError, facebook_status, verify_social_token
+from app.services import avatar_store, news_service, official_stations, ward_index
+from app.services.social_auth import SocialAuthError, facebook_status, latest_provider, provider_names, verify_social_token
 from app.services import knowledge_base
 from app.services.auth_service import (
     check_admin,
@@ -316,7 +316,8 @@ station_status_store = {}
 
 @app.get("/api/v1/gis/stations", tags=["WebGIS Không Gian"])
 def get_stations():
-    """Lấy danh sách các trạm quan trắc từ PostGIS kèm trạng thái vận hành chính xác"""
+    """Danh sách ĐIỂM GIÁM SÁT ẢO (PostGIS): vị trí đại diện để hiển thị giá trị ƯỚC TÍNH (vệ tinh + CAMS hạ quy mô
+    về phường) - không phải trạm đo thực địa. Trạm chính thức của TP.HCM: GET /api/v1/gis/official-stations"""
     stations_list = []
     try:
         # Tự động bổ sung cột status vào bảng TramQuanTrac nếu CSDL chưa có
@@ -372,6 +373,13 @@ class StationCreateRequest(BaseModel):
     lat: float
     lng: float
     status: str = "HOẠT ĐỘNG"
+
+@app.get("/api/v1/gis/official-stations", tags=["WebGIS Không Gian"])
+def get_official_stations():
+    """33 trạm quan trắc không khí tự động liên tục của TP.HCM theo QĐ 921/QĐ-UBND (11/02/2026) - CHỈ vị trí tham khảo,
+    hiện KHÔNG hiển thị trên bản đồ (các trạm đang quan trắc định kỳ, chưa công bố số liệu đo theo giờ).
+    Dữ liệu giữ lại để kiểm chứng / hiệu chỉnh mô hình khi trạm vận hành tự động."""
+    return official_stations.collection()
 
 @app.post("/api/v1/gis/stations", dependencies=ADMIN_ONLY, tags=["Quản lý Trạm PostGIS"])
 def create_new_station(st: StationCreateRequest):
@@ -710,7 +718,7 @@ def get_spatial_summary(date_str: Optional[str] = Query(None, description="Ngày
             "ma_phuong_xa": str(w["ma_phuong_xa"]),
             "ten_phuong_xa": w["ten_phuong_xa"],
             "dien_tich_km2": float(w.get("dien_tich_km2") or 10.0),
-            "so_luong_tram": 1,
+            "so_luong_tram": 0,
             "pm2_5_trung_binh": ward_pm25,
             "aqi_trung_binh": ward_aqi
         })
@@ -887,59 +895,10 @@ def delete_subscription(sub_id: str):
 
 @app.get("/api/v1/news", tags=["Tin tức Môi trường"])
 def get_environmental_news():
-    """API cung cấp danh sách bài báo tự động làm mới theo ngày cho Frontend"""
-    live_news = news_service.fetch_news()
-
-    # Dữ liệu dự phòng đồng bộ ngày tự động (Dynamic Fallback) nếu phòng báo cáo mất mạng Internet
-    if not live_news or len(live_news) < 4:
-        today_str = datetime.now().strftime("%d/%m/%Y")
-        yesterday_str = datetime.fromtimestamp(datetime.now().timestamp() - 86400).strftime("%d/%m/%Y")
-        
-        live_news = [
-            {
-                "title": "TP.HCM tăng cường giám sát nghịch nhiệt bức xạ và nồng độ bụi PM2.5 vào sáng sớm tại các trục vành đai",
-                "link": "https://baotainguyenmoitruong.vn/moi-truong-va-cuoc-song",
-                "summary": "Hiện tượng nghịch nhiệt tầng thấp kết hợp lưu lượng giao thông liên tỉnh tăng cao làm lớp khói bụi không thể khuếch tán, chỉ số AQI ghi nhận mức Kém tại các trạm cửa ngõ...",
-                "source": "Báo Tài nguyên & Môi trường",
-                "badge_color": "#0284c7",
-                "pub_date": f"{today_str} • 07:30",
-                "image": "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=80",
-                "category": "PM25",
-                "is_featured": True
-            },
-            {
-                "title": "Ứng dụng ảnh vệ tinh Sentinel-5P và AI trong việc cảnh báo sớm ô nhiễm sol khí tại Nam Bộ",
-                "link": "https://tuoitre.vn/khoa-hoc.htm",
-                "summary": "Các nhà khoa học đánh giá việc tích hợp chỉ số AAI từ cảm biến TROPOMI giúp bù đắp mạng lưới quan trắc mặt đất, phát hiện sớm sự lan truyền của bụi mịn đô thị...",
-                "source": "Báo Tuổi Trẻ",
-                "badge_color": "#e11d48",
-                "pub_date": f"{today_str} • 06:15",
-                "image": "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80",
-                "category": "PM25"
-            },
-            {
-                "title": "Triển khai kế hoạch tăng cường rửa đường và phân luồng xe tải nặng tại các cửa ngõ TP.HCM",
-                "link": "https://sggp.org.vn/moi-truong.html",
-                "summary": "Sở TN&MT phối hợp Sở GTVT triển khai phun nước dập bụi tại nút giao An Lạc, Quốc lộ 1A nhằm hạn chế phát tán bụi thô PM10 và bụi mịn PM2.5 vào khung giờ cao điểm...",
-                "source": "Báo Sài Gòn Giải Phóng",
-                "badge_color": "#16a34a",
-                "pub_date": f"{yesterday_str} • 14:30",
-                "image": "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=600&q=80",
-                "category": "POLICY"
-            },
-            {
-                "title": "Khuyến cáo y tế: Cách chọn khẩu trang lọc bụi mịn chuẩn N95/KN95 cho trẻ nhỏ mùa hanh khô",
-                "link": "https://vnexpress.net/suc-khoe",
-                "summary": "Các chuyên gia y tế hô hấp khuyến cáo khẩu trang vải thông thường không lọc được hạt bụi PM2.5, phụ huynh cần trang bị khẩu trang có van thở hoặc màng lọc tĩnh điện...",
-                "source": "VnExpress Sức Khỏe",
-                "badge_color": "#7c2d12",
-                "pub_date": f"{yesterday_str} • 09:00",
-                "image": "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=600&q=80",
-                "category": "WEATHER"
-            }
-        ]
-
-    return live_news
+    """Bài báo thật từ RSS (Tuổi Trẻ, VnExpress, Thanh Niên, Người Lao Động...) đã lọc chủ đề không khí / thời tiết /
+    môi trường, làm mới 15 phút. Không lấy được tin nào -> trả danh sách rỗng để giao diện báo "chưa tải được tin"
+    (không dùng bài viết tự tạo gắn tên báo thật)."""
+    return news_service.fetch_news() or []
 
 # ==============================================================================
 # 6. HỆ THỐNG XÁC THỰC END-USERS & QUẢN TRỊ THÀNH VIÊN AIRHCM
@@ -1044,6 +1003,7 @@ def register_end_user(req: EndUserRegisterRequest):
         "fullname": req.fullname.strip(),
         "email": str(req.email).lower().strip(),
         "provider": "Email",
+        "providers": ["Email"],
         "avatar": f"https://ui-avatars.com/api/?name={urllib.parse.quote(req.fullname)}&background=0284c7&color=fff",
         "status": "HOẠT ĐỘNG",
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -1077,6 +1037,9 @@ def login_end_user(req: EndUserLoginRequest):
     elif not verify_password(req.password or "", stored):
         time.sleep(0.6)
         raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác!")
+    user["last_login"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    user["last_provider"] = "Email"
+    save_users_to_disk(users_db)
     return {"status": "success", "message": "Đăng nhập thành công!", "user": user, **issue_user_token(user["id"])}
 
 def _linked_uids(user: dict) -> list:
@@ -1085,6 +1048,12 @@ def _linked_uids(user: dict) -> list:
     if user.get("firebase_uid") and user["firebase_uid"] not in uids:
         uids.append(user["firebase_uid"])
     return uids
+
+def _user_providers(user: dict) -> list:
+    """Mọi phương thức đăng nhập của tài khoản (phương thức đăng ký đứng đầu)"""
+    providers = [p for p in (user.get("providers") or []) if p]
+    first = user.get("provider") or "Email"
+    return providers if providers else [first]
 
 def _initials_avatar(fullname: str) -> str:
     """Ảnh chữ cái viết tắt khi tài khoản không có ảnh đại diện"""
@@ -1151,17 +1120,28 @@ def social_login_end_user(req: SocialLoginRequest):
         if user.get("status") == "BỊ KHÓA":
             raise HTTPException(status_code=403, detail="Tài khoản này đã bị khóa bởi Quản trị viên!")
         # Thêm liên kết mới, KHÔNG ghi đè liên kết cũ (đăng nhập Google rồi Facebook vẫn về cùng tài khoản)
+        newly_linked = provider not in _user_providers(user)
         user["firebase_uids"] = _linked_uids(user) + ([uid] if uid not in _linked_uids(user) else [])
+        user["providers"] = _user_providers(user) + ([provider] if newly_linked else [])
+        user["last_provider"] = provider
         user["firebase_uid"] = uid  # Danh tính dùng gần nhất
         if contact_email and not user.get("email"):
             user["email"] = contact_email
+        # Tài khoản đang mang tên tạm ("Thành viên Google"...) do lần trước nhà cung cấp chưa trả tên -> cập nhật tên thật
+        real_name = info["name"] or (req.fullname or "").strip()[:80]
+        if real_name and (not user.get("fullname") or user.get("fullname") == f"Thành viên {provider}"):
+            user["fullname"] = real_name
         # Ảnh đại diện thật từ Google / Facebook (ảnh Facebook được tải về lưu trên máy chủ)
         user["avatar"] = (avatar_store.social_avatar(user["id"], info, user.get("avatar", ""))
                           or _initials_avatar(user.get("fullname") or "U"))
         user["last_login"] = now
         save_users_to_disk(users_db)
-        return {"status": "success", "message": f"Đăng nhập thành công qua {provider}!", "user": user,
-                **issue_user_token(user["id"])}
+        message = f"Đăng nhập thành công qua {provider}!"
+        if newly_linked:
+            # Cùng email với tài khoản có sẵn -> liên kết vào tài khoản đó (một người một tài khoản), báo rõ cho người dùng
+            message = (f"Đã liên kết {provider} vào tài khoản có sẵn cùng email (đăng ký bằng "
+                       f"{user.get('provider') or 'Email'} ngày {(user.get('created_at') or '')[:10]}). Đăng nhập thành công!")
+        return {"status": "success", "message": message, "user": user, **issue_user_token(user["id"])}
 
     # 3. Lần đầu đăng nhập: tự tạo tài khoản thành viên
     fullname = (info["name"] or (req.fullname or "").strip()[:80]
@@ -1172,6 +1152,8 @@ def social_login_end_user(req: SocialLoginRequest):
         "fullname": fullname,
         "email": contact_email,
         "provider": provider,
+        "providers": [provider],
+        "last_provider": provider,
         "avatar": avatar_store.social_avatar(new_id, info) or _initials_avatar(fullname),
         "status": "HOẠT ĐỘNG",
         "created_at": now,
@@ -1224,6 +1206,19 @@ def update_user_areas(req: UserAreasRequest, user_id: int = Depends(require_user
 def get_all_end_users():
     global users_db
     users_db = load_users_from_disk()
+    changed = False
+    for u in users_db:
+        first = u.get("provider") or "Email"
+        if not u.get("providers"):
+            linked = provider_names(_linked_uids(u)) if _linked_uids(u) else []
+            u["providers"] = [first] + [p for p in linked if p != first]
+            changed = True
+        if not u.get("last_provider"):
+            # Tài khoản cũ chưa ghi phương thức của lần đăng nhập gần nhất -> lấy theo thời điểm đăng nhập trên Firebase
+            u["last_provider"] = (latest_provider(_linked_uids(u)) if _linked_uids(u) else "") or first
+            changed = True
+    if changed:
+        save_users_to_disk(users_db)
     return users_db
 
 # API Admin đổi trạng thái tài khoản (HOẠT ĐỘNG <-> BỊ KHÓA)
@@ -1277,6 +1272,7 @@ def create_user_by_admin(req: AdminUserCreateRequest):
         "fullname": req.fullname.strip(),
         "email": str(req.email).lower().strip(),
         "provider": req.provider.strip(),
+        "providers": [req.provider.strip()],
         "avatar": f"https://ui-avatars.com/api/?name={urllib.parse.quote(req.fullname)}&background=random",
         "status": req.status.strip(),
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -1705,7 +1701,7 @@ def compute_location_insight(lat: float, lng: float, ward_code: Optional[str] = 
         "query": {"lat": lat, "lng": lng},
         "inside_hcm": bool(ward and ward.get("inside")),
         "ward": ward,
-        "nearest_station": nearest_station,
+        "nearest_station": nearest_station,  # điểm giám sát ảo gần nhất (PostGIS KNN)
         "current": {
             "pm2_5": round(ward_pm25, 1),
             "pm10": round(ward_pm25 * 1.35, 1),

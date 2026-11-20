@@ -30,7 +30,7 @@ let map = null;
 let wardsLayer = null;
 let selectedWardLayer = null;
 let selectedWardFeature = null;
-let stationMarkers = [];
+let stationMarkers = [];      // điểm giám sát ảo (PostGIS): hiển thị AQI ƯỚC TÍNH của phường chứa điểm
 let stationDataList = [];
 let heatLayer = null;
 let forecastChartInstance = null;
@@ -67,13 +67,36 @@ const HOURLY_TEMP_ERA5 = {
     18: 28.9, 19: 28.0, 20: 27.4, 21: 26.9, 22: 26.4, 23: 26.0
 };
 
-// Chỉ số Sol khí Sentinel-5P (AAI) theo mật độ phát thải
-const HOURLY_AEROSOL_S5P = {
-    0: 0.65, 1: 0.62, 2: 0.60, 3: 0.65, 4: 0.72, 5: 0.80,
-    6: 0.98, 7: 1.25, 8: 1.18, 9: 0.92, 10: 0.78, 11: 0.68,
-    12: 0.62, 13: 0.58, 14: 0.64, 15: 0.72, 16: 0.96, 17: 1.22,
-    18: 1.28, 19: 1.05, 20: 0.88, 21: 0.80, 22: 0.74, 23: 0.68
-};
+// Chỉ số sol khí hấp thụ (AAI) Sentinel-5P THẬT mới nhất từ AirData (/air/aai): trung bình 168 phường,
+// tổ hợp trượt 30 ngày đến ngày ảnh mới nhất. Vệ tinh qua 1 lần/ngày (~13:30) nên AAI không đổi theo giờ.
+let latestAAI = null;   // {date, city_mean, min, max, composite_days, ...}
+
+function aaiText() {
+    return latestAAI && isFinite(latestAAI.city_mean) ? `${Number(latestAAI.city_mean).toFixed(2)} AAI` : "-- AAI";
+}
+
+function aaiDateLabel() {
+    if (!latestAAI || !latestAAI.date) return "";
+    const [y, m, d] = String(latestAAI.date).split("-");
+    return `${d}/${m}/${y}`;
+}
+
+function loadSatelliteAAI() {
+    return fetch(`${API_BASE}/air/aai`)
+        .then(res => (res.ok ? res.json() : null))
+        .then(d => {
+            if (!d || !isFinite(d.city_mean)) return;
+            latestAAI = d;
+            setSafeText("current-aerosol", aaiText());
+            const label = document.getElementById("current-aerosol-label");
+            if (label) label.textContent = `Khí dung · ${aaiDateLabel().slice(0, 5)}`;
+            const box = document.getElementById("current-aerosol-box");
+            if (box) box.title = `Chỉ số sol khí hấp thụ (AAI) Sentinel-5P TROPOMI - trung bình ${d.wards} phường, `
+                + `tổ hợp ${d.composite_days} ngày đến ${aaiDateLabel()} (khoảng ${Number(d.min).toFixed(2)} … ${Number(d.max).toFixed(2)}). `
+                + "AAI > 0: có khói/bụi hấp thụ; AAI < 0: chủ yếu mây hoặc sol khí không hấp thụ. Vệ tinh qua 1 lần/ngày nên không đổi theo giờ.";
+        })
+        .catch(err => console.warn("Chưa tải được AAI vệ tinh:", err));
+}
 // ==============================================================================
 // THUẬT TOÁN TÍNH TOÁN VN_AQI THEO QUYẾT ĐỊNH 1459/QĐ-TCMT (BỘ TN&MT VIỆT NAM)
 // ==============================================================================
@@ -526,6 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. Nạp dữ liệu các phân hệ
     fetchCurrentAQI();
+    loadSatelliteAAI();
     fetchStations();
     fetchWardsGeoJSON();
     fetchHourlyForecast(24);
@@ -539,6 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchActiveAlert();
         fetchHeatmapPoints();
         loadForecastTimeline();
+        loadSatelliteAAI();   // ảnh vệ tinh mới được AirData cập nhật mỗi ngày
     }, 5 * 60 * 1000);
 
     // 3. Khởi tạo tính năng tương tác
@@ -682,7 +707,7 @@ function fetchCurrentAQI() {
             setSafeText("current-pm25", `${pm25.toFixed(1)} µg/m³`);
             setSafeText("current-pm10", `${pm10.toFixed(1)} µg/m³`);
             setSafeText("current-temp", `${tempC} °C`);
-            setSafeText("current-aerosol", `${HOURLY_AEROSOL_S5P[currentHourSimulated] || 0.75} AAI`);
+            setSafeText("current-aerosol", aaiText());
 
             // Mức độ tính theo chuẩn đang chọn (VN_AQI / US AQI) để khớp với con số hiển thị và thẻ DSS
             const localAdvisory = getAdvisoryForAQI(aqi, pm25);
@@ -765,25 +790,7 @@ function fetchStations() {
                     icon: createIQAirStationIcon(stats.aqi)
                 }).addTo(map);
 
-                const lvl = getAQILevelIndex(stats.aqi);
-                marker.bindPopup(`
-                    <div class="pop-card">
-                        <h4 class="pop-title"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
-                        <div class="pop-sub">Mã trạm: ${st.ma_tram}</div>
-                        <div class="pop-meta">
-                            <span><b>Đơn vị:</b> ${st.don_vi_quan_ly}</span>
-                            <span><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</span>
-                        </div>
-                        <div class="pop-row">
-                            <span>Chỉ số ${currentAQIStandard === 'VN' ? 'VN_AQI' : 'US AQI'}</span>
-                            <span class="aqi-pill lvl-${lvl}">${stats.aqi} · ${stats.advisory.level}</span>
-                        </div>
-                        <div class="pop-row">
-                            <span>Bụi mịn PM2.5</span>
-                            <b class="text-blue">${stats.pm25} µg/m³</b>
-                        </div>
-                    </div>
-                `);
+                marker.bindPopup(() => virtualPointPopupHtml(st, lat, lng));
 
                 stationMarkers.push({ marker: marker, data: st });
             });
@@ -798,6 +805,32 @@ function fetchStations() {
                 setTimeout(fetchStations, 5000);
             }
         });
+}
+
+// Popup điểm giám sát ảo: số liệu là ƯỚC TÍNH (vệ tinh + CAMS hạ quy mô về phường), không phải số đo tại chỗ
+function virtualPointPopupHtml(st, lat, lng) {
+    const stats = getStationAirStats(st, currentHourSimulated);
+    const lvl = getAQILevelIndex(stats.aqi);
+    const when = currentTimeIndex === 0 ? "hiện tại" : `dự báo ${tlPad(currentHourSimulated)}:00`;
+    return `
+        <div class="pop-card">
+            <h4 class="pop-title"><i class="fa-solid fa-satellite-dish"></i> ${escapeHtml(st.ten_tram)}</h4>
+            <div class="pop-sub">Điểm giám sát ảo · ${escapeHtml(st.ma_tram)}</div>
+            <div class="pop-meta">
+                <span><b>Nguồn số liệu:</b> ${escapeHtml(st.don_vi_quan_ly || "AirHCM - ước tính từ vệ tinh + CAMS")}</span>
+                <span><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</span>
+            </div>
+            <div class="pop-row">
+                <span>Chỉ số ${currentAQIStandard === 'VN' ? 'VN_AQI' : 'US AQI'} (${when})</span>
+                <span class="aqi-pill lvl-${lvl}">${stats.aqi} · ${escapeHtml(stats.advisory.level)}</span>
+            </div>
+            <div class="pop-row">
+                <span>Bụi mịn PM2.5</span>
+                <b class="text-blue">${stats.pm25} µg/m³</b>
+            </div>
+            <div class="pop-note-warn"><i class="fa-solid fa-circle-info"></i> Giá trị ước tính của phường chứa điểm
+                (vệ tinh Sentinel-5P/MODIS + mô hình CAMS/ERA5), không phải số đo của trạm quan trắc.</div>
+        </div>`;
 }
 
 function updateStationMarkersHour(hour) {
@@ -950,6 +983,7 @@ function fetchHourlyForecast(hours = 24) {
                     level: advisory.level
                 });
             }
+            fallbackData.synthetic = true; // Số mô phỏng khi mất kết nối - KHÔNG phải dự báo của mô hình
             renderForecastView(fallbackData, hours);
         });
 }
@@ -1201,7 +1235,7 @@ function renderHotspotsTable(data) {
     const tbody = document.getElementById("hotspots-table-body");
     if (!tbody) return;
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="table-empty"><i class="fa-solid fa-magnifying-glass"></i> Không tìm thấy Phường/Xã phù hợp.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="table-empty"><i class="fa-solid fa-magnifying-glass"></i> Không tìm thấy Phường/Xã phù hợp.</td></tr>`;
         return;
     }
 
@@ -1219,7 +1253,6 @@ function renderHotspotsTable(data) {
                 <td><b>${w.ma_phuong_xa}</b></td>
                 <td class="cell-strong">${w.ten_phuong_xa}</td>
                 <td class="nowrap">${w.dien_tich_km2} km²</td>
-                <td><span class="chip chip-info"><i class="fa-solid fa-tower-broadcast"></i> ${w.so_luong_tram || 1} trạm</span></td>
                 <td class="cell-brand nowrap">${pm} µg/m³</td>
                 <td class="center"><b class="aqi-num t-${lvl}">${aqi}</b></td>
                 <td><span class="aqi-pill lvl-${lvl}">${advisory.level}</span></td>
@@ -1398,12 +1431,11 @@ function applyTimeStep(index) {
     const simTemp = (tempVal ?? (HOURLY_TEMP_ERA5[hour] || 28.5)).toFixed(1);
     const aqiColor = getAQIColor(simAQI);
     const advisory = getAdvisoryForAQI(simAQI, simPM25);
-    const simAerosol = (HOURLY_AEROSOL_S5P[hour] || 0.75).toFixed(2);
 
     setSafeText("current-pm25", `${simPM25} µg/m³`);
     setSafeText("current-pm10", `${simPM10} µg/m³`);
     setSafeText("current-temp", `${simTemp} °C`);
-    setSafeText("current-aerosol", `${simAerosol} AAI`);
+    setSafeText("current-aerosol", aaiText()); // số vệ tinh thật mới nhất (không có biến thiên theo giờ)
     setSafeText("current-aqi", simAQI);
 
     const levelBadge = document.getElementById("current-aqi-level");
@@ -1720,7 +1752,7 @@ function localPlaceSearch(q) {
     (stationDataList || []).forEach(st => {
         if (results.length >= 6) return;
         if (normalizeVi(st.ten_tram).includes(nq) || normalizeVi(st.ma_tram).includes(nq)) {
-            results.push({ kind: "station", lat: Number(st.lat), lng: Number(st.lng), name: st.ten_tram, address: `Trạm quan trắc ${st.ma_tram}` });
+            results.push({ kind: "station", lat: Number(st.lat), lng: Number(st.lng), name: st.ten_tram, address: `Điểm giám sát ảo ${st.ma_tram} · AQI ước tính` });
         }
     });
     return results;
@@ -1787,8 +1819,8 @@ function renderSuggest(items, loading, query) {
     if (!box) return;
     suggestItems = items;
     suggestActive = items.length ? 0 : -1;
-    const icons = { ward: "fa-map", station: "fa-tower-broadcast", geo: "fa-location-dot" };
-    const labels = { ward: "Phường/Xã", station: "Trạm", geo: "Địa điểm" };
+    const icons = { ward: "fa-map", station: "fa-satellite-dish", geo: "fa-location-dot" };
+    const labels = { ward: "Phường/Xã", station: "Điểm ảo", geo: "Địa điểm" };
 
     if (!items.length) {
         box.innerHTML = loading
@@ -2372,7 +2404,6 @@ function renderPlacePanel(data) {
     const ringColor = (aqi > 50 && aqi <= 100) ? "#eab308" : adv.color;
     const fs = data.forecast_summary || {};
     const ward = data.ward;
-    const st = data.nearest_station;
     const alert = data.alert || {};
     const isWarning = alert.status === "WARNING";
     const stdLabel = currentAQIStandard === "VN" ? "VN_AQI" : "US AQI";
@@ -2400,7 +2431,7 @@ function renderPlacePanel(data) {
         </div>
         <div class="pp-meta">
             <span><i class="fa-solid fa-map"></i> ${wardLine}</span>
-            ${st ? `<span><i class="fa-solid fa-tower-broadcast"></i> ${escapeHtml(st.ten_tram)} · ${formatDistance(st.distance_m)}</span>` : ""}
+            <span><i class="fa-solid fa-satellite"></i> Số liệu ước tính cho phường từ vệ tinh + CAMS/ERA5 (không phải số đo trạm)</span>
         </div>
 
         <div class="pp-section-title"><i class="fa-solid fa-notes-medical"></i> Hỗ trợ ra quyết định (DSS)</div>
@@ -3127,7 +3158,7 @@ function rebuildWindGrid(force = false) {
     const speed = Math.hypot(center.u, center.v);
     setSafeText("wind-legend-text",
         `Gió 10m: ${speed.toFixed(1)} m/s (${(speed * 3.6).toFixed(0)} km/h) · hướng ${windDirectionName(center.u, center.v)}` +
-        (windField ? (windField.source === "open-meteo" ? " · Open-Meteo" : " · mô phỏng") : " · trạm trung tâm"));
+        (windField ? (windField.source === "open-meteo" ? " · Open-Meteo" : " · mô phỏng") : " · số liệu toàn TP"));
 }
 
 function spawnWindParticle(randomAge) {
@@ -3347,102 +3378,77 @@ function updateDSSOverview(aqi, pm25) {
 // ==============================================================================
 // 11. CHUẨN BỊ SỐ LIỆU ĐỒNG BỘ VÀ KÍCH HOẠT XUẤT BÁO CÁO PDF CHUẨN
 // ==============================================================================
-window.exportOfficialReport = function () {
+window.exportOfficialReport = async function () {
     const now = new Date();
     const dd = String(now.getDate()).padStart(2, '0');
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const yyyy = now.getFullYear();
     const hh = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
+    const stdLabel = currentAQIStandard === 'VN' ? "VN_AQI" : "US AQI";
+    const num = v => (v !== null && v !== undefined && v !== "" && isFinite(v) ? Number(v) : null);
 
-    // 1. Cập nhật ngày tháng và số báo cáo
+    // 1. Ngày tháng và mã bản tin (mã nội bộ của AirHCM, không phải số văn bản hành chính)
     const docDateEl = document.getElementById("doc-official-date");
     if (docDateEl) docDateEl.innerText = `TP. Hồ Chí Minh, ngày ${dd} tháng ${mm} năm ${yyyy}`;
+    setSafeText("doc-report-no", `AirHCM-${yyyy}${mm}${dd}-${hh}${min}`);
+    setSafeText("doc-publish-time", `${hh}:${min} ngày ${dd}/${mm}/${yyyy}`);
+    setSafeText("doc-aqi-label", `Chỉ số ${stdLabel}`);
+    setSafeText("doc-fc-aqi-label", stdLabel);
 
-    const docRepNo = document.getElementById("doc-report-no");
-    if (docRepNo) docRepNo.innerText = `${dd}${mm}/BC-AQI`;
+    // 2. Hiện trạng toàn TP lúc xuất (luôn là giờ hiện tại, kể cả khi thanh thời gian đang xem mốc dự báo)
+    const pmNow = num(latestBasePM25);
+    const pm10Now = num(latestServerAQI.pm10);
+    let tempNow = num(latestServerAQI.temp);
+    if (tempNow !== null && tempNow > 100) tempNow -= 273.15;
+    const aqiNow = pmNow !== null ? pickAQI(latestServerAQI.vn, latestServerAQI.us, pmNow) : null;
+    setSafeText("doc-aqi", aqiNow !== null ? String(aqiNow) : "--");
+    setSafeText("doc-pm25", pmNow !== null ? `${pmNow.toFixed(1)} µg/m³` : "-- µg/m³");
+    setSafeText("doc-pm10", pm10Now !== null ? `${pm10Now.toFixed(1)} µg/m³` : "-- µg/m³");
+    setSafeText("doc-temp", tempNow !== null ? `${tempNow.toFixed(1)} °C` : "-- °C");
+    setSafeText("doc-aai", latestAAI ? `${aaiText()} (TB ${latestAAI.composite_days} ngày đến ${aaiDateLabel()})` : "--");
+    setSafeText("doc-qcvn", pmNow === null ? "--" : (pmNow > QCVN_PM25_24H ? `Vượt QCVN 05:2023 (${QCVN_PM25_24H} µg/m³)` : `Đạt QCVN 05:2023 (≤ ${QCVN_PM25_24H} µg/m³)`));
 
-    const docPubEl = document.getElementById("doc-publish-time");
-    if (docPubEl) docPubEl.innerText = `${hh}:${min} ngày ${dd}/${mm}/${yyyy}`;
-
-    // 2. Lấy số liệu hiện tại từ màn hình trạm
-    const currentAqi = document.getElementById("current-aqi") ? document.getElementById("current-aqi").innerText : "68";
-    const currentPm25 = document.getElementById("current-pm25") ? document.getElementById("current-pm25").innerText : "20.5 µg/m³";
-    const currentPm10 = document.getElementById("current-pm10") ? document.getElementById("current-pm10").innerText : "27.6 µg/m³";
-    const currentTemp = document.getElementById("current-temp") ? document.getElementById("current-temp").innerText : "31.5 °C";
-    const currentAerosol = document.getElementById("current-aerosol") ? document.getElementById("current-aerosol").innerText : "0.75 AAI";
-    const qcvnText = document.getElementById("qcvn-tag") ? document.getElementById("qcvn-tag").innerText : "Đạt quy chuẩn QCVN 05:2023";
-
-    setSafeText("doc-aqi", currentAqi);
-    setSafeText("doc-pm25", currentPm25);
-    setSafeText("doc-pm10", currentPm10);
-    setSafeText("doc-temp", currentTemp);
-    setSafeText("doc-aai", currentAerosol);
-    setSafeText("doc-qcvn", qcvnText);
-
-    // 3. Lấy dữ liệu dự báo 24 giờ (chắt lọc 6 mốc giờ tiêu biểu để vừa vặn 1 trang A4)
+    // 3. Dự báo 24 giờ tới: số liệu thật của mô hình (bộ nhớ của tab Dự báo hoặc gọi API) - không dùng số mẫu
     const printTbody = document.getElementById("doc-forecast-tbody");
-    const forecastRows = document.querySelectorAll("#forecast-table-body tr");
-
     if (printTbody) {
-        printTbody.innerHTML = "";
-        let count = 0;
-
-        // Nếu bảng dự báo chính đã nạp dữ liệu
-        if (forecastRows.length > 1) {
-            forecastRows.forEach((row, idx) => {
-                // Lấy cách quãng (mỗi 3 - 4 giờ lấy 1 dòng) để bảng báo cáo gọn gàng
-                if (idx % 3 === 0 && count < 6) {
-                    const cells = row.querySelectorAll("td");
-                    if (cells.length >= 6) {
-                        const time = cells[0].innerText;
-                        const pm25 = cells[1].innerText;
-                        const aqi = cells[3].innerText;
-                        const level = cells[4].innerText;
-                        const qcvn = cells[5].innerText;
-
-                        printTbody.innerHTML += `
-                            <tr style="text-align: center;">
-                                <td>${time}</td>
-                                <td style="font-weight: 600;">${pm25}</td>
-                                <td style="font-weight: 700;">${aqi}</td>
-                                <td>${level}</td>
-                                <td>${qcvn}</td>
-                            </tr>
-                        `;
-                        count++;
-                    }
-                }
-            });
+        let rows = Array.isArray(cachedForecastData) && cachedForecastData.length && !cachedForecastData.synthetic
+            ? cachedForecastData : null;
+        if (!rows) {
+            try {
+                const res = await fetch(`${API_BASE}/forecast/hourly?hours=24`);
+                rows = res.ok ? await res.json() : null;
+            } catch (e) {
+                rows = null;
+            }
         }
-
-        // Dữ liệu dự phòng nếu chưa kịp chuyển sang tab forecast
-        if (count === 0) {
-            const sampleHours = ["00:00", "06:00", "09:00", "12:00", "15:00", "18:00"];
-            sampleHours.forEach(h => {
-                printTbody.innerHTML += `
-                    <tr style="text-align: center;">
-                        <td>${yyyy}-${mm}-${dd} ${h}</td>
-                        <td style="font-weight: 600;">22.4 µg/m³</td>
-                        <td style="font-weight: 700;">72</td>
-                        <td>Trung bình</td>
-                        <td><span style="color: #15803d;">✓ Dưới ngưỡng 24h</span></td>
-                    </tr>
-                `;
-            });
-        }
+        const picked = (Array.isArray(rows) ? rows : []).filter((_, i) => i % 4 === 0).slice(0, 6);
+        printTbody.innerHTML = picked.length ? picked.map(r => {
+            const pm = Number(r.pm2_5);
+            const aqi = pickAQI(r.vn_aqi, r.us_aqi_all, pm);
+            const level = getAdvisoryForAQI(aqi, pm).level;
+            const over = pm > QCVN_PM25_24H;
+            return `
+                <tr style="text-align: center;">
+                    <td>${escapeHtml(String(r.time || ""))}</td>
+                    <td style="font-weight: 600;">${pm.toFixed(1)} µg/m³</td>
+                    <td style="font-weight: 700;">${aqi}</td>
+                    <td>${escapeHtml(level)}</td>
+                    <td><span style="color: ${over ? "#b91c1c" : "#15803d"};">${over ? "⚠ Vượt ngưỡng 24h" : "✓ Dưới ngưỡng 24h"}</span></td>
+                </tr>`;
+        }).join("") : `
+            <tr><td colspan="5" style="text-align: center; font-style: italic;">Chưa tải được dữ liệu dự báo từ máy chủ AirHCM.</td></tr>`;
     }
 
-    // 4. Lấy khuyến cáo DSS
-    const dssGen = document.getElementById("dss-general") ? document.getElementById("dss-general").innerText : "Không khí ở mức chấp nhận được. Người dân an tâm sinh hoạt.";
-    const dssSens = document.getElementById("dss-sensitive") ? document.getElementById("dss-sensitive").innerText : "Trẻ em và người cao tuổi mang khẩu trang lọc bụi khi ra ngoài giờ cao điểm.";
-    const dssAct = document.getElementById("dss-action") ? document.getElementById("dss-action").innerText : "Duy trì kiểm soát tuần tra khí thải và tưới nước rửa đường tại các trục chính.";
-
+    // 4. Khuyến cáo DSS
+    const dssGen = document.getElementById("dss-general") ? document.getElementById("dss-general").innerText : "--";
+    const dssSens = document.getElementById("dss-sensitive") ? document.getElementById("dss-sensitive").innerText : "--";
+    const dssAct = document.getElementById("dss-action") ? document.getElementById("dss-action").innerText : "--";
     setSafeText("doc-advice-general", dssGen);
     setSafeText("doc-advice-sensitive", dssSens);
     setSafeText("doc-advice-action", dssAct);
 
-    // 5. Kích hoạt hộp thoại In của trình duyệt
+    // 5. Mở hộp thoại In của trình duyệt (Lưu thành PDF)
     setTimeout(() => {
         window.print();
     }, 150);
@@ -3484,7 +3490,7 @@ window.setAQIStandard = function (standard) {
     const forecastAqiTh = document.querySelector("#tab-forecast thead th:nth-child(4)");
     if (forecastAqiTh) forecastAqiTh.innerText = standard === 'VN' ? "VN_AQI" : "US AQI";
 
-    const hotspotAqiTh = document.querySelector("#tab-hotspots thead th:nth-child(7)");
+    const hotspotAqiTh = document.querySelector("#tab-hotspots thead th:nth-child(6)");
     if (hotspotAqiTh) hotspotAqiTh.innerText = standard === 'VN' ? "VN_AQI" : "US AQI";
 
     // 5. VẼ LẠI BIỂU ĐỒ DỰ BÁO AI NGAY LẬP TỨC TỪ DỮ LIỆU ĐANG CÓ
@@ -3535,63 +3541,45 @@ function fetchEnvironmentalNews() {
             if (Array.isArray(newsList) && newsList.length > 0) {
                 allNewsData = newsList;
                 renderNewsUI(newsList);
+            } else if (!allNewsData.length) {
+                renderNewsUnavailable("Máy chủ chưa lấy được bài viết nào từ các báo (có thể do mất kết nối Internet).");
             }
         })
         .catch(err => {
-            console.warn("Lỗi nạp tin tức từ Backend, sử dụng bộ cập nhật ngày tự động:", err);
-            // Tự động sinh ngày thực tế theo ngày máy tính người dùng
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const todayStr = `${dd}/${mm}/${yyyy}`;
-
-            const fallbackNews = [
-                {
-                    title: "TP.HCM tăng cường giám sát nghịch nhiệt bức xạ và nồng độ bụi PM2.5 vào sáng sớm tại các trục vành đai",
-                    link: "https://baotainguyenmoitruong.vn",
-                    summary: "Hiện tượng nghịch nhiệt tầng thấp kết hợp lưu lượng giao thông tăng cao làm lớp khói bụi lắng đọng, hệ thống WebGIS AirHCM ghi nhận chỉ số AQI vượt ngưỡng an toàn...",
-                    source: "Báo Tài nguyên & Môi trường",
-                    badge_color: "#0284c7",
-                    pub_date: `${todayStr} • 07:30`,
-                    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=900&q=80",
-                    category: "PM25"
-                },
-                {
-                    title: "Ứng dụng ảnh vệ tinh Sentinel-5P và AI trong việc cảnh báo sớm ô nhiễm sol khí tại Nam Bộ",
-                    link: "https://tuoitre.vn",
-                    summary: "Mô hình kết hợp ảnh vệ tinh TROPOMI và trạm quan trắc mặt đất giúp đưa ra dự báo chính xác chuỗi thời gian nồng độ bụi mịn PM2.5...",
-                    source: "Báo Tuổi Trẻ",
-                    badge_color: "#e11d48",
-                    pub_date: `${todayStr} • 06:15`,
-                    image: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80",
-                    category: "PM25"
-                },
-                {
-                    title: "Kế hoạch điều phối phân luồng xe tải nặng giảm thiểu phát thải bụi tại các cửa ngõ TP.HCM",
-                    link: "https://sggp.org.vn",
-                    summary: "Sở Tài nguyên & Môi trường phối hợp với cơ quan liên ngành triển khai các kịch bản tưới nước rửa đường và điều tiết lưu thông...",
-                    source: "Báo Sài Gòn Giải Phóng",
-                    badge_color: "#16a34a",
-                    pub_date: `${todayStr} • Hôm qua`,
-                    image: "https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=600&q=80",
-                    category: "POLICY"
-                },
-                {
-                    title: "Khuyến cáo y tế: Lựa chọn khẩu trang lọc bụi mịn chuẩn N95 khi di chuyển trong khung giờ cao điểm",
-                    link: "https://vnexpress.net",
-                    summary: "Khuyến nghị của các chuyên gia y tế hô hấp dành cho người già và trẻ nhỏ khi sinh sống tại các khu vực điểm nóng ô nhiễm...",
-                    source: "VnExpress Sức Khỏe",
-                    badge_color: "#7c2d12",
-                    pub_date: `${todayStr} • Hôm qua`,
-                    image: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=600&q=80",
-                    category: "WEATHER"
-                }
-            ];
-            allNewsData = fallbackNews;
-            renderNewsUI(fallbackNews);
+            console.warn("Lỗi nạp tin tức từ Backend:", err);
+            // Đang hiển thị tin thật từ lần trước -> giữ nguyên; chưa có gì -> báo chưa tải được (không dùng tin tự tạo)
+            if (!allNewsData.length) renderNewsUnavailable("Không kết nối được máy chủ AirHCM.");
         });
 }
+
+// Chưa có tin thật: báo rõ cho người dùng và cho phép thử lại (không hiển thị bài viết tự tạo)
+function renderNewsUnavailable(reason) {
+    allNewsData = [];
+    const featured = document.getElementById("news-featured-container");
+    const grid = document.getElementById("news-card-grid");
+    if (featured) {
+        featured.innerHTML = `
+            <div class="panel news-unavailable" role="status">
+                <span class="nu-icon"><i class="fa-solid fa-newspaper"></i></span>
+                <div class="nu-text">
+                    <h3>Chưa tải được tin tức</h3>
+                    <p>${escapeHtml(reason)} Vui lòng thử lại sau ít phút.</p>
+                </div>
+                <button type="button" class="btn btn-gradient" onclick="retryEnvironmentalNews(this)">
+                    <i class="fa-solid fa-rotate-right"></i> Thử lại
+                </button>
+            </div>`;
+    }
+    if (grid) grid.innerHTML = "";
+}
+
+window.retryEnvironmentalNews = function (btn) {
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loader-dots"></span> Đang tải...';
+    }
+    fetchEnvironmentalNews();
+};
 
 // Ảnh bài báo + lớp nền dự phòng (ảnh lỗi / mất mạng -> hiện nền màu thay vì khung trống)
 function newsImageStyle(url) {
@@ -3935,7 +3923,12 @@ window.handleSocialAuth = async function (provider) {
         const res = await fetch(`${API_BASE}/auth/user/social`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id_token: idToken, fullname: result.user.displayName || null })
+            // Một số tài khoản (Google Workspace / email trường học) chỉ có tên trong dữ liệu nhà cung cấp
+            body: JSON.stringify({
+                id_token: idToken,
+                fullname: result.user.displayName
+                    || ((result.user.providerData || []).map(p => p && p.displayName).find(Boolean)) || null
+            })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.detail || "Máy chủ AirHCM từ chối xác thực.");

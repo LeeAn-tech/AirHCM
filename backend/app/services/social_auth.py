@@ -64,6 +64,10 @@ def verify_social_token(id_token: str) -> dict:
 
     identities = (firebase_claims.get("identities") or {}).get(provider_id) or []
     email = (decoded.get("email") or "").strip().lower()
+    name = (decoded.get("name") or "").strip()
+    # Một số tài khoản (Facebook; Google Workspace / email trường học chưa xác minh với Google) không có email
+    # hoặc tên trong token -> đọc hồ sơ nhà cung cấp mà Firebase lưu (provider_data) bằng Admin SDK
+    profile = _provider_profile(decoded["uid"], provider_id) if not (email and name) else {}
     return {
         "uid": decoded["uid"],
         "provider": provider,
@@ -72,23 +76,61 @@ def verify_social_token(id_token: str) -> dict:
         "email": email,
         "email_verified": bool(decoded.get("email_verified")),
         # Facebook: Firebase không đưa email vào token (chưa coi là đã xác minh) nhưng vẫn lưu trong hồ sơ
-        "provider_email": "" if email else _provider_email(decoded["uid"], provider_id),
-        "name": (decoded.get("name") or "").strip(),
+        "provider_email": "" if email else profile.get("email", ""),
+        "name": name or profile.get("name", ""),
         "picture": decoded.get("picture") or "",
     }
 
 
-def _provider_email(uid: str, provider_id: str) -> str:
-    """Email mà nhà cung cấp trả về, đọc từ hồ sơ Firebase bằng Admin SDK (cần serviceAccountKey.json)"""
+def provider_names(uids) -> list:
+    """Tên các phương thức (Google / Facebook / Apple) của các danh tính Firebase đã liên kết - đọc bằng Admin SDK"""
+    names = []
+    for uid in uids or []:
+        try:
+            record = firebase_auth.get_user(uid, app=_firebase_app())
+        except Exception as e:
+            print(f"-> [Đăng nhập MXH] Không đọc được hồ sơ Firebase: {type(e).__name__}")
+            continue
+        for p in record.provider_data:
+            name = PROVIDERS.get(p.provider_id)
+            if name and name not in names:
+                names.append(name)
+    return names
+
+
+def latest_provider(uids) -> str:
+    """Phương thức của lần đăng nhập gần nhất trong các danh tính Firebase đã liên kết (theo last_sign_in của Firebase)"""
+    best_name, best_ts = "", -1
+    for uid in uids or []:
+        try:
+            record = firebase_auth.get_user(uid, app=_firebase_app())
+        except Exception as e:
+            print(f"-> [Đăng nhập MXH] Không đọc được hồ sơ Firebase: {type(e).__name__}")
+            continue
+        ts = (record.user_metadata.last_sign_in_timestamp or 0) if record.user_metadata else 0
+        for p in record.provider_data:
+            name = PROVIDERS.get(p.provider_id)
+            if name and ts > best_ts:
+                best_name, best_ts = name, ts
+    return best_name
+
+
+def _provider_profile(uid: str, provider_id: str) -> dict:
+    """Email & tên hiển thị mà nhà cung cấp trả về, đọc từ hồ sơ Firebase bằng Admin SDK (cần serviceAccountKey.json)"""
     try:
         record = firebase_auth.get_user(uid, app=_firebase_app())
     except Exception as e:
         print(f"-> [Đăng nhập MXH] Không đọc được hồ sơ Firebase: {type(e).__name__}")
-        return ""
+        return {}
+    out = {"email": "", "name": (record.display_name or "").strip()}
     for p in record.provider_data:
-        if p.provider_id == provider_id and p.email:
-            return p.email.strip().lower()
-    return ""
+        if p.provider_id != provider_id:
+            continue
+        if p.email and not out["email"]:
+            out["email"] = p.email.strip().lower()
+        if p.display_name and not out["name"]:
+            out["name"] = p.display_name.strip()
+    return out
 
 
 # ------------------------------------------------------------------------------

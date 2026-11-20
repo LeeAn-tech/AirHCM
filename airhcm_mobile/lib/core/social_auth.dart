@@ -56,7 +56,10 @@ class SocialAuth {
       final user = cred.user;
       final token = await user?.getIdToken();
       if (user == null || token == null) throw ApiException('$name không trả về thông tin tài khoản.');
-      return await ApiService.socialLogin(token, fullname: user.displayName);
+      // Một số tài khoản (Google Workspace / email trường học) chỉ có tên trong dữ liệu nhà cung cấp
+      final displayName = user.displayName ??
+          user.providerData.map((p) => p.displayName).firstWhere((n) => n != null && n.isNotEmpty, orElse: () => null);
+      return await ApiService.socialLogin(token, fullname: displayName);
     } on FirebaseAuthException catch (e) {
       final message = describe(e, name);
       if (message == null) throw SocialAuthCancelled();

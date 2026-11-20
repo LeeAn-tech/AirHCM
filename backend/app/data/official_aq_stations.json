@@ -1,0 +1,736 @@
+{
+ "type": "FeatureCollection",
+ "source": "Phụ lục 1 - Chương trình quan trắc tài nguyên và môi trường TP.HCM năm 2026, kèm Quyết định 921/QĐ-UBND ngày 11/02/2026 của UBND TP.HCM",
+ "source_url": "https://hochiminhcity.gov.vn/documents/39403/198301/Chuong_trinh_QTTNMT_nam_2026_signed.pdf",
+ "summary": "157 điểm quan trắc không khí xung quanh = 124 điểm định kỳ + 33 trạm tự động liên tục (33 trạm đang tạm thời quan trắc định kỳ trong quá trình chờ phát triển thành trạm tự động). Bụi PM2.5 lấy mẫu trung bình 24 giờ, 1 ngày/tháng (29 điểm giao thông lớn: 4 ngày/tháng).",
+ "data_public_realtime": false,
+ "coordinates_note": "Văn bản chỉ ghi địa chỉ; tọa độ do AirHCM xác định (địa danh OpenStreetMap trong đúng phường, hoặc tâm phường khi không tra được) - chỉ mang tính minh họa vị trí.",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.706335,
+     10.787842
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_ZOO",
+    "name": "Thảo Cầm Viên",
+    "kind": "Nền",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26740",
+    "ward": "Phường Sài Gòn",
+    "location": "Trong khuôn viên Thảo Cầm Viên, quận 1 (nay là Phường Sài Gòn)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.685654,
+     10.797608
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_TSH",
+    "name": "Tân Sơn Hòa",
+    "kind": "Dân cư",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27058",
+    "ward": "Phường Cầu Kiệu",
+    "location": "Mảng xanh cách tòa nhà chính Khu di tích lịch sử địa đạo Củ Chi khoảng 40 m về hướng tây nam, quận Phú Nhuận (nay là Phường Cầu Kiệu)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.687139,
+     10.780446
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_DOST",
+    "name": "DOSTE",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27139",
+    "ward": "Phường Xuân Hòa",
+    "location": "Tại Sở Khoa học và Công nghệ, quận 3 (nay là Phường Xuân Hòa)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.660778,
+     10.755584
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_HB",
+    "name": "Hồng Bàng",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27343",
+    "ward": "Phường Chợ Lớn",
+    "location": "Tại trường THCS Hồng Bàng, quận 5 (nay là Phường Chợ Lớn)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.808513,
+     10.502804
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_CG",
+    "name": "Cần Giờ",
+    "kind": "Nền",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27673",
+    "ward": "Xã An Thới Đông",
+    "location": "Đất trống lô 26, khoảnh 2, tiểu khu 10c - Rừng phòng hộ Cần Giờ (nay là Xã An Thới Đông)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.62142,
+     10.815506
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_TB",
+    "name": "Tân Bình",
+    "kind": "Công nghiệp",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27013",
+    "ward": "Phường Tây Thạnh",
+    "location": "Công viên trong khuôn viên chung cư Tây Thạnh, quận Tân Phú (nay là Phường Tây Thạnh)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.653337,
+     10.791102
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_TN",
+    "name": "Thống Nhất",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26968",
+    "ward": "Phường Tân Sơn Nhất",
+    "location": "Tại bệnh viện Thống Nhất, quận Tân Bình (nay là Phường Tân Sơn Nhất)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.774947,
+     10.769736
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_CL",
+    "name": "Cát Lái",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27112",
+    "ward": "Phường Cát Lái",
+    "location": "Vòng xoay Mỹ Thủy (Nguyễn Thị Định - Vành đai 2), quận 2 cũ (nay là Phường Cát Lái)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.628524,
+     10.854541
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_QT",
+    "name": "Quang Trung",
+    "kind": "Nền",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26785",
+    "ward": "Phường Trung Mỹ Tây",
+    "location": "Trong khuôn viên Công viên phần mềm Quang Trung, quận 12 (nay là Phường Trung Mỹ Tây)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.663542,
+     10.878591
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_TA",
+    "name": "Thới An",
+    "kind": "Dân cư",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26773",
+    "ward": "Phường Thới An",
+    "location": "Khu đô thị Thới An - Hà Đô, quận 12 (nay là Phường Thới An)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.730576,
+     10.717921
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PMH",
+    "name": "Phú Mỹ Hưng",
+    "kind": "Dân cư",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27487",
+    "ward": "Phường Tân Mỹ",
+    "location": "Khu đô thị Phú Mỹ Hưng, quận 7 (nay là Phường Tân Mỹ)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.762196,
+     10.857199
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_LT",
+    "name": "Linh Trung",
+    "kind": "Công nghiệp",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26824",
+    "ward": "Phường Thủ Đức",
+    "location": "Trường Đại học Ngân hàng TP.HCM, TP. Thủ Đức (nay là Phường Thủ Đức)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.735825,
+     10.757828
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_HTP-NVL",
+    "name": "Huỳnh Tấn Phát - Nguyễn Văn Linh",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27478",
+    "ward": "Phường Tân Thuận",
+    "location": "Khu vực giao lộ Huỳnh Tấn Phát - Nguyễn Văn Linh, quận 7 (nay là Phường Tân Thuận)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.61517,
+     10.84295
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_AS",
+    "name": "An Sương",
+    "kind": "Giao thông",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26785",
+    "ward": "Phường Trung Mỹ Tây",
+    "location": "Khu vực Ngã tư An Sương, quận 12 (nay là Phường Trung Mỹ Tây)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (giao lộ Ngã tư An Sương)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.82468,
+     10.85654
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_Q9",
+    "name": "Quận 9",
+    "kind": "Nền",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "26833",
+    "ward": "Phường Long Bình",
+    "location": "Trong sân golf, đường Hoàng Hữu Nam, TP. Thủ Đức (nay là Phường Long Bình)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (Sân golf Thủ Đức)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.551075,
+     10.788752
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_LMX",
+    "name": "Lê Minh Xuân",
+    "kind": "Công nghiệp",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27604",
+    "ward": "Xã Tân Vĩnh Lộc",
+    "location": "Công viên góc đường số 3 và số 6, khu dân cư Vĩnh Lộc B, Bình Chánh (nay là Xã Tân Vĩnh Lộc)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.751174,
+     10.634957
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_HP",
+    "name": "Hiệp Phước",
+    "kind": "Công nghiệp",
+    "region": "Vùng TP.HCM (trước hợp nhất)",
+    "ward_code": "27658",
+    "ward": "Xã Hiệp Phước",
+    "location": "Khu dân cư tập trung xã Long Thới, huyện Nhà Bè (nay là Xã Hiệp Phước)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.76141,
+     10.89385
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PDA",
+    "name": "Trung tâm hành chính Phường Dĩ An",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25942",
+    "ward": "Phường Dĩ An",
+    "location": "Ngay trước khu Trung tâm hành chính phường Dĩ An",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (Trung tâm hành chính Dĩ An)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.702716,
+     10.902521
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PLT",
+    "name": "UBND Phường Lái Thiêu",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25966",
+    "ward": "Phường Lái Thiêu",
+    "location": "Ngay trước khu Trung tâm hành chính phường Lái Thiêu",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.67596,
+     10.98699
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PPL",
+    "name": "Trung tâm Quan trắc Tài nguyên và Môi trường - CS2",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25750",
+    "ward": "Phường Phú Lợi",
+    "location": "Trong khuôn viên Trung tâm Quan trắc - Khu vực 2 (số 26 Huỳnh Văn Nghệ), phường Phú Lợi",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Gần đúng: đường Huỳnh Văn Nghệ trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.689066,
+     11.054804
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_TPMBD",
+    "name": "Trung tâm hành chính thành phố mới Bình Dương",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25760",
+    "ward": "Phường Bình Dương",
+    "location": "Đối diện tòa nhà Trung tâm hành chính thành phố mới Bình Dương",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.561866,
+     11.167961
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PBC",
+    "name": "Phường Long Nguyên",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25840",
+    "ward": "Phường Long Nguyên",
+    "location": "Gần Trung tâm hội nghị triển lãm phường Long Nguyên",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.79459,
+     11.05904
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_PTU",
+    "name": "Phường Tân Uyên",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25888",
+    "ward": "Phường Tân Uyên",
+    "location": "Khu Trung tâm thương mại và khu chợ phường Tân Uyên",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (Chợ Tân Uyên)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.744027,
+     10.918435
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_KCNST2",
+    "name": "KCN Sóng Thần II",
+    "kind": "Công nghiệp",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25942",
+    "ward": "Phường Dĩ An",
+    "location": "Đường số 22, trước cổng nhà máy xử lý nước thải KCN Sóng Thần 2",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.650151,
+     11.096771
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_KCNMP3",
+    "name": "KCN Mỹ Phước III",
+    "kind": "Công nghiệp",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25846",
+    "ward": "Phường Thới Hòa",
+    "location": "Khu vực đường C1 giao đường C3, KCN Mỹ Phước 3",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.741,
+     10.97802
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_NTMOC",
+    "name": "Ngã tư Miếu Ông Cù",
+    "kind": "Giao thông",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25975",
+    "ward": "Phường An Phú",
+    "location": "Tại ngã tư Miễu Ông Cù",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (Ngã tư Miếu Ông Cù, ĐT747B)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.71204,
+     10.90109
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_NTCOB",
+    "name": "Ngã tư cầu Ông Bố",
+    "kind": "Giao thông",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25987",
+    "ward": "Phường Bình Hòa",
+    "location": "Tại UBND phường Bình Hòa (ngã tư cầu Ông Bố)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Gần đúng: cầu Ông Bố trên OpenStreetMap"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.737428,
+     10.959464
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_NTAN",
+    "name": "Ngã sáu An Phú",
+    "kind": "Giao thông",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25975",
+    "ward": "Phường An Phú",
+    "location": "Ngay phòng khám đa khoa An Phú, phường An Phú (ngã sáu An Phú)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.743145,
+     11.061804
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_VXKH",
+    "name": "Vòng xoay cây xăng Kim Hằng",
+    "kind": "Giao thông",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25920",
+    "ward": "Phường Tân Hiệp",
+    "location": "Tại vòng xoay cây xăng Kim Hằng, phường Tân Hiệp",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.402617,
+     11.332531
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_XDT",
+    "name": "Trung tâm hành chính xã Dầu Tiếng",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25777",
+    "ward": "Xã Dầu Tiếng",
+    "location": "Đối diện khu Trung tâm hành chính tập trung xã Dầu Tiếng",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.861008,
+     11.307124
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_ĐT9",
+    "name": "Trung tâm hành chính huyện Phú Giáo",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25858",
+    "ward": "Xã Phú Giáo",
+    "location": "Trung tâm hành chính huyện Phú Giáo (cũ)",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Tâm phường/xã (vị trí gần đúng)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.84965,
+     11.12787
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_XBTU",
+    "name": "Trung tâm hành chính xã Bắc Tân Uyên",
+    "kind": "Dân cư",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25906",
+    "ward": "Xã Bắc Tân Uyên",
+    "location": "Ngay cổng chào đường vào khu Trung tâm hành chính tập trung xã Bắc Tân Uyên",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap (Trung tâm hành chính Bắc Tân Uyên)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     106.602933,
+     11.25802
+    ]
+   },
+   "properties": {
+    "code": "HCM_KK_KCNBB",
+    "name": "KCN Bàu Bàng",
+    "kind": "Công nghiệp",
+    "region": "Vùng Bình Dương (trước hợp nhất)",
+    "ward_code": "25822",
+    "ward": "Xã Bàu Bàng",
+    "location": "Trên đường NC gần cổng chào KCN Bàu Bàng",
+    "method": "Tự động liên tục",
+    "status": "Tạm thời quan trắc định kỳ gián đoạn (chờ phát triển thành trạm tự động)",
+    "accuracy": "Địa danh trên OpenStreetMap"
+   }
+  }
+ ]
+}

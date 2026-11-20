@@ -157,12 +157,13 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   // Trạm dự phòng khi chưa kết nối được máy chủ
   static const List<Map<String, dynamic>> _fallbackStations = [
-    {'ma_tram': 'HCM_OM_01', 'ten_tram': 'Trạm quan trắc trung tâm TP.HCM', 'lat': 10.8231, 'lng': 106.6297, 'status': 'HOẠT ĐỘNG'},
-    {'ma_tram': 'HCM_Q1_02', 'ten_tram': 'Trạm Quan trắc Trung tâm Q.1', 'lat': 10.7769, 'lng': 106.7009, 'status': 'HOẠT ĐỘNG'},
-    {'ma_tram': 'HCM_Q8_03', 'ten_tram': 'Trạm Quan trắc Bình Đông - Q.8', 'lat': 10.7328, 'lng': 106.6525, 'status': 'HOẠT ĐỘNG'},
-    {'ma_tram': 'HCM_TD_04', 'ten_tram': 'Trạm Khu đô thị TP. Thủ Đức', 'lat': 10.8494, 'lng': 106.7583, 'status': 'HOẠT ĐỘNG'},
-    {'ma_tram': 'HCM_BT_05', 'ten_tram': 'Trạm Cửa ngõ KCN Bình Tân', 'lat': 10.7483, 'lng': 106.6022, 'status': 'HOẠT ĐỘNG'},
-    {'ma_tram': 'HCM_CC_06', 'ten_tram': 'Trạm Sinh thái Ngoại ô Củ Chi', 'lat': 10.9731, 'lng': 106.4952, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_OM_01', 'ten_tram': 'Điểm giám sát ảo - Phường Tân Sơn', 'lat': 10.8231, 'lng': 106.6297, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_GV_01', 'ten_tram': 'Điểm giám sát ảo - Phường An Hội Đông', 'lat': 10.8387, 'lng': 106.6653, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_Q1_02', 'ten_tram': 'Điểm giám sát ảo - Phường Sài Gòn', 'lat': 10.7769, 'lng': 106.7009, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_Q8_03', 'ten_tram': 'Điểm giám sát ảo - Phường Bình Đông', 'lat': 10.7328, 'lng': 106.6525, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_TD_04', 'ten_tram': 'Điểm giám sát ảo - Phường Thủ Đức', 'lat': 10.8494, 'lng': 106.7583, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_BT_05', 'ten_tram': 'Điểm giám sát ảo - Phường Tân Tạo', 'lat': 10.7483, 'lng': 106.6022, 'status': 'HOẠT ĐỘNG'},
+    {'ma_tram': 'HCM_CC_06', 'ten_tram': 'Điểm giám sát ảo - Xã Tân An Hội', 'lat': 10.9731, 'lng': 106.4952, 'status': 'HOẠT ĐỘNG'},
   ];
 
   @override
@@ -435,7 +436,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 
   _Selection get _current {
-    return _selection ?? _Selection('Trạm Trung tâm TP.HCM', 'Số liệu quan trắc thời gian thực', _basePm, _hcmCenter, Icons.cell_tower, city: true);
+    return _selection ??
+        _Selection('Toàn TP.HCM · ước tính', 'Theo giờ từ vệ tinh + CAMS/ERA5 (không phải trạm đo)', _basePm, _hcmCenter,
+            Icons.satellite_alt, city: true);
   }
 
   // ---------------------------------------------------------------------------
@@ -472,10 +475,10 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     final point = LatLng(AqiUtils.toDouble(st['lat']), AqiUtils.toDouble(st['lng']));
     final pm = _stationPmNow(st);
     setState(() {
-      _selection = _Selection('${st['ten_tram']}', 'Mã trạm ${st['ma_tram']} · ${st['status'] ?? 'HOẠT ĐỘNG'}', pm, point, Icons.cell_tower);
+      _selection = _Selection('${st['ten_tram']}', 'Điểm giám sát ảo ${st['ma_tram']} · AQI ước tính', pm, point, Icons.satellite_alt);
       _highlight = WardCatalog.locate(point);
     });
-    _openPopup(_MapPopup(point, '${st['ten_tram']}', 'Trạm quan trắc · ${st['ma_tram']}', pm), zoom: zoom);
+    _openPopup(_MapPopup(point, '${st['ten_tram']}', 'Điểm giám sát ảo · ước tính', pm), zoom: zoom);
   }
 
   void _selectWard(WardShape w) {
@@ -565,10 +568,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     for (final st in _stations) {
       if ('${st['ten_tram']}'.toLowerCase().contains(q) || '${st['ma_tram']}'.toLowerCase().contains(q)) {
         _selectStation(st, zoom: 14);
-        _toast('Đã định vị trạm: ${st['ten_tram']}');
+        _toast('Đã định vị: ${st['ten_tram']}');
         return;
       }
     }
+
     for (final w in _wards) {
       if (w.name.toLowerCase().contains(q) || w.displayName.toLowerCase().contains(q)) {
         _selectWard(w);
@@ -576,7 +580,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         return;
       }
     }
-    _toast('Không tìm thấy "$query" trong 168 phường/xã và trạm quan trắc');
+    _toast('Không tìm thấy "$query" trong 168 phường/xã và điểm giám sát ảo');
   }
 
   Future<void> _locateMe() async {
@@ -741,7 +745,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                   const Divider(height: 26),
                   const Text('Lớp dữ liệu WebGIS', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                   const SizedBox(height: 4),
-                  sw('Trạm quan trắc', Icons.cell_tower, AppColors.brand, _showStations, (v) => _showStations = v),
+                  sw('Điểm giám sát ảo (AQI ước tính)', Icons.satellite_alt, AppColors.brand, _showStations, (v) => _showStations = v),
                   sw('Bản đồ nhiệt (Heatmap)', Icons.local_fire_department, const Color(0xFFEA580C), _showHeat, (v) => _showHeat = v),
                   sw('Ranh giới phường/xã', Icons.map_outlined, const Color(0xFF7C3AED), _showWards, (v) => _showWards = v),
                   const Divider(height: 22),
@@ -1277,7 +1281,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         textInputAction: TextInputAction.search,
         onSubmitted: _search,
         decoration: InputDecoration(
-          hintText: 'Tìm phường/xã hoặc trạm quan trắc...',
+          hintText: 'Tìm phường/xã hoặc điểm giám sát...',
           hintStyle: const TextStyle(fontSize: 13.5, color: AppColors.muted),
           prefixIcon: const Icon(Icons.search, color: AppColors.brand),
           suffixIcon: IconButton(

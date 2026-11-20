@@ -82,6 +82,7 @@ class ApiService {
   // ---------------------------------------------------------------------------
   static Future<Map<String, dynamic>> currentAqi() async => _map(await _get('/aqi/current'));
 
+  /// Điểm giám sát ảo (PostGIS) - vị trí hiển thị AQI ƯỚC TÍNH của phường, không phải trạm đo
   static Future<List<dynamic>> stations() async => _list(await _get('/gis/stations'));
 
   static Future<List<dynamic>> spatialSummary() async => _list(await _get('/aqi/spatial-summary'));

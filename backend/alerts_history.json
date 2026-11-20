@@ -1,5 +1,49 @@
 [
   {
+    "time": "2026-11-20 22:08:13",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 27.7,
+    "peak_aqi": 86,
+    "peak_time": "2026-11-21 06:00",
+    "exceed_hours": 0,
+    "trigger": "admin",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-20 18:26:51",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 30.6,
+    "peak_aqi": 91,
+    "peak_time": "2026-11-20 23:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-20 12:25:47",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 30.7,
+    "peak_aqi": 91,
+    "peak_time": "2026-11-20 22:00",
+    "exceed_hours": 0,
+    "trigger": "admin",
+    "push_sent": 0
+  },
+  {
+    "time": "2026-11-20 10:01:11",
+    "status": "NORMAL",
+    "title": "✅ Chất lượng không khí trong ngưỡng an toàn",
+    "peak_pm25": 31.2,
+    "peak_aqi": 92,
+    "peak_time": "2026-11-20 23:00",
+    "exceed_hours": 0,
+    "trigger": "scheduler",
+    "push_sent": 0
+  },
+  {
     "time": "2026-11-20 05:22:37",
     "status": "NORMAL",
     "title": "✅ Chất lượng không khí trong ngưỡng an toàn",

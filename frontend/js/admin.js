@@ -424,11 +424,13 @@ function fetchAdminStations() {
         })
         .catch(err => {
             const mockStations = [
-                { ma_tram: "HCM_OM_01", ten_tram: "Trạm quan trắc trung tâm TP.HCM", don_vi_quan_ly: "Open-Meteo & GEE", lat: 10.8231, lng: 106.6297, status: "HOẠT ĐỘNG" },
-                { ma_tram: "HCM_GV_01", ten_tram: "Trạm Quan trắc Gò Vấp - Q.12", don_vi_quan_ly: "Trung tâm QTMT Nam Bộ", lat: 10.8350, lng: 106.6650, status: "HOẠT ĐỘNG" },
-                { ma_tram: "HCM_Q1_02", ten_tram: "Trạm Quan trắc Bến Thành - Q.1", don_vi_quan_ly: "Chi cục BVMT TP.HCM", lat: 10.7769, lng: 106.7009, status: "HOẠT ĐỘNG" },
-                { ma_tram: "HCM_TD_04", ten_tram: "Trạm Khu đô thị TP. Thủ Đức", don_vi_quan_ly: "Trung tâm QTMT Nam Bộ", lat: 10.8494, lng: 106.7583, status: "HOẠT ĐỘNG" },
-                { ma_tram: "HCM_BT_05", ten_tram: "Trạm Cửa ngõ KCN Bình Tân", don_vi_quan_ly: "Sở TN&MT TP.HCM", lat: 10.7483, lng: 106.6022, status: "HOẠT ĐỘNG" }
+                { ma_tram: "HCM_OM_01", ten_tram: "Điểm giám sát ảo - Phường Tân Sơn", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8231, lng: 106.6297, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_GV_01", ten_tram: "Điểm giám sát ảo - Phường An Hội Đông", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8387, lng: 106.6653, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_Q1_02", ten_tram: "Điểm giám sát ảo - Phường Sài Gòn", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7769, lng: 106.7009, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_Q8_03", ten_tram: "Điểm giám sát ảo - Phường Bình Đông", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7328, lng: 106.6525, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_TD_04", ten_tram: "Điểm giám sát ảo - Phường Thủ Đức", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8494, lng: 106.7583, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_BT_05", ten_tram: "Điểm giám sát ảo - Phường Tân Tạo", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7483, lng: 106.6022, status: "HOẠT ĐỘNG" },
+                { ma_tram: "HCM_CC_06", ten_tram: "Điểm giám sát ảo - Xã Tân An Hội", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.9731, lng: 106.4952, status: "HOẠT ĐỘNG" }
             ];
             adminStationList = mockStations;
             renderStationTableAndMap(mockStations);
@@ -436,7 +438,7 @@ function fetchAdminStations() {
 }
 
 function renderStationTableAndMap(stations) {
-    document.getElementById("adm-total-stations").innerText = `${stations.length} Trạm`;
+    document.getElementById("adm-total-stations").innerText = `${stations.length} điểm`;
 
     const tbody = document.getElementById("adm-station-table");
     if (tbody) tbody.innerHTML = "";
@@ -459,9 +461,9 @@ function renderStationTableAndMap(stations) {
         if (tbody) {
             const row = `
                 <tr>
-                    <td><span class="chip chip-neutral">${st.ma_tram}</span></td>
-                    <td class="cell-strong">${st.ten_tram}</td>
-                    <td>${st.don_vi_quan_ly}</td>
+                    <td><span class="chip chip-neutral">${escapeHtml(st.ma_tram)}</span></td>
+                    <td class="cell-strong">${escapeHtml(st.ten_tram)}</td>
+                    <td>${escapeHtml(st.don_vi_quan_ly)}</td>
                     <td class="cell-muted nowrap">${lat.toFixed(4)}, ${lng.toFixed(4)}</td>
                     <td class="center nowrap">${statusBadge}</td>
                     <td class="center nowrap">
@@ -469,10 +471,10 @@ function renderStationTableAndMap(stations) {
                             <button onclick="zoomToStation(${lat}, ${lng})" class="btn-act act-view" title="Xem vị trí">
                                 <i class="fa-solid fa-eye"></i> Xem
                             </button>
-                            <button onclick="openEditStationModal('${st.ma_tram}')" class="btn-act act-edit" title="Chỉnh sửa trạm">
+                            <button onclick="openEditStationModal('${st.ma_tram}')" class="btn-act act-edit" title="Chỉnh sửa điểm">
                                 <i class="fa-solid fa-pen-to-square"></i> Sửa
                             </button>
-                            <button onclick="deleteStation('${st.ma_tram}')" class="btn-act act-del" title="Xóa trạm">
+                            <button onclick="deleteStation('${st.ma_tram}')" class="btn-act act-del" title="Xóa điểm">
                                 <i class="fa-solid fa-trash"></i> Xóa
                             </button>
                         </div>
@@ -486,7 +488,7 @@ function renderStationTableAndMap(stations) {
             const radarIcon = L.divIcon({
                 className: 'custom-station-icon',
                 html: `
-                    <div class="station-radar-marker" title="${st.ten_tram}">
+                    <div class="station-radar-marker" title="${escapeHtml(st.ten_tram)}">
                         <div class="station-radar-wave"></div>
                         <div class="station-radar-core"></div>
                     </div>
@@ -499,10 +501,10 @@ function renderStationTableAndMap(stations) {
             const stStatus = st.status || 'HOẠT ĐỘNG';
             marker.bindPopup(`
                 <div class="pop-card">
-                    <h4 class="pop-title"><i class="fa-solid fa-tower-broadcast"></i> ${st.ten_tram}</h4>
-                    <div class="pop-sub">Mã trạm: ${st.ma_tram}</div>
+                    <h4 class="pop-title"><i class="fa-solid fa-satellite-dish"></i> ${escapeHtml(st.ten_tram)}</h4>
+                    <div class="pop-sub">Điểm giám sát ảo · ${escapeHtml(st.ma_tram)}</div>
                     <div class="pop-meta">
-                        <span><b>Đơn vị:</b> ${st.don_vi_quan_ly}</span>
+                        <span><b>Nguồn số liệu:</b> ${escapeHtml(st.don_vi_quan_ly)}</span>
                         <span><b>Tọa độ:</b> ${lat.toFixed(4)}N, ${lng.toFixed(4)}E</span>
                     </div>
                     <span class="chip ${stStatus === 'BẢO TRÌ' ? 'chip-warning' : 'chip-success'}">${stStatus}</span>
@@ -553,10 +555,10 @@ window.submitNewStation = function (e) {
             fetchAdminStations();
             closeAddStationModal();
             document.getElementById("form-add-station").reset();
-            showAdminToast(`✅ Đã thêm trạm "${newSt.ten_tram}" và đồng bộ PostGIS thành công!`);
+            showAdminToast(`✅ Đã thêm điểm giám sát "${newSt.ten_tram}" và đồng bộ PostGIS thành công!`);
         })
         .catch(err => {
-            alert("Lỗi khi thêm trạm: " + err.message);
+            alert("Lỗi khi thêm điểm giám sát: " + err.message);
         })
         .finally(() => {
             btnSubmit.innerHTML = originalText;
@@ -571,7 +573,7 @@ window.submitNewStation = function (e) {
 window.openEditStationModal = function (ma_tram) {
     const st = adminStationList.find(s => s.ma_tram === ma_tram);
     if (!st) {
-        alert("Không tìm thấy thông tin trạm!");
+        alert("Không tìm thấy thông tin điểm giám sát!");
         return;
     }
 
@@ -616,7 +618,7 @@ window.submitEditStation = function (e) {
         body: JSON.stringify(payload)
     })
         .then(res => {
-            if (!res.ok) throw new Error("Cập nhật trạm thất bại");
+            if (!res.ok) throw new Error("Cập nhật điểm giám sát thất bại");
             return res.json();
         })
         .then(data => {
@@ -631,7 +633,7 @@ window.submitEditStation = function (e) {
             }
             renderStationTableAndMap(adminStationList);
             closeEditStationModal();
-            showAdminToast(`✅ Đã cập nhật trạm "${ma_tram}" sang trạng thái: ${selectedStatus}!`);
+            showAdminToast(`✅ Đã cập nhật điểm "${ma_tram}" sang trạng thái: ${selectedStatus}!`);
             // Đồng bộ lại với Backend
             fetchAdminStations();
         })
@@ -646,7 +648,7 @@ window.submitEditStation = function (e) {
 
 // Xử lý Xóa trạm quan trắc
 window.deleteStation = function (ma_tram) {
-    if (!confirm(`⚠️ XÁC NHẬN: Bạn có chắc chắn muốn xóa trạm quan trắc "${ma_tram}" khỏi CSDL PostGIS? Hành động này không thể hoàn tác!`)) {
+    if (!confirm(`⚠️ XÁC NHẬN: Bạn có chắc chắn muốn xóa điểm giám sát "${ma_tram}" khỏi CSDL PostGIS? Hành động này không thể hoàn tác!`)) {
         return;
     }
 
@@ -654,7 +656,7 @@ window.deleteStation = function (ma_tram) {
         method: "DELETE"
     })
         .then(res => {
-            if (!res.ok) throw new Error("Xóa trạm thất bại");
+            if (!res.ok) throw new Error("Xóa điểm giám sát thất bại");
             return res.json();
         })
         .then(data => {
@@ -662,7 +664,7 @@ window.deleteStation = function (ma_tram) {
             showAdminToast(`🗑️ ${data.message}`);
         })
         .catch(err => {
-            alert("Lỗi khi xóa trạm: " + err.message);
+            alert("Lỗi khi xóa điểm giám sát: " + err.message);
         });
 };
 // ==============================================================================
@@ -974,11 +976,11 @@ window.broadcastAlertToAll = function () {
 // 1. Xuất danh sách trạm quan trắc PostGIS
 window.exportStationsToCSV = function () {
     if (!adminStationList || adminStationList.length === 0) {
-        alert("Chưa có dữ liệu trạm để xuất!");
+        alert("Chưa có dữ liệu điểm giám sát để xuất!");
         return;
     }
 
-    let csvContent = "\uFEFFMã Trạm,Tên Trạm Quan Trắc,Đơn Vị Quản Lý,Vĩ Độ (Lat),Kinh Độ (Lng),Trạng Thái\n";
+    let csvContent = "\uFEFFMã điểm,Tên điểm giám sát ảo,Nguồn số liệu,Vĩ Độ (Lat),Kinh Độ (Lng),Trạng Thái\n";
     adminStationList.forEach(st => {
         csvContent += `"${st.ma_tram}","${st.ten_tram}","${st.don_vi_quan_ly}",${st.lat},${st.lng},"${st.status || 'HOẠT ĐỘNG'}"\n`;
     });
@@ -986,11 +988,11 @@ window.exportStationsToCSV = function () {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Danh_sach_Tram_Quan_Trac_AirHCM_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `Danh_sach_Diem_Giam_Sat_Ao_AirHCM_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showAdminToast("📊 Đã xuất thành công file Excel danh sách trạm quan trắc!");
+    showAdminToast("📊 Đã xuất thành công file Excel danh sách điểm giám sát ảo!");
 };
 
 // 2. Xuất danh sách người dân đăng ký cảnh báo AQI
@@ -1134,14 +1136,13 @@ window.setBufferRadius = function (radiusMeters, btnEl) {
 
     // 3. Lấy danh sách trạm quan trắc thực tế từ PostGIS (có cơ chế fallback nếu chưa nạp xong)
     const stations = (adminStationList && adminStationList.length > 0) ? adminStationList : [
-        { ma_tram: "HCM_OM_01", ten_tram: "Trạm Quan trắc Trung tâm TP.HCM", lat: 10.8231, lng: 106.6297 },
-        { ma_tram: "HCM_GV_01", ten_tram: "Trạm Quan trắc Gò Vấp - Q.12", lat: 10.8350, lng: 106.6650 },
-        { ma_tram: "HCM_Q1_02", ten_tram: "Trạm Quan trắc Bến Thành - Q.1", lat: 10.7769, lng: 106.7009 },
-        { ma_tram: "HCM_Q8_03", ten_tram: "Trạm Quan trắc Bình Đông - Q.8", lat: 10.7328, lng: 106.6525 },
-        { ma_tram: "HCM_TD_04", ten_tram: "Trạm Khu đô thị TP. Thủ Đức", lat: 10.8494, lng: 106.7583 },
-        { ma_tram: "HCM_BT_05", ten_tram: "Trạm Cửa ngõ KCN Bình Tân", lat: 10.7483, lng: 106.6022 },
-        { ma_tram: "HCM_TP_07", ten_tram: "Trạm Quan Trắc Sơn Kỳ - Tân Phú", lat: 10.7987, lng: 106.6300 },
-        { ma_tram: "HCM_CC_06", ten_tram: "Trạm Sinh thái Ngoại ô Củ Chi", lat: 10.9731, lng: 106.4952 }
+        { ma_tram: "HCM_OM_01", ten_tram: "Điểm giám sát ảo - Phường Tân Sơn", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8231, lng: 106.6297, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_GV_01", ten_tram: "Điểm giám sát ảo - Phường An Hội Đông", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8387, lng: 106.6653, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_Q1_02", ten_tram: "Điểm giám sát ảo - Phường Sài Gòn", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7769, lng: 106.7009, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_Q8_03", ten_tram: "Điểm giám sát ảo - Phường Bình Đông", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7328, lng: 106.6525, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_TD_04", ten_tram: "Điểm giám sát ảo - Phường Thủ Đức", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.8494, lng: 106.7583, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_BT_05", ten_tram: "Điểm giám sát ảo - Phường Tân Tạo", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.7483, lng: 106.6022, status: "HOẠT ĐỘNG" },
+        { ma_tram: "HCM_CC_06", ten_tram: "Điểm giám sát ảo - Xã Tân An Hội", don_vi_quan_ly: "AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)", lat: 10.9731, lng: 106.4952, status: "HOẠT ĐỘNG" }
     ];
 
     let highRiskCount = 0;
@@ -1154,8 +1155,9 @@ window.setBufferRadius = function (radiusMeters, btnEl) {
 
         // Phân loại nguy cơ: Các trạm cửa ngõ, công nghiệp mật độ xe cao hiển thị viền đỏ cảnh báo
         const nameLower = (st.ten_tram || "").toLowerCase();
-        const isHighRisk = nameLower.includes("bình tân") || nameLower.includes("quận 8") ||
-            nameLower.includes("tân phú") || nameLower.includes("trung tâm");
+        // Khu cửa ngõ / công nghiệp / lõi đô thị (Bình Tân - Tân Tạo, Quận 8 - Bình Đông, Tân Sơn, Sài Gòn)
+        const isHighRisk = ["tân tạo", "bình đông", "tân sơn", "sài gòn", "bình tân", "quận 8", "tân phú", "trung tâm"]
+            .some(k => nameLower.includes(k));
 
         const circleColor = isHighRisk ? "#dc2626" : "#f59e0b";
         const fillColor = isHighRisk ? "#ef4444" : "#fbbf24";
@@ -1174,9 +1176,9 @@ window.setBufferRadius = function (radiusMeters, btnEl) {
         circle.bindPopup(`
             <div style="font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; min-width: 210px;">
                 <h4 style="margin: 0 0 6px 0; color: ${circleColor};">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Vùng ảnh hưởng: ${st.ten_tram}
+                    <i class="fa-solid fa-triangle-exclamation"></i> Vùng ảnh hưởng: ${escapeHtml(st.ten_tram)}
                 </h4>
-                <p style="margin: 2px 0;"><b>Mã trạm:</b> ${st.ma_tram}</p>
+                <p style="margin: 2px 0;"><b>Mã điểm:</b> ${escapeHtml(st.ma_tram)}</p>
                 <p style="margin: 2px 0;"><b>Bán kính phân tán:</b> ${radiusMeters / 1000} km</p>
                 <p style="margin: 2px 0;"><b>Đánh giá rủi ro:</b> <b style="color: ${circleColor};">${isHighRisk ? 'Nguy cơ cao (Ưu tiên xử lý)' : 'Mức kiểm soát'}</b></p>
                 <hr style="margin: 6px 0; border: 0; border-top: 1px solid #e2e8f0;">
@@ -1198,7 +1200,7 @@ window.setBufferRadius = function (radiusMeters, btnEl) {
     }
 
     if (typeof showAdminToast === "function") {
-        showAdminToast(`📡 Đã kích hoạt ${stations.length} vùng đệm (${radiusMeters / 1000}km) trên toàn mạng lưới trạm!`);
+        showAdminToast(`📡 Đã kích hoạt ${stations.length} vùng đệm (${radiusMeters / 1000}km) quanh các điểm giám sát ảo!`);
     }
 };
 
@@ -1242,7 +1244,7 @@ window.toggleStationStatus = function (ma_tram, currentStatus) {
 
     const targetStation = adminStationList.find(s => s.ma_tram === ma_tram);
     const payload = {
-        ten_tram: targetStation ? targetStation.ten_tram : "Trạm quan trắc",
+        ten_tram: targetStation ? targetStation.ten_tram : "Điểm giám sát",
         don_vi_quan_ly: targetStation ? targetStation.don_vi_quan_ly : "Sở TN&MT TP.HCM",
         lat: targetStation ? targetStation.lat : 10.8231,
         lng: targetStation ? targetStation.lng : 106.6297,
@@ -1259,7 +1261,7 @@ window.toggleStationStatus = function (ma_tram, currentStatus) {
             return res.json();
         })
         .then(() => {
-            showAdminToast(`🔄 Đã đổi trạm ${ma_tram} sang trạng thái: ${newStatus}`);
+            showAdminToast(`🔄 Đã đổi điểm ${ma_tram} sang trạng thái: ${newStatus}`);
             fetchAdminStations(); // Làm mới danh sách trạm và bản đồ
         })
         .catch(err => alert("Lỗi: " + err.message));
@@ -1288,6 +1290,16 @@ function memberAreasHtml(u) {
     return parts.length ? `<div class="cell-muted" style="font-size: 11px; margin-top: 2px;">${parts.join(" &middot; ")}</div>` : "";
 }
 
+function providerChip(p, title) {
+    const map = {
+        Google: ["chip-danger", "fa-brands fa-google"],
+        Facebook: ["chip-info", "fa-brands fa-facebook"],
+        Apple: ["chip-dark", "fa-brands fa-apple"],
+    };
+    const [cls, icon] = map[p] || ["chip-neutral", "fa-solid fa-envelope"];
+    return `<span class="chip ${cls}" title="${escapeHtml(title)}"><i class="${icon}"></i> ${escapeHtml(map[p] ? p : "Email")}</span>`;
+}
+
 function renderAdminUsersTable(users) {
     const tbody = document.getElementById("adm-users-table-body");
     if (!tbody) return;
@@ -1306,10 +1318,17 @@ function renderAdminUsersTable(users) {
             ? `<span class="chip chip-danger"><i class="fa-solid fa-lock"></i> BỊ KHÓA</span>`
             : `<span class="chip chip-success"><i class="fa-solid fa-circle-check"></i> HOẠT ĐỘNG</span>`;
 
-        let providerBadge = `<span class="chip chip-neutral"><i class="fa-solid fa-envelope"></i> Email</span>`;
-        if (u.provider === 'Google') providerBadge = `<span class="chip chip-danger"><i class="fa-brands fa-google"></i> Google</span>`;
-        else if (u.provider === 'Facebook') providerBadge = `<span class="chip chip-info"><i class="fa-brands fa-facebook"></i> Facebook</span>`;
-        else if (u.provider === 'Apple') providerBadge = `<span class="chip chip-dark"><i class="fa-brands fa-apple"></i> Apple</span>`;
+        // Phương thức của lần đăng nhập gần nhất: vào bằng Facebook -> Facebook, vào bằng Google -> Google.
+        // (Tài khoản vẫn liên kết chung theo email; danh sách đầy đủ xem ở chú thích khi rê chuột.)
+        const method = u.last_provider || u.provider || "Email";
+        const linked = (Array.isArray(u.providers) && u.providers.length) ? u.providers : [u.provider || "Email"];
+        const providerBadge = providerChip(method,
+            `Đăng nhập gần nhất bằng ${method} · đăng ký bằng ${u.provider || "Email"}` +
+            (linked.length > 1 ? ` · đã liên kết: ${linked.join(", ")}` : ""));
+        const lastLogin = u.last_login
+            ? `<div class="cell-muted" style="font-size: 11px; margin-top: 2px;" title="Lần đăng nhập gần nhất">
+                   <i class="fa-solid fa-right-to-bracket"></i> ${escapeHtml(u.last_login)}</div>`
+            : "";
 
         // Số thứ tự hiển thị tự động tăng (ID thật vẫn dùng để gọi API)
         const stt = idx + 1;
@@ -1328,7 +1347,7 @@ function renderAdminUsersTable(users) {
                 </td>
                 <td>${u.email ? `<a href="mailto:${escapeHtml(u.email)}" class="link-mail">${escapeHtml(u.email)}</a>` : '<span class="cell-muted">—</span>'}</td>
                 <td>${providerBadge}</td>
-                <td class="cell-muted nowrap">${u.created_at || 'Mới'}</td>
+                <td class="cell-muted nowrap">${escapeHtml(u.created_at || 'Mới')}${lastLogin}</td>
                 <td class="center nowrap">${statusBadge}</td>
                 <td class="center nowrap">
                     <div class="act-group">
@@ -1456,10 +1475,11 @@ window.exportUsersToCSV = function () {
     }
 
     // Đổi tiêu đề cột đầu tiên thành STT
-    let csvContent = "\uFEFFSTT,Họ và Tên,Địa Chỉ Email,Phương Thức Đăng Ký,Thời Gian Tạo,Trạng Thái\n";
+    let csvContent = "\uFEFFSTT,Họ và Tên,Địa Chỉ Email,Phương Thức Đăng Nhập (gần nhất),Thời Gian Tạo,Đăng Nhập Gần Nhất,Trạng Thái\n";
 
     adminUsersList.forEach((u, idx) => {
-        csvContent += `${idx + 1},"${u.fullname}","${u.email}","${u.provider}","${u.created_at || ''}","${u.status}"\n`;
+        const method = u.last_provider || u.provider || "Email";
+        csvContent += `${idx + 1},"${u.fullname}","${u.email || ''}","${method}","${u.created_at || ''}","${u.last_login || ''}","${u.status}"\n`;
     });
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

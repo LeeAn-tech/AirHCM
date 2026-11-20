@@ -6,7 +6,7 @@
     <!-- Cấu hình chuẩn ứng dụng di động PWA & Chống zoom vỡ layout -->
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AirHCM — WebGIS Dự báo AQI & Cảnh báo Sức khỏe TP.HCM</title>
+    <title>AirHCM — WebGIS Dự báo Chất lượng Không khí đa chất & Cảnh báo Sức khỏe TP.HCM</title>
     <meta name="description"
         content="Hệ thống WebGIS dự báo chất lượng không khí PM2.5/AQI và cảnh báo sức khỏe cho TP. Hồ Chí Minh - HCMUNRE">
     <meta name="theme-color" content="#0b1b4d">
@@ -33,7 +33,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="assets/css/style.css?v=20261120c">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261120i">
     <link rel="stylesheet" href="assets/css/air-forecast.css?v=20261117a">
     <link rel="stylesheet" href="assets/css/air-analysis.css?v=20261119a">
     <link rel="stylesheet" href="assets/css/map3d.css?v=20261120a">
@@ -46,7 +46,7 @@
         <div class="preloader-core">
             <div class="preloader-logo preloader-logo--img"><img src="assets/img/logo-mark.png" alt="AirHCM" width="84" height="84"></div>
             <div class="preloader-text"><span class="text-gradient">AirHCM</span></div>
-            <div class="preloader-sub">Đang đồng bộ dữ liệu quan trắc không khí...</div>
+            <div class="preloader-sub">Đang đồng bộ dữ liệu chất lượng không khí...</div>
             <div class="preloader-bar"></div>
         </div>
     </div>
@@ -106,8 +106,8 @@
         <!-- THANH TIÊU ĐỀ -->
         <header class="topbar">
             <div class="header-title">
-                <span class="header-eyebrow"><i class="fa-solid fa-satellite-dish"></i> AirHCM<span class="eyebrow-extra"> · WebGIS Platform</span></span>
-                <h2>Hệ thống WebGIS Dự báo Chất lượng Không khí (PM2.5/AQI) & Cảnh báo Sức khỏe</h2>
+                <span class="header-eyebrow"><i class="fa-solid fa-satellite-dish"></i> AirHCM<span class="eyebrow-extra"> · WebGIS Platform · VN_AQI / US AQI · 168 phường/xã</span></span>
+                <h2 title="Hệ thống WebGIS Dự báo Chất lượng Không khí (PM2.5, PM10, NO₂, SO₂, CO, O₃, CO₂) &amp; Cảnh báo Sức khỏe TP.HCM">Hệ thống WebGIS Dự báo Chất lượng Không khí (PM2.5, PM10, NO₂, SO₂, CO, O₃, CO₂) &amp; Cảnh báo Sức khỏe</h2>
                 <p>Khoa Công Nghệ Thông Tin - Trường ĐH Tài nguyên & Môi trường TP.HCM | SVTH: Lê Hoàng Ân | GVHD: TS.
                     Dương Thị Thúy Nga</p>
             </div>
@@ -184,19 +184,19 @@
             <!-- Bảng thông tin địa điểm: AQI, PM2.5, đường đi & hỗ trợ ra quyết định -->
             <aside id="panel-place" class="panel glass place-panel" hidden></aside>
 
-            <!-- Khung Trạm Trung tâm -->
+            <!-- Khung số liệu toàn TP.HCM (ước tính từ vệ tinh + CAMS/ERA5 hạ quy mô - không phải trạm đo) -->
             <div id="panel-station" class="panel glass floating-top-left">
                 <div class="panel-header station-head">
-                    <div class="station-title">
-                        <span class="icon-chip sm"><i class="fa-solid fa-tower-broadcast"></i></span>
+                    <div class="station-title" title="Trung bình toàn TP.HCM, ước tính theo giờ từ vệ tinh (Sentinel-5P, MODIS) + mô hình CAMS/ERA5 hạ quy mô về 168 phường/xã. TP.HCM chưa có trạm tự động công bố PM2.5 theo giờ (QĐ 921/QĐ-UBND).">
+                        <span class="icon-chip sm"><i class="fa-solid fa-satellite"></i></span>
                         <div>
-                            <h4>Trạm Trung tâm TP.HCM</h4>
+                            <h4>Toàn TP.HCM · ước tính</h4>
                             <span class="badge-time"><i class="fa-regular fa-clock"></i> <span
                                     id="realtime-clock">Đang nạp...</span></span>
                         </div>
                     </div>
                     <div class="station-head-right">
-                        <span class="chip chip-live"><span class="pulse-dot"></span> LIVE</span>
+                        <span class="chip chip-live" title="Cập nhật mỗi giờ từ dữ liệu vệ tinh + mô hình"><span class="pulse-dot"></span> Theo giờ</span>
                         <button type="button" class="panel-collapse-btn" data-toggle-target="panel-station"
                             data-toggle-class="collapsed" title="Thu gọn / Mở rộng">
                             <i class="fa-solid fa-chevron-up"></i>
@@ -231,10 +231,10 @@
                         <span>Nhiệt độ (ERA5)</span>
                         <b id="current-temp">-- °C</b>
                     </div>
-                    <div class="metric-item m-teal">
+                    <div class="metric-item m-teal" id="current-aerosol-box" title="Chỉ số sol khí hấp thụ (AAI) Sentinel-5P - số liệu vệ tinh mới nhất">
                         <i class="fa-solid fa-satellite"></i>
-                        <span>Khí dung (S5P)</span>
-                        <b id="current-aerosol">0.75 AAI</b>
+                        <span id="current-aerosol-label">Khí dung (S5P)</span>
+                        <b id="current-aerosol">-- AAI</b>
                     </div>
                 </div>
             </div>
@@ -353,8 +353,8 @@
                 <div class="layer-section" id="layers-2d">
                     <div class="layer-group-title"><i class="fa-solid fa-layer-group"></i> Lớp dữ liệu WebGIS</div>
                     <label class="layer-item">
-                        <span class="layer-name"><span class="li-ico"><i class="fa-solid fa-tower-broadcast"></i></span>
-                            Trạm quan trắc</span>
+                        <span class="layer-name" title="Vị trí đại diện hiển thị AQI ước tính của phường (vệ tinh + CAMS) - không phải trạm đo"><span class="li-ico"><i class="fa-solid fa-satellite-dish"></i></span>
+                            Điểm giám sát ảo</span>
                         <input type="checkbox" id="chk-stations" class="switch" checked>
                     </label>
                     <label class="layer-item">
@@ -436,6 +436,9 @@
                     <div><span style="background: #FF0000;"></span> 151–200 · Xấu</div>
                     <div><span style="background: #8F3F97;"></span> 201–300 · Rất xấu</div>
                     <div><span style="background: #7E0023;"></span> &gt;300 · Nguy hại</div>
+                </div>
+                <div class="legend-points">
+                    <div><span class="lp-virtual">72</span> Điểm giám sát ảo · AQI ước tính</div>
                 </div>
                 <div class="wind-legend">
                     <div class="wind-legend-bar"></div>
@@ -861,7 +864,6 @@
                                     <th>Mã Phường/Xã</th>
                                     <th>Tên Phường/Xã</th>
                                     <th>Diện tích (km²)</th>
-                                    <th>Trạm lân cận</th>
                                     <th>PM2.5 Trung bình</th>
                                     <th class="center">VN_AQI</th>
                                     <th>Tình trạng</th>
@@ -1219,7 +1221,7 @@
                     <div class="hero-orbit"><span></span><span></span><span></span></div>
                     <i class="fa-solid fa-earth-asia hero-globe"></i>
                     <span class="hero-eyebrow">Đồ án Chuyên ngành · HCMUNRE</span>
-                    <h2>Hệ thống WebGIS Dự báo Chất lượng Không khí AirHCM</h2>
+                    <h2>Hệ thống WebGIS Dự báo Chất lượng Không khí đa chất AirHCM</h2>
                     <p>Đồ án Chuyên ngành Công nghệ Thông tin - Chuyên ngành Tin Học Môi trường | Trường Đại học Tài
                         nguyên và Môi trường TP.HCM (HCMUNRE)</p>
                     <div class="hero-badges">
@@ -1318,13 +1320,22 @@
                                         bụi công nghiệp.</td>
                                 </tr>
                                 <tr>
-                                    <td><b>Mạng lưới Trạm Quan trắc Mặt đất PostGIS</b></td>
-                                    <td><b>8 Trạm quan trắc chuẩn</b><br><small class="cell-muted">(Ground Truth mốc
-                                            thực tế)</small></td>
+                                    <td><b>Điểm giám sát ảo (CSDL PostGIS)</b></td>
+                                    <td><b>7 điểm đại diện</b><br><small class="cell-muted">(không phải trạm đo
+                                            thực địa)</small></td>
                                     <td><b>1 giờ / lần (Hourly)</b><br><span class="chip chip-info"
-                                            style="margin-top: 4px;">Đồng bộ CSDL PostGIS</span></td>
-                                    <td>Dữ liệu kiểm chứng thực địa, dùng để hiệu chỉnh sai số (Calibration/Bias
-                                        Correction) cho ô lưới mô hình.</td>
+                                            style="margin-top: 4px;">Ước tính từ mô hình</span></td>
+                                    <td>Hiển thị giá trị ước tính (vệ tinh + CAMS/ERA5 hạ quy mô) của phường chứa điểm;
+                                        không dùng làm số liệu đo hay để hiệu chỉnh mô hình.</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Trạm quan trắc chính thức TP.HCM (QĐ 921/QĐ-UBND, 11/02/2026)</b></td>
+                                    <td><b>33 trạm tự động liên tục</b><br><small class="cell-muted">(trong 157 điểm
+                                            quan trắc không khí)</small></td>
+                                    <td><b>Đang quan trắc định kỳ</b><br><small class="cell-muted">PM2.5 mẫu 24 giờ,
+                                            1 ngày/tháng</small></td>
+                                    <td>Chưa hiển thị trên bản đồ vì các trạm chưa vận hành tự động và chưa công bố số
+                                        liệu đo theo giờ. Khi có số liệu sẽ dùng để kiểm chứng, hiệu chỉnh mô hình.</td>
                                 </tr>
                                 <tr>
                                     <td><b>Bản đồ WebGIS Phân vùng Hành chính</b></td>
@@ -1391,17 +1402,17 @@
     <!-- KHUNG BÁO CÁO CÔNG VỤ XUẤT PDF ĐỘC LẬP (CHỈ HIỂN THỊ KHI IN ẤN TRÊN KHỔ A4)    -->
     <!-- ============================================================================== -->
     <div id="official-print-document">
-        <!-- 1. Tiêu đề thể thức văn bản hành chính -->
+        <!-- 1. Phần đầu: sản phẩm đồ án của sinh viên (không dùng thể thức văn bản của cơ quan nhà nước) -->
         <div class="doc-header">
             <div class="doc-header-left">
-                <p class="doc-bold">UBND THÀNH PHỐ HỒ CHÍ MINH</p>
-                <p class="doc-bold" style="text-decoration: underline;">SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG</p>
-                <p style="font-size: 11px; margin-top: 3px;">Trung tâm Quan trắc Môi trường</p>
-                <p style="font-size: 11px; font-style: italic;">Số: <span id="doc-report-no">.../BC-AQI</span></p>
+                <p class="doc-bold">TRƯỜNG ĐẠI HỌC TÀI NGUYÊN VÀ MÔI TRƯỜNG TP.HCM</p>
+                <p class="doc-bold" style="text-decoration: underline;">KHOA CÔNG NGHỆ THÔNG TIN</p>
+                <p style="font-size: 11px; margin-top: 3px;">Đồ án chuyên ngành · Hệ thống AirHCM</p>
+                <p style="font-size: 11px; font-style: italic;">Mã bản tin: <span id="doc-report-no">AirHCM-...</span></p>
             </div>
             <div class="doc-header-right">
-                <p class="doc-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
-                <p class="doc-bold" style="text-decoration: underline;">Độc lập - Tự do - Hạnh phúc</p>
+                <p class="doc-bold">HỆ THỐNG WEBGIS AIRHCM</p>
+                <p class="doc-bold" style="text-decoration: underline;">Dự báo chất lượng không khí &amp; cảnh báo sức khỏe</p>
                 <p style="font-size: 11.5px; font-style: italic; margin-top: 5px;" id="doc-official-date">
                     TP. Hồ Chí Minh, ngày ... tháng ... năm 2026
                 </p>
@@ -1412,20 +1423,21 @@
         <div class="doc-title-box">
             <h2 class="doc-main-title">BẢN TIN DỰ BÁO CHẤT LƯỢNG KHÔNG KHÍ & CẢNH BÁO SỨC KHỎE</h2>
             <p style="font-size: 12px; margin: 4px 0 0 0; font-style: italic;">
-                (Theo dõi nồng độ bụi mịn PM2.5 trên 168 Phường/Xã/Thị trấn Vùng đô thị TP.HCM)
+                (Ước tính &amp; dự báo PM2.5, PM10, NO₂, SO₂, CO, O₃ cho 168 phường/xã TP.HCM từ dữ liệu vệ tinh và mô hình
+                CAMS/ERA5 - không phải số liệu đo của trạm quan trắc)
             </p>
             <p style="font-size: 11px; color: #333; margin-top: 3px;">
                 Thời điểm xuất bản dữ liệu: <b id="doc-publish-time">--</b>
             </p>
         </div>
 
-        <!-- 3. Bảng số liệu Hiện trạng Quan trắc Trạm Trung tâm -->
+        <!-- 3. Bảng số liệu hiện trạng toàn TP.HCM (ước tính vệ tinh + CAMS/ERA5) -->
         <div class="doc-section">
-            <h4 class="doc-section-title">I. HIỆN TRẠNG CHẤT LƯỢNG KHÔNG KHÍ TẠI TRẠM TRUNG TÂM</h4>
+            <h4 class="doc-section-title">I. HIỆN TRẠNG CHẤT LƯỢNG KHÔNG KHÍ TOÀN TP.HCM (ƯỚC TÍNH TỪ VỆ TINH + CAMS)</h4>
             <table class="doc-table">
                 <thead>
                     <tr>
-                        <th>Chỉ số US AQI</th>
+                        <th id="doc-aqi-label">Chỉ số VN_AQI</th>
                         <th>Nồng độ PM2.5</th>
                         <th>Nồng độ PM10</th>
                         <th>Nhiệt độ (ERA5)</th>
@@ -1454,7 +1466,7 @@
                     <tr>
                         <th style="width: 20%;">Mốc thời gian</th>
                         <th style="width: 20%;">PM2.5 Dự báo</th>
-                        <th style="width: 20%;">US AQI</th>
+                        <th style="width: 20%;" id="doc-fc-aqi-label">VN_AQI</th>
                         <th style="width: 20%;">Phân loại Ô nhiễm</th>
                         <th style="width: 20%;">Đối chiếu QCVN (TB 24h)</th>
                     </tr>
@@ -1470,26 +1482,30 @@
 
         <!-- 5. Khuyến cáo Y tế & Kịch bản Điều hành Đô thị -->
         <div class="doc-section">
-            <h4 class="doc-section-title">III. KHUYẾN NGHỊ Y TẾ & KỊCH BẢN ĐIỀU HÀNH ĐÔ THỊ (HỆ THỐNG DSS)</h4>
+            <h4 class="doc-section-title">III. KHUYẾN NGHỊ Y TẾ & GỢI Ý ỨNG PHÓ ĐÔ THỊ (HỆ THỐNG DSS - THAM KHẢO)</h4>
             <div class="doc-box">
                 <p>• <b>Cộng đồng dân cư:</b> <span id="doc-advice-general">Đang đồng bộ...</span></p>
                 <p style="margin-top: 5px;">• <b>Nhóm người nhạy cảm (Trẻ em, người cao tuổi):</b> <span
                         id="doc-advice-sensitive">Đang đồng bộ...</span></p>
-                <p style="margin-top: 5px;">• <b>Kịch bản chỉ đạo môi trường đô thị:</b> <span
+                <p style="margin-top: 5px;">• <b>Gợi ý ứng phó đô thị (tham khảo):</b> <span
                         id="doc-advice-action">Đang đồng bộ...</span></p>
             </div>
         </div>
 
-        <!-- 6. Chữ ký xác nhận công vụ -->
+        <p class="doc-disclaimer">Bản tin được tạo tự động bởi hệ thống AirHCM - sản phẩm đồ án chuyên ngành của sinh viên
+            Khoa Công nghệ Thông tin, Trường Đại học Tài nguyên và Môi trường TP.HCM; không phải văn bản của cơ quan quản lý
+            nhà nước. Số liệu là ước tính và dự báo từ mô hình, chỉ mang tính tham khảo.</p>
+
+        <!-- 6. Người thực hiện đồ án -->
         <div class="doc-signatures">
             <div class="sig-block">
-                <p class="doc-bold">NGƯỜI LẬP BIỂU</p>
+                <p class="doc-bold">SINH VIÊN THỰC HIỆN</p>
                 <p class="sig-sub">(Ký, ghi rõ họ tên)</p>
                 <div class="sig-space"></div>
                 <p class="doc-bold">Lê Hoàng Ân</p>
             </div>
             <div class="sig-block">
-                <p class="doc-bold">CÁN BỘ PHỤ TRÁCH QUAN TRẮC</p>
+                <p class="doc-bold">GIẢNG VIÊN HƯỚNG DẪN</p>
                 <p class="sig-sub">(Ký, ghi rõ họ tên)</p>
                 <div class="sig-space"></div>
                 <p class="doc-bold">TS. Dương Thị Thúy Nga</p>
@@ -1628,7 +1644,7 @@
     </div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/app.js?v=20261120c"></script>
+    <script src="js/app.js?v=20261120i"></script>
     <script src="js/air-forecast.js?v=20261117a"></script>
     <script src="js/air-analysis.js?v=20261119a"></script>
     <script src="js/map3d.js?v=20261120c"></script>

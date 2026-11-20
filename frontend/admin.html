@@ -21,7 +21,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="assets/css/style.css?v=20261120c">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261120i">
 </head>
 
 <body class="admin-body">
@@ -53,12 +53,12 @@
             <button class="adm-tab-btn active" data-adm-tab="adm-tab-map" data-title="Bản đồ Giám sát GIS"
                 title="Bản đồ Giám sát GIS">
                 <i class="fa-solid fa-map-location-dot"></i>
-                <span class="tab-text">Bản đồ Giám sát GIS<small>Mạng lưới trạm không gian</small></span>
+                <span class="tab-text">Bản đồ Giám sát GIS<small>Điểm giám sát ảo không gian</small></span>
             </button>
             <button class="adm-tab-btn" data-adm-tab="adm-tab-stations-ai"
-                data-title="Quản lý Trạm PostGIS & Mô hình AI" title="Quản lý Trạm PostGIS & Mô hình AI">
+                data-title="Điểm giám sát PostGIS & Mô hình AI" title="Điểm giám sát PostGIS & Mô hình AI">
                 <i class="fa-solid fa-server"></i>
-                <span class="tab-text">Trạm PostGIS & Mô hình AI<small>CSDL, ETL, điểm nóng</small></span>
+                <span class="tab-text">Điểm PostGIS & Mô hình AI<small>CSDL, ETL, điểm nóng</small></span>
             </button>
             <button class="adm-tab-btn" data-adm-tab="adm-tab-subscriptions"
                 data-title="Quản lý Cảnh báo AQI (End-Users)" title="Quản lý Cảnh báo AQI">
@@ -115,11 +115,11 @@
             <section class="admin-kpi-row">
                 <div class="panel admin-kpi-box spotlight" style="--kc: rgba(2,132,199,.14);">
                     <div class="kpi-top">
-                        <span class="kpi-label">Mạng lưới trạm</span>
-                        <span class="icon-chip sm"><i class="fa-solid fa-tower-cell"></i></span>
+                        <span class="kpi-label">Điểm giám sát ảo</span>
+                        <span class="icon-chip sm"><i class="fa-solid fa-satellite-dish"></i></span>
                     </div>
-                    <b class="kpi-value text-blue" id="adm-total-stations" data-countup>8 Trạm</b>
-                    <small class="kpi-sub"><i class="fa-solid fa-database"></i> Đã kết nối PostGIS</small>
+                    <b class="kpi-value text-blue" id="adm-total-stations" data-countup>7 điểm</b>
+                    <small class="kpi-sub"><i class="fa-solid fa-database"></i> Ước tính vệ tinh + CAMS · PostGIS</small>
                 </div>
                 <div class="panel admin-kpi-box spotlight" style="--kc: rgba(6,182,212,.16);">
                     <div class="kpi-top">
@@ -127,7 +127,7 @@
                         <span class="icon-chip sm teal"><i class="fa-solid fa-smog"></i></span>
                     </div>
                     <b class="kpi-value" id="adm-pm25" data-countup>-- µg/m³</b>
-                    <small class="kpi-sub"><i class="fa-solid fa-location-dot"></i> Trạm Trung tâm TP.HCM</small>
+                    <small class="kpi-sub"><i class="fa-solid fa-satellite"></i> Toàn TP.HCM · ước tính vệ tinh + CAMS</small>
                 </div>
                 <div class="panel admin-kpi-box spotlight" style="--kc: rgba(245,158,11,.16);">
                     <div class="kpi-top">
@@ -164,7 +164,7 @@
                         <div class="panel-title">
                             <span class="icon-chip"><i class="fa-solid fa-earth-asia"></i></span>
                             <div>
-                                <h3>Bản đồ Giám sát Mạng lưới Trạm Không gian TP.HCM</h3>
+                                <h3>Bản đồ Giám sát Điểm giám sát ảo TP.HCM</h3>
                                 <p id="adm-ward-scope">Phạm vi 168 Phường/Xã/Thị trấn Vùng đô thị TP.HCM mở rộng</p>
                             </div>
                         </div>
@@ -201,7 +201,7 @@
                             <button type="button" id="btn-toggle-pick" class="btn-tool-pick"
                                 onclick="toggleCoordPickerBtn()">
                                 <span class="pick-status-dot"></span>
-                                <i class="fa-solid fa-crosshairs"></i> Bắt tọa độ trạm trên bản đồ
+                                <i class="fa-solid fa-crosshairs"></i> Bắt tọa độ điểm trên bản đồ
                             </button>
                         </div>
                     </div>
@@ -227,9 +227,9 @@
                                 <div class="panel-title">
                                     <span class="icon-chip"><i class="fa-solid fa-list-check"></i></span>
                                     <div>
-                                        <h3>Quản lý Mạng lưới Trạm Quan trắc PostGIS</h3>
-                                        <p>Danh sách các trạm đo kết nối cơ sở dữ liệu không gian · Bấm vào trạng thái
-                                            để chuyển đổi</p>
+                                        <h3>Quản lý Điểm giám sát ảo (PostGIS)</h3>
+                                        <p>Vị trí đại diện hiển thị AQI ước tính (vệ tinh + CAMS) - không phải trạm đo ·
+                                            Bấm vào trạng thái để chuyển đổi</p>
                                     </div>
                                 </div>
                                 <div class="header-actions">
@@ -237,7 +237,7 @@
                                         <i class="fa-solid fa-file-excel"></i> Xuất Excel (CSV)
                                     </button>
                                     <button class="btn btn-gradient" onclick="openAddStationModal()">
-                                        <i class="fa-solid fa-plus"></i> Thêm Trạm mới
+                                        <i class="fa-solid fa-plus"></i> Thêm điểm mới
                                     </button>
                                 </div>
                             </div>
@@ -245,9 +245,9 @@
                                 <table class="custom-table">
                                     <thead>
                                         <tr>
-                                            <th>Mã Trạm</th>
-                                            <th>Tên Trạm Quan Trắc</th>
-                                            <th>Đơn vị Quản lý</th>
+                                            <th>Mã điểm</th>
+                                            <th>Tên điểm giám sát</th>
+                                            <th>Nguồn số liệu</th>
                                             <th>Tọa độ (Lat, Lng)</th>
                                             <th class="center">Trạng thái</th>
                                             <th class="center">Thao tác</th>
@@ -256,7 +256,7 @@
                                     <tbody id="adm-station-table">
                                         <tr>
                                             <td colspan="6" class="table-empty"><span class="loader-dots"></span> Đang
-                                                nạp danh sách trạm...</td>
+                                                nạp danh sách điểm giám sát...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -368,7 +368,7 @@
                                     <small>Hôm nay, 08:30</small>
                                 </div>
                                 <div class="tl-item" style="--c: #0284c7;">
-                                    <p><b>PostGIS:</b> Kết nối 8 trạm quan trắc chuẩn không gian</p>
+                                    <p><b>PostGIS:</b> 7 điểm giám sát ảo + 168 ranh giới phường/xã</p>
                                     <small>Hôm nay, 08:00</small>
                                 </div>
                                 <div class="tl-item" style="--c: #d97706;">
@@ -477,8 +477,8 @@
                                     <th class="center">STT</th>
                                     <th>Người dùng</th>
                                     <th>Email</th>
-                                    <th>Phương thức</th>
-                                    <th>Thời gian tạo</th>
+                                    <th title="Phương thức của lần đăng nhập gần nhất (tài khoản cùng email được liên kết chung)">Phương thức</th>
+                                    <th>Tạo / Đăng nhập gần nhất</th>
                                     <th class="center">Trạng thái</th>
                                     <th class="center">Thao tác</th>
                                 </tr>
@@ -502,7 +502,7 @@
     <div id="modal-add-station" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3><span class="icon-chip sm"><i class="fa-solid fa-plus"></i></span> Thêm Trạm Quan trắc WebGIS Mới
+                <h3><span class="icon-chip sm"><i class="fa-solid fa-plus"></i></span> Thêm Điểm giám sát ảo
                 </h3>
                 <button class="btn-modal-close" onclick="closeAddStationModal()" aria-label="Đóng">&times;</button>
             </div>
@@ -510,7 +510,7 @@
                 <div class="modal-body form-stack">
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label for="new-st-id">Mã trạm (PostGIS ID) <span class="req">*</span></label>
+                            <label for="new-st-id">Mã điểm (PostGIS ID) <span class="req">*</span></label>
                             <input type="text" id="new-st-id" class="custom-input" placeholder="VD: HCM_Q2_01" required>
                         </div>
                         <div class="form-group">
@@ -522,14 +522,14 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="new-st-name">Tên trạm quan trắc <span class="req">*</span></label>
+                        <label for="new-st-name">Tên điểm giám sát <span class="req">*</span></label>
                         <input type="text" id="new-st-name" class="custom-input"
-                            placeholder="VD: Trạm Quan trắc Thảo Điền - Q.2" required>
+                            placeholder="VD: Điểm giám sát ảo - Phường An Khánh" required>
                     </div>
                     <div class="form-group">
-                        <label for="new-st-owner">Đơn vị quản lý / vận hành <span class="req">*</span></label>
+                        <label for="new-st-owner">Nguồn số liệu <span class="req">*</span></label>
                         <input type="text" id="new-st-owner" class="custom-input"
-                            placeholder="VD: Chi cục Bảo vệ Môi trường TP.HCM" required>
+                            value="AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)" required>
                     </div>
                     <div class="form-grid-2">
                         <div class="form-group">
@@ -557,15 +557,15 @@
     <div id="modal-edit-station" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3><span class="icon-chip sm amber"><i class="fa-solid fa-pen-to-square"></i></span> Chỉnh sửa Trạm
-                    Quan trắc</h3>
+                <h3><span class="icon-chip sm amber"><i class="fa-solid fa-pen-to-square"></i></span> Chỉnh sửa Điểm
+                    giám sát ảo</h3>
                 <button class="btn-modal-close" onclick="closeEditStationModal()" aria-label="Đóng">&times;</button>
             </div>
             <form id="form-edit-station" onsubmit="submitEditStation(event)">
                 <div class="modal-body form-stack">
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label for="edit-st-id">Mã trạm (không đổi)</label>
+                            <label for="edit-st-id">Mã điểm (không đổi)</label>
                             <input type="text" id="edit-st-id" class="custom-input" readonly>
                         </div>
                         <div class="form-group">
@@ -577,14 +577,14 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="edit-st-name">Tên trạm quan trắc <span class="req">*</span></label>
+                        <label for="edit-st-name">Tên điểm giám sát <span class="req">*</span></label>
                         <input type="text" id="edit-st-name" class="custom-input"
-                            placeholder="VD: Trạm Quan Trắc Sơn Kỳ - Quận Tân Phú" required>
+                            placeholder="VD: Điểm giám sát ảo - Phường Tân Sơn" required>
                     </div>
                     <div class="form-group">
-                        <label for="edit-st-owner">Đơn vị quản lý / vận hành <span class="req">*</span></label>
+                        <label for="edit-st-owner">Nguồn số liệu <span class="req">*</span></label>
                         <input type="text" id="edit-st-owner" class="custom-input"
-                            placeholder="VD: Chi cục Bảo vệ Môi Trường Tân Phú" required>
+                            placeholder="VD: AirHCM - ước tính từ vệ tinh + CAMS (không phải trạm đo)" required>
                     </div>
                     <div class="form-grid-2">
                         <div class="form-group">
@@ -795,7 +795,7 @@
     <div id="toast-admin-notification" class="admin-toast" role="status" aria-live="polite"></div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/admin.js?v=20261119b"></script>
+    <script src="js/admin.js?v=20261120d"></script>
 </body>
 
 </html>

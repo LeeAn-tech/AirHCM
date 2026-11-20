@@ -216,7 +216,7 @@ class _DssScreenState extends State<DssScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Trợ lý AI AirHCM', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16.5)),
-                Text('Tư vấn theo dữ liệu quan trắc & dự báo', style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                Text('Tư vấn theo số liệu ước tính & dự báo AI', style: TextStyle(fontSize: 11, color: AppColors.muted)),
               ],
             ),
           ],
@@ -257,7 +257,7 @@ class _DssScreenState extends State<DssScreen> {
     final aqi = AqiUtils.pick(cur?['vn_aqi'], cur?['us_aqi_all'], pm, useUS: useUS);
     final hasLoc = AppState.lastLocation.value != null;
     final locLabel = !_useLocation || !hasLoc
-        ? 'Trạm Trung tâm TP.HCM'
+        ? 'Toàn TP.HCM (ước tính)'
         : (AppState.lastWardName != null ? 'Phường ${AppState.lastWardName}' : 'Vị trí đã chọn');
 
     return Container(
@@ -369,7 +369,7 @@ class _DssScreenState extends State<DssScreen> {
         const Text('Xin chào! Tôi là Trợ lý AI AirHCM', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
         const SizedBox(height: 6),
         const Text(
-          'Tôi trả lời dựa trên số liệu quan trắc thời gian thực, dự báo AI 24 giờ theo phường của bạn '
+          'Tôi trả lời dựa trên số liệu ước tính theo giờ (vệ tinh + CAMS), dự báo AI 24 giờ theo phường của bạn '
           'và cảnh báo QCVN 05:2023 của hệ thống WebGIS.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: AppColors.muted, height: 1.45),

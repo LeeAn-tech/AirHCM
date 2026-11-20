@@ -112,7 +112,6 @@ class _InsightBodyState extends State<_InsightBody> {
   List<Widget> _content(Map<String, dynamic> d) {
     final useUS = AppState.useUSAQI.value;
     final ward = d['ward'] as Map?;
-    final station = d['nearest_station'] as Map?;
     final current = Map<String, dynamic>.from(d['current'] ?? {});
     final fs = Map<String, dynamic>.from(d['forecast_summary'] ?? {});
     final advisory = Map<String, dynamic>.from(d['advisory'] ?? {});
@@ -167,11 +166,8 @@ class _InsightBodyState extends State<_InsightBody> {
                 const SizedBox(height: 6),
                 Text('PM2.5 hiện tại: ${pm.toStringAsFixed(1)} µg/m³',
                     style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.brand)),
-                if (station != null)
-                  Text(
-                    'Trạm gần nhất: ${station['ten_tram']} (${((station['distance_m'] ?? 0) / 1000).toStringAsFixed(1)} km)',
-                    style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                  ),
+                const Text('Ước tính cho phường từ vệ tinh + CAMS/ERA5 (không phải số đo trạm)',
+                    style: TextStyle(fontSize: 11.5, color: AppColors.muted)),
               ],
             ),
           ),

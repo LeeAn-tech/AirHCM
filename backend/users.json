@@ -4,14 +4,30 @@
     "fullname": "Hoàng Ân Lê",
     "email": "lehoangan200504@gmail.com",
     "provider": "Facebook",
-    "avatar": "/api/v1/avatars/u11.jpg?v=1795025942",
+    "avatar": "/api/v1/avatars/u11.jpg?v=1795178828",
     "status": "HOẠT ĐỘNG",
     "created_at": "2026-11-19 01:19",
-    "last_login": "2026-11-19 01:19",
+    "last_login": "2026-11-20 19:47",
     "firebase_uid": "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2",
     "firebase_uids": [
-      "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2"
-    ]
+      "f6dxF1WJLuW1rkzWbz9mUJ4xf3n2",
+      "BecAred8h3YTW1hIetGhdwReFqd2"
+    ],
+    "providers": [
+      "Facebook",
+      "Google"
+    ],
+    "last_provider": "Facebook",
+    "areas": {
+      "home": {
+        "code": "27424",
+        "name": "Phường Bình Đông"
+      },
+      "work": {
+        "code": "27658",
+        "name": "Xã Hiệp Phước"
+      }
+    }
   },
   {
     "id": 10,
@@ -19,13 +35,17 @@
     "email": "lehoangan1128@gmail.com",
     "provider": "Google",
     "avatar": "https://lh3.googleusercontent.com/a/ACg8ocK9BfTn1bv1NgOsVWS8hISkW7X2HsOmqUe0KacOxuYA36zhEGU=s96-c",
-    "status": "HOẠT ĐỘNG",
+    "status": "BỊ KHÓA",
     "created_at": "2026-11-14 10:58",
-    "last_login": "2026-11-17 23:29",
+    "last_login": "2026-11-20 12:17",
     "firebase_uid": "5NZKr9p5ziaNIhdzIFxQyoPK2x13",
     "firebase_uids": [
       "5NZKr9p5ziaNIhdzIFxQyoPK2x13"
-    ]
+    ],
+    "providers": [
+      "Google"
+    ],
+    "last_provider": "Google"
   },
   {
     "id": 9,
@@ -36,7 +56,11 @@
     "status": "HOẠT ĐỘNG",
     "created_at": "2026-11-12 09:57",
     "last_login": "2026-11-16 22:03",
-    "firebase_uid": "1uOFGnFug4Ntd3juryMM82OHyEE3"
+    "firebase_uid": "1uOFGnFug4Ntd3juryMM82OHyEE3",
+    "providers": [
+      "Google"
+    ],
+    "last_provider": "Google"
   },
   {
     "id": 8,
@@ -45,7 +69,11 @@
     "provider": "Email",
     "avatar": "https://ui-avatars.com/api/?name=L%C3%AA%20Minh%20H%C6%B0ng&background=0284c7&color=fff",
     "status": "HOẠT ĐỘNG",
-    "created_at": "2026-11-10 19:49"
+    "created_at": "2026-11-10 19:49",
+    "providers": [
+      "Email"
+    ],
+    "last_provider": "Email"
   },
   {
     "id": 6,
@@ -54,15 +82,10 @@
     "provider": "Google",
     "avatar": "https://ui-avatars.com/api/?name=Hoang+An+Le&background=0284c7&color=fff&size=128&bold=true",
     "status": "HOẠT ĐỘNG",
-    "created_at": "2026-10-23 20:37"
-  },
-  {
-    "id": 3,
-    "fullname": "Nguyễn Mai Phương",
-    "email": "phuong.nguyen@gmail.com",
-    "provider": "Facebook",
-    "avatar": "https://ui-avatars.com/api/?name=Mai+Phuong&background=1877f2&color=fff",
-    "status": "HOẠT ĐỘNG",
-    "created_at": "2026-10-22 09:10"
+    "created_at": "2026-10-23 20:37",
+    "providers": [
+      "Google"
+    ],
+    "last_provider": "Google"
   }
 ]

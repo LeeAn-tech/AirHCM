@@ -1961,6 +1961,63 @@ input[type="range"].time-range-slider::-moz-range-track {
     box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .1);
 }
 
+/* Chú giải điểm giám sát ảo (AQI ước tính - không phải trạm đo) */
+.legend-points {
+    display: grid;
+    gap: 5px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(148, 163, 184, .45);
+}
+
+.legend-points div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+
+.lp-virtual {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .35);
+    border-radius: 50%;
+    font-size: 8px;
+    font-weight: 800;
+    color: #0f172a;
+    background: #facc15;
+}
+
+/* Trang quản trị: các phương thức đăng nhập đã liên kết của một thành viên */
+.provider-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.pop-note-warn {
+    margin-top: 8px;
+    padding: 7px 9px;
+    border-radius: 9px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #854d0e;
+    background: #fef9c3;
+}
+
+.pop-src {
+    margin-top: 6px;
+    font-size: 10.5px;
+    color: var(--text-3, #64748b);
+}
+
 /* ------------------------------------------------------------------------------
    12. TINH CHỈNH LEAFLET (POPUP, TOOLTIP, MARKER)
    ------------------------------------------------------------------------------ */
@@ -3201,6 +3258,45 @@ select.inline-select {
     border-color: transparent;
     color: #fff;
     box-shadow: var(--shadow-brand);
+}
+
+/* Chưa tải được tin thật: thông báo + nút thử lại (không hiển thị bài viết tự tạo) */
+.news-unavailable {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px;
+}
+
+.news-unavailable .nu-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    font-size: 22px;
+    color: #c2410c;
+    background: #ffedd5;
+}
+
+.news-unavailable .nu-text {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.news-unavailable h3 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    color: var(--text);
+}
+
+.news-unavailable p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-2);
 }
 
 .news-featured {
@@ -6981,6 +7077,15 @@ select.inline-select {
 
     .doc-box p {
         margin: 0;
+        text-align: justify;
+    }
+
+    .doc-disclaimer {
+        margin: 12px 0 0;
+        font-size: 10px;
+        font-style: italic;
+        line-height: 1.45;
+        color: #444444;
         text-align: justify;
     }
 

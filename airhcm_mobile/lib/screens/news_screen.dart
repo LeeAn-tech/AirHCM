@@ -96,7 +96,14 @@ class _NewsScreenState extends State<NewsScreen> {
             if (_loading)
               const Padding(padding: EdgeInsets.symmetric(vertical: 60), child: Center(child: CircularProgressIndicator()))
             else if (_error != null)
-              ErrorView(message: _error!, onRetry: _load)
+              ErrorView(message: 'Chưa tải được tin tức: không kết nối được máy chủ AirHCM. Vui lòng thử lại.', onRetry: _load)
+            else if (_news.isEmpty)
+              // Máy chủ chưa lấy được bài viết thật nào từ các báo -> báo rõ (không hiển thị tin tự tạo)
+              ErrorView(
+                message: 'Chưa tải được tin tức: máy chủ chưa lấy được bài viết nào từ các báo (có thể do mất Internet). '
+                    'Vui lòng thử lại sau ít phút.',
+                onRetry: _load,
+              )
             else if (filtered.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),

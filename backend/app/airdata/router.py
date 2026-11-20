@@ -8,12 +8,15 @@ API REST PHÂN HỆ AIRDATA (đa chất ô nhiễm, dự báo realtime 7 ngày, 
   GET  /api/v1/air/model-metrics   Kết quả huấn luyện/kiểm thử các mô hình
   GET  /api/v1/air/verification    Đối chiếu trực tuyến dự báo đã phát hành với số liệu thực
   GET  /api/v1/air/status          Trạng thái luồng cập nhật realtime
+  GET  /api/v1/air/aai             Chỉ số sol khí hấp thụ (AAI) Sentinel-5P mới nhất theo phường + trung bình TP
   POST /api/v1/admin/air/update    (admin) chạy ngay một lượt cập nhật realtime
   POST /api/v1/admin/air/reload-models (admin) nạp lại mô hình sau khi huấn luyện
 """
 import json
 import os
 import threading
+import time
+from datetime import date, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -104,6 +107,49 @@ def air_model_metrics():
 @router.get("/api/v1/air/verification", tags=[TAG])
 def air_verification(days: int = Query(30, ge=1, le=180)):
     return ENGINE.verification(days=days)
+
+
+_AAI_CACHE = {"t": 0.0, "data": None}
+
+
+@router.get("/api/v1/air/aai", tags=[TAG])
+def air_aai():
+    """Chỉ số sol khí hấp thụ (Absorbing Aerosol Index - AAI) của Sentinel-5P TROPOMI, số liệu vệ tinh THẬT mới nhất
+    theo 168 phường (bảng kk_vetinh_phuong_ngay của AirData, trích xuất qua Google Earth Engine).
+
+    Mỗi giá trị là trung bình tổ hợp trượt `composite_days` ngày tính đến `date` (lấp vùng mây); vệ tinh chỉ bay qua
+    khoảng 13:30 mỗi ngày nên AAI KHÔNG có biến thiên theo giờ. AAI > 0: có sol khí hấp thụ (khói, bụi);
+    AAI < 0: chủ yếu mây / sol khí không hấp thụ."""
+    if _AAI_CACHE["data"] is not None and time.time() - _AAI_CACHE["t"] < 600:
+        return _AAI_CACHE["data"]
+    from app.airdata import store
+    today = date.today()
+    try:
+        sat = store.satellite(today - timedelta(days=60), today)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Chưa đọc được số liệu vệ tinh: {e}")
+    if sat is None or sat.empty or "aer_ai" not in sat.columns:
+        raise HTTPException(status_code=404, detail="Chưa có số liệu AAI vệ tinh trong 60 ngày gần nhất.")
+    sat = sat.dropna(subset=["aer_ai"])
+    if sat.empty:
+        raise HTTPException(status_code=404, detail="Chưa có số liệu AAI vệ tinh trong 60 ngày gần nhất.")
+    last = sat["ngay"].max()
+    day = sat[sat["ngay"] == last]
+    vals = day["aer_ai"].astype(float)
+    stream = day["nguon"].mode().iloc[0] if "nguon" in day and not day["nguon"].dropna().empty else None
+    data = {
+        "date": str(last)[:10],
+        "city_mean": round(float(vals.mean()), 3),
+        "min": round(float(vals.min()), 3),
+        "max": round(float(vals.max()), 3),
+        "wards": int(len(vals)),
+        "composite_days": int(C.SAT_COMPOSITE_DAYS),
+        "stream": stream,
+        "source": "Sentinel-5P TROPOMI L3 AER_AI qua Google Earth Engine (AirData)",
+        "by_ward": {str(r.ma_phuong_xa): round(float(r.aer_ai), 3) for r in day.itertuples()},
+    }
+    _AAI_CACHE.update({"t": time.time(), "data": data})
+    return data
 
 
 @router.get("/api/v1/air/status", tags=[TAG])

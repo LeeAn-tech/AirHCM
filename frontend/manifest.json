@@ -1,5 +1,5 @@
 {
-  "name": "Hệ thống WebGIS Dự báo AQI AirHCM",
+  "name": "AirHCM - WebGIS Dự báo Chất lượng Không khí đa chất TP.HCM",
   "short_name": "AirHCM",
   "description": "Dự báo nồng độ bụi mịn PM2.5 và cảnh báo sức khỏe TP.Hồ Chí Minh",
   "start_url": "./index.html",
