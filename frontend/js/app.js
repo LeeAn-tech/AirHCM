@@ -1309,6 +1309,48 @@ function initAQIEvaluator() {
 // ==============================================================================
 // KHỞI TẠO TÍNH NĂNG PLAYBACK 24H (CHỐNG LỖI KẸT TIMER SAU KHI SLEEP MÁY)
 // ==============================================================================
+// ==============================================================================
+// NÚT TỐC ĐỘ PHÁT (dùng chung cho thanh thời gian 2D và hoạt cảnh 3D)
+// Mức 1× = 1 giờ dự báo / giây (2D). Lựa chọn được nhớ trên máy (localStorage).
+// ==============================================================================
+const PLAYBACK_SPEEDS = [0.25, 0.5, 1, 2, 4];
+
+function speedLabel(v) {
+    return `${String(v).replace(".", ",")}×`;
+}
+
+window.createSpeedControl = function (rootId, storageKey, onChange) {
+    const root = document.getElementById(rootId);
+    let saved = NaN;
+    try { saved = Number(localStorage.getItem(storageKey)); } catch (e) { /* trình duyệt chặn lưu trữ */ }
+    let idx = PLAYBACK_SPEEDS.indexOf(saved);
+    if (idx < 0) idx = PLAYBACK_SPEEDS.indexOf(1);
+    const render = () => {
+        if (!root) return;
+        const v = PLAYBACK_SPEEDS[idx];
+        root.querySelector(".speed-val").textContent = speedLabel(v);
+        root.title = `Tốc độ phát: ${speedLabel(v)}`;
+        const [slower, faster] = root.querySelectorAll(".speed-btn");
+        slower.disabled = idx === 0;
+        faster.disabled = idx === PLAYBACK_SPEEDS.length - 1;
+    };
+    if (root) {
+        root.querySelectorAll(".speed-btn").forEach(btn => btn.addEventListener("click", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            idx = Math.max(0, Math.min(PLAYBACK_SPEEDS.length - 1, idx + Number(btn.dataset.step)));
+            try { localStorage.setItem(storageKey, String(PLAYBACK_SPEEDS[idx])); } catch (err) { /* bỏ qua */ }
+            render();
+            onChange(PLAYBACK_SPEEDS[idx]);
+        }));
+        if (typeof L !== "undefined" && L.DomEvent) L.DomEvent.disableClickPropagation(root);
+    }
+    render();
+    return PLAYBACK_SPEEDS[idx];
+};
+
+let playbackSpeed = 1;   // tốc độ thanh thời gian 2D
+
 function initPlaybackFeature() {
     const slider = document.getElementById("time-slider");
     const btnPlay = document.getElementById("btn-play-pause");
@@ -1338,6 +1380,12 @@ function initPlaybackFeature() {
         btnPlay.classList.remove("playing");
     };
 
+    // Nút tốc độ: đổi khi đang phát thì áp dụng ngay
+    playbackSpeed = createSpeedControl("tl-speed", "airhcm_timeline_speed", v => {
+        playbackSpeed = v;
+        if (playbackTimer) window.startPlayback();
+    });
+
     // Hàm bắt đầu chạy timer
     window.startPlayback = function () {
         if (playbackTimer) clearInterval(playbackTimer);
@@ -1352,7 +1400,7 @@ function initPlaybackFeature() {
             const next = (currentVal + 1) % timelineLength(); // Hết 48 giờ thì quay lại mốc hiện tại
             slider.value = next;
             applyTimeStep(next);
-        }, 1000);
+        }, Math.round(1000 / playbackSpeed)); // 1× = 1 giờ/giây; 4× = 4 giờ/giây; 0,25× = 4 giây/giờ
     };
 
     // Sự kiện click nút Play / Pause

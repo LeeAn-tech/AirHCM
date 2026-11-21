@@ -523,7 +523,8 @@
         }));
         $("m3d-rotate").addEventListener("change", e => setRotate(e.target.checked));
         $("m3d-play").addEventListener("click", () => setPlaying(!st.playing));
-        $("m3d-speed").addEventListener("change", e => { st.speed = Number(e.target.value) || 1; });
+        // Nút tốc độ (cùng kiểu với thanh thời gian 2D); 1× = FRAMES_PER_SECOND khung hình/giây
+        st.speed = window.createSpeedControl ? window.createSpeedControl("m3d-speed", "airhcm_3d_speed", v => { st.speed = v; }) : 1;
         $("m3d-slider").addEventListener("input", e => {
             setPlaying(false);
             st.frame = Number(e.target.value);

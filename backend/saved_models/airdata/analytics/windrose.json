@@ -1,0 +1,4526 @@
+{
+ "toan_ky": {
+  "pm2_5": {
+   "n_total": 37694,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 50.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 3395,
+     "freq_pct": 9.01,
+     "low_count": false,
+     "by_speed_pct": [
+      6.86,
+      2.11,
+      0.04,
+      0.0
+     ],
+     "mean": 22.3,
+     "median": 21.08,
+     "p90": 34.55,
+     "p_exceed": 0.0112,
+     "n_exceed": 38,
+     "cbpf": [
+      {
+       "n": 2585,
+       "p": 0.0147,
+       "low_count": false
+      },
+      {
+       "n": 794,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 4180,
+     "freq_pct": 11.09,
+     "low_count": false,
+     "by_speed_pct": [
+      6.33,
+      4.71,
+      0.05,
+      0.0
+     ],
+     "mean": 20.1,
+     "median": 18.43,
+     "p90": 30.6,
+     "p_exceed": 0.0069,
+     "n_exceed": 29,
+     "cbpf": [
+      {
+       "n": 2385,
+       "p": 0.0113,
+       "low_count": false
+      },
+      {
+       "n": 1776,
+       "p": 0.0011,
+       "low_count": false
+      },
+      {
+       "n": 19,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 3600,
+     "freq_pct": 9.55,
+     "low_count": false,
+     "by_speed_pct": [
+      5.07,
+      4.44,
+      0.04,
+      0.0
+     ],
+     "mean": 19.64,
+     "median": 17.81,
+     "p90": 30.86,
+     "p_exceed": 0.0083,
+     "n_exceed": 30,
+     "cbpf": [
+      {
+       "n": 1912,
+       "p": 0.012,
+       "low_count": false
+      },
+      {
+       "n": 1674,
+       "p": 0.0042,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 7494,
+     "freq_pct": 19.88,
+     "low_count": false,
+     "by_speed_pct": [
+      7.09,
+      12.7,
+      0.1,
+      0.0
+     ],
+     "mean": 19.23,
+     "median": 17.71,
+     "p90": 29.92,
+     "p_exceed": 0.0055,
+     "n_exceed": 41,
+     "cbpf": [
+      {
+       "n": 2671,
+       "p": 0.0131,
+       "low_count": false
+      },
+      {
+       "n": 4787,
+       "p": 0.0013,
+       "low_count": false
+      },
+      {
+       "n": 36,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 3811,
+     "freq_pct": 10.11,
+     "low_count": false,
+     "by_speed_pct": [
+      6.36,
+      3.73,
+      0.02,
+      0.0
+     ],
+     "mean": 23.93,
+     "median": 22.4,
+     "p90": 36.83,
+     "p_exceed": 0.0176,
+     "n_exceed": 67,
+     "cbpf": [
+      {
+       "n": 2398,
+       "p": 0.0279,
+       "low_count": false
+      },
+      {
+       "n": 1407,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 8149,
+     "freq_pct": 21.62,
+     "low_count": false,
+     "by_speed_pct": [
+      9.2,
+      11.84,
+      0.58,
+      0.0
+     ],
+     "mean": 22.3,
+     "median": 20.16,
+     "p90": 35.25,
+     "p_exceed": 0.0259,
+     "n_exceed": 211,
+     "cbpf": [
+      {
+       "n": 3468,
+       "p": 0.0536,
+       "low_count": false
+      },
+      {
+       "n": 4464,
+       "p": 0.0056,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4897,
+     "freq_pct": 12.99,
+     "low_count": false,
+     "by_speed_pct": [
+      4.86,
+      7.35,
+      0.78,
+      0.0
+     ],
+     "mean": 20.14,
+     "median": 18.09,
+     "p90": 31.39,
+     "p_exceed": 0.0155,
+     "n_exceed": 76,
+     "cbpf": [
+      {
+       "n": 1832,
+       "p": 0.0344,
+       "low_count": false
+      },
+      {
+       "n": 2772,
+       "p": 0.0047,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 2112,
+     "freq_pct": 5.6,
+     "low_count": false,
+     "by_speed_pct": [
+      4.01,
+      1.56,
+      0.03,
+      0.0
+     ],
+     "mean": 22.82,
+     "median": 21.25,
+     "p90": 34.8,
+     "p_exceed": 0.0099,
+     "n_exceed": 21,
+     "cbpf": [
+      {
+       "n": 1511,
+       "p": 0.0119,
+       "low_count": false
+      },
+      {
+       "n": 588,
+       "p": 0.0051,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 56,
+    "freq_pct": 0.15,
+    "mean": 24.99,
+    "median": 22.98,
+    "p_exceed": 0.0179
+   },
+   "overall_mean": 21.11,
+   "overall_p_exceed": 0.0136,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 56,
+     "mean": 24.99,
+     "p_exceed": 0.0179
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 18762,
+     "mean": 24.4,
+     "p_exceed": 0.0244
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 18262,
+     "mean": 17.97,
+     "p_exceed": 0.0031
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 614,
+     "mean": 13.79,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "TN",
+    "p_exceed": 0.0259,
+    "n": 8149
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 21.62
+   },
+   "pollutant": "pm2_5",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.15,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 5.53,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "no2": {
+   "n_total": 37694,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 100.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 3395,
+     "freq_pct": 9.01,
+     "low_count": false,
+     "by_speed_pct": [
+      6.86,
+      2.11,
+      0.04,
+      0.0
+     ],
+     "mean": 18.04,
+     "median": 17.73,
+     "p90": 29.76,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2585,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 794,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 4180,
+     "freq_pct": 11.09,
+     "low_count": false,
+     "by_speed_pct": [
+      6.33,
+      4.71,
+      0.05,
+      0.0
+     ],
+     "mean": 14.83,
+     "median": 13.63,
+     "p90": 27.32,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2385,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1776,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 19,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 3600,
+     "freq_pct": 9.55,
+     "low_count": false,
+     "by_speed_pct": [
+      5.07,
+      4.44,
+      0.04,
+      0.0
+     ],
+     "mean": 14.68,
+     "median": 12.55,
+     "p90": 28.37,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1912,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1674,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 7494,
+     "freq_pct": 19.88,
+     "low_count": false,
+     "by_speed_pct": [
+      7.09,
+      12.7,
+      0.1,
+      0.0
+     ],
+     "mean": 15.54,
+     "median": 15.1,
+     "p90": 26.45,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2671,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4787,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 36,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 3811,
+     "freq_pct": 10.11,
+     "low_count": false,
+     "by_speed_pct": [
+      6.36,
+      3.73,
+      0.02,
+      0.0
+     ],
+     "mean": 18.17,
+     "median": 17.65,
+     "p90": 32.5,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2398,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1407,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 8149,
+     "freq_pct": 21.62,
+     "low_count": false,
+     "by_speed_pct": [
+      9.2,
+      11.84,
+      0.58,
+      0.0
+     ],
+     "mean": 18.76,
+     "median": 17.78,
+     "p90": 33.17,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 3468,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4464,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4897,
+     "freq_pct": 12.99,
+     "low_count": false,
+     "by_speed_pct": [
+      4.86,
+      7.35,
+      0.78,
+      0.0
+     ],
+     "mean": 15.68,
+     "median": 13.44,
+     "p90": 30.58,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1832,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2772,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 2112,
+     "freq_pct": 5.6,
+     "low_count": false,
+     "by_speed_pct": [
+      4.01,
+      1.56,
+      0.03,
+      0.0
+     ],
+     "mean": 17.72,
+     "median": 16.63,
+     "p90": 31.58,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1511,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 588,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 56,
+    "freq_pct": 0.15,
+    "mean": 20.75,
+    "median": 21.06,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 16.72,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 56,
+     "mean": 20.75,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 18762,
+     "mean": 20.24,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 18262,
+     "mean": 13.4,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 614,
+     "mean": 7.45,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 3395
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 21.62
+   },
+   "pollutant": "no2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.15,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 5.53,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "so2": {
+   "n_total": 37694,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 125.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 3395,
+     "freq_pct": 9.01,
+     "low_count": false,
+     "by_speed_pct": [
+      6.86,
+      2.11,
+      0.04,
+      0.0
+     ],
+     "mean": 11.88,
+     "median": 11.14,
+     "p90": 20.16,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2585,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 794,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 4180,
+     "freq_pct": 11.09,
+     "low_count": false,
+     "by_speed_pct": [
+      6.33,
+      4.71,
+      0.05,
+      0.0
+     ],
+     "mean": 10.13,
+     "median": 9.21,
+     "p90": 17.5,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2385,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1776,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 19,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 3600,
+     "freq_pct": 9.55,
+     "low_count": false,
+     "by_speed_pct": [
+      5.07,
+      4.44,
+      0.04,
+      0.0
+     ],
+     "mean": 9.81,
+     "median": 8.9,
+     "p90": 17.29,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1912,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1674,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 7494,
+     "freq_pct": 19.88,
+     "low_count": false,
+     "by_speed_pct": [
+      7.09,
+      12.7,
+      0.1,
+      0.0
+     ],
+     "mean": 9.64,
+     "median": 9.05,
+     "p90": 16.04,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2671,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4787,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 36,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 3811,
+     "freq_pct": 10.11,
+     "low_count": false,
+     "by_speed_pct": [
+      6.36,
+      3.73,
+      0.02,
+      0.0
+     ],
+     "mean": 12.85,
+     "median": 11.81,
+     "p90": 22.19,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 2398,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1407,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 8149,
+     "freq_pct": 21.62,
+     "low_count": false,
+     "by_speed_pct": [
+      9.2,
+      11.84,
+      0.58,
+      0.0
+     ],
+     "mean": 14.78,
+     "median": 14.1,
+     "p90": 23.62,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 3468,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4464,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4897,
+     "freq_pct": 12.99,
+     "low_count": false,
+     "by_speed_pct": [
+      4.86,
+      7.35,
+      0.78,
+      0.0
+     ],
+     "mean": 13.63,
+     "median": 12.66,
+     "p90": 22.08,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1832,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2772,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 2112,
+     "freq_pct": 5.6,
+     "low_count": false,
+     "by_speed_pct": [
+      4.01,
+      1.56,
+      0.03,
+      0.0
+     ],
+     "mean": 14.15,
+     "median": 13.48,
+     "p90": 22.99,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1511,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 588,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 56,
+    "freq_pct": 0.15,
+    "mean": 16.55,
+    "median": 15.73,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 12.13,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 56,
+     "mean": 16.55,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 18762,
+     "mean": 14.15,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 18262,
+     "mean": 10.16,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 614,
+     "mean": 8.56,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 3395
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 21.62
+   },
+   "pollutant": "so2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.15,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 5.53,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "wind16": {
+   "n_total": 37694,
+   "n_sectors": 16,
+   "calm_threshold": 0.5,
+   "threshold": null,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1708,
+     "freq_pct": 4.53,
+     "low_count": false,
+     "by_speed_pct": [
+      3.47,
+      1.03,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 1,
+     "name": "BĐB",
+     "center_deg": 22.5,
+     "n": 2084,
+     "freq_pct": 5.53,
+     "low_count": false,
+     "by_speed_pct": [
+      3.95,
+      1.56,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 2,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 2170,
+     "freq_pct": 5.76,
+     "low_count": false,
+     "by_speed_pct": [
+      3.17,
+      2.56,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐĐB",
+     "center_deg": 67.5,
+     "n": 1846,
+     "freq_pct": 4.9,
+     "low_count": false,
+     "by_speed_pct": [
+      2.47,
+      2.41,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 4,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 1693,
+     "freq_pct": 4.49,
+     "low_count": false,
+     "by_speed_pct": [
+      2.51,
+      1.96,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 5,
+     "name": "ĐĐN",
+     "center_deg": 112.5,
+     "n": 2411,
+     "freq_pct": 6.4,
+     "low_count": false,
+     "by_speed_pct": [
+      2.76,
+      3.61,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 6,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 4439,
+     "freq_pct": 11.78,
+     "low_count": false,
+     "by_speed_pct": [
+      3.78,
+      7.93,
+      0.07,
+      0.0
+     ]
+    },
+    {
+     "k": 7,
+     "name": "NĐN",
+     "center_deg": 157.5,
+     "n": 2963,
+     "freq_pct": 7.86,
+     "low_count": false,
+     "by_speed_pct": [
+      3.66,
+      4.2,
+      0.01,
+      0.0
+     ]
+    },
+    {
+     "k": 8,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 1693,
+     "freq_pct": 4.49,
+     "low_count": false,
+     "by_speed_pct": [
+      2.98,
+      1.5,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 9,
+     "name": "NTN",
+     "center_deg": 202.5,
+     "n": 1988,
+     "freq_pct": 5.27,
+     "low_count": false,
+     "by_speed_pct": [
+      3.78,
+      1.49,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 10,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 4215,
+     "freq_pct": 11.18,
+     "low_count": false,
+     "by_speed_pct": [
+      5.05,
+      5.99,
+      0.15,
+      0.0
+     ]
+    },
+    {
+     "k": 11,
+     "name": "TTN",
+     "center_deg": 247.5,
+     "n": 4893,
+     "freq_pct": 12.98,
+     "low_count": false,
+     "by_speed_pct": [
+      3.54,
+      8.55,
+      0.9,
+      0.0
+     ]
+    },
+    {
+     "k": 12,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 2176,
+     "freq_pct": 5.77,
+     "low_count": false,
+     "by_speed_pct": [
+      2.37,
+      3.11,
+      0.29,
+      0.0
+     ]
+    },
+    {
+     "k": 13,
+     "name": "TTB",
+     "center_deg": 292.5,
+     "n": 1136,
+     "freq_pct": 3.01,
+     "low_count": false,
+     "by_speed_pct": [
+      1.94,
+      1.05,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 14,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 1043,
+     "freq_pct": 2.77,
+     "low_count": false,
+     "by_speed_pct": [
+      1.96,
+      0.78,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 15,
+     "name": "BTB",
+     "center_deg": 337.5,
+     "n": 1180,
+     "freq_pct": 3.13,
+     "low_count": false,
+     "by_speed_pct": [
+      2.39,
+      0.73,
+      0.01,
+      0.0
+     ]
+    }
+   ],
+   "calm": {
+    "n": 56,
+    "freq_pct": 0.15
+   },
+   "pollutant": null,
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.15,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 5.53,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  }
+ },
+ "mua_kho": {
+  "pm2_5": {
+   "n_total": 14520,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 50.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1881,
+     "freq_pct": 12.95,
+     "low_count": false,
+     "by_speed_pct": [
+      9.46,
+      3.4,
+      0.1,
+      0.0
+     ],
+     "mean": 22.6,
+     "median": 21.69,
+     "p90": 35.2,
+     "p_exceed": 0.0106,
+     "n_exceed": 20,
+     "cbpf": [
+      {
+       "n": 1373,
+       "p": 0.0146,
+       "low_count": false
+      },
+      {
+       "n": 494,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 2695,
+     "freq_pct": 18.56,
+     "low_count": false,
+     "by_speed_pct": [
+      8.84,
+      9.61,
+      0.11,
+      0.0
+     ],
+     "mean": 20.02,
+     "median": 18.54,
+     "p90": 30.06,
+     "p_exceed": 0.0037,
+     "n_exceed": 10,
+     "cbpf": [
+      {
+       "n": 1283,
+       "p": 0.0062,
+       "low_count": false
+      },
+      {
+       "n": 1396,
+       "p": 0.0014,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 2049,
+     "freq_pct": 14.11,
+     "low_count": false,
+     "by_speed_pct": [
+      5.45,
+      8.57,
+      0.1,
+      0.0
+     ],
+     "mean": 19.38,
+     "median": 17.88,
+     "p90": 30.24,
+     "p_exceed": 0.0054,
+     "n_exceed": 11,
+     "cbpf": [
+      {
+       "n": 791,
+       "p": 0.0051,
+       "low_count": false
+      },
+      {
+       "n": 1244,
+       "p": 0.0056,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 5447,
+     "freq_pct": 37.51,
+     "low_count": false,
+     "by_speed_pct": [
+      9.19,
+      28.1,
+      0.22,
+      0.0
+     ],
+     "mean": 19.06,
+     "median": 17.76,
+     "p90": 29.4,
+     "p_exceed": 0.0028,
+     "n_exceed": 15,
+     "cbpf": [
+      {
+       "n": 1335,
+       "p": 0.0067,
+       "low_count": false
+      },
+      {
+       "n": 4080,
+       "p": 0.0015,
+       "low_count": false
+      },
+      {
+       "n": 32,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 1590,
+     "freq_pct": 10.95,
+     "low_count": false,
+     "by_speed_pct": [
+      4.87,
+      6.08,
+      0.0,
+      0.0
+     ],
+     "mean": 23.91,
+     "median": 22.98,
+     "p90": 35.23,
+     "p_exceed": 0.0075,
+     "n_exceed": 12,
+     "cbpf": [
+      {
+       "n": 707,
+       "p": 0.017,
+       "low_count": false
+      },
+      {
+       "n": 883,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 265,
+     "freq_pct": 1.83,
+     "low_count": false,
+     "by_speed_pct": [
+      1.42,
+      0.41,
+      0.0,
+      0.0
+     ],
+     "mean": 27.88,
+     "median": 26.78,
+     "p90": 37.71,
+     "p_exceed": 0.0151,
+     "n_exceed": 4,
+     "cbpf": [
+      {
+       "n": 206,
+       "p": 0.0194,
+       "low_count": false
+      },
+      {
+       "n": 59,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 178,
+     "freq_pct": 1.23,
+     "low_count": false,
+     "by_speed_pct": [
+      1.18,
+      0.04,
+      0.0,
+      0.0
+     ],
+     "mean": 27.63,
+     "median": 27.63,
+     "p90": 37.6,
+     "p_exceed": 0.0056,
+     "n_exceed": 1,
+     "cbpf": [
+      {
+       "n": 172,
+       "p": 0.0058,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 410,
+     "freq_pct": 2.82,
+     "low_count": false,
+     "by_speed_pct": [
+      2.48,
+      0.34,
+      0.0,
+      0.0
+     ],
+     "mean": 25.92,
+     "median": 24.77,
+     "p90": 39.7,
+     "p_exceed": 0.0098,
+     "n_exceed": 4,
+     "cbpf": [
+      {
+       "n": 360,
+       "p": 0.0111,
+       "low_count": false
+      },
+      {
+       "n": 50,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 5,
+    "freq_pct": 0.03,
+    "mean": 35.76,
+    "median": 38.74,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 20.74,
+   "overall_p_exceed": 0.0053,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 5,
+     "mean": 35.76,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 6227,
+     "mean": 24.21,
+     "p_exceed": 0.01
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 8212,
+     "mean": 18.17,
+     "p_exceed": 0.0018
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 76,
+     "mean": 13.35,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "TN",
+    "p_exceed": 0.0151,
+    "n": 265
+   },
+   "dominant_wind_sector": {
+    "name": "ĐN",
+    "freq_pct": 37.51
+   },
+   "pollutant": "pm2_5",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.0,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.03,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 2.71,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "no2": {
+   "n_total": 14520,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 100.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1881,
+     "freq_pct": 12.95,
+     "low_count": false,
+     "by_speed_pct": [
+      9.46,
+      3.4,
+      0.1,
+      0.0
+     ],
+     "mean": 16.87,
+     "median": 16.3,
+     "p90": 28.64,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1373,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 494,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 2695,
+     "freq_pct": 18.56,
+     "low_count": false,
+     "by_speed_pct": [
+      8.84,
+      9.61,
+      0.11,
+      0.0
+     ],
+     "mean": 13.54,
+     "median": 12.08,
+     "p90": 25.6,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1283,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1396,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 2049,
+     "freq_pct": 14.11,
+     "low_count": false,
+     "by_speed_pct": [
+      5.45,
+      8.57,
+      0.1,
+      0.0
+     ],
+     "mean": 12.88,
+     "median": 9.7,
+     "p90": 26.88,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 791,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1244,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 5447,
+     "freq_pct": 37.51,
+     "low_count": false,
+     "by_speed_pct": [
+      9.19,
+      28.1,
+      0.22,
+      0.0
+     ],
+     "mean": 14.72,
+     "median": 14.16,
+     "p90": 24.72,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1335,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4080,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 32,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 1590,
+     "freq_pct": 10.95,
+     "low_count": false,
+     "by_speed_pct": [
+      4.87,
+      6.08,
+      0.0,
+      0.0
+     ],
+     "mean": 14.99,
+     "median": 12.63,
+     "p90": 28.98,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 707,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 883,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 265,
+     "freq_pct": 1.83,
+     "low_count": false,
+     "by_speed_pct": [
+      1.42,
+      0.41,
+      0.0,
+      0.0
+     ],
+     "mean": 13.79,
+     "median": 9.18,
+     "p90": 30.1,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 206,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 59,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 178,
+     "freq_pct": 1.23,
+     "low_count": false,
+     "by_speed_pct": [
+      1.18,
+      0.04,
+      0.0,
+      0.0
+     ],
+     "mean": 16.44,
+     "median": 12.2,
+     "p90": 34.82,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 172,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 410,
+     "freq_pct": 2.82,
+     "low_count": false,
+     "by_speed_pct": [
+      2.48,
+      0.34,
+      0.0,
+      0.0
+     ],
+     "mean": 16.62,
+     "median": 13.46,
+     "p90": 32.51,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 360,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 50,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 5,
+    "freq_pct": 0.03,
+    "mean": 20.2,
+    "median": 19.09,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 14.61,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 5,
+     "mean": 20.2,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 6227,
+     "mean": 17.27,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 8212,
+     "mean": 12.63,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 76,
+     "mean": 9.48,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 1881
+   },
+   "dominant_wind_sector": {
+    "name": "ĐN",
+    "freq_pct": 37.51
+   },
+   "pollutant": "no2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.0,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.03,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 2.71,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "so2": {
+   "n_total": 14520,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 125.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1881,
+     "freq_pct": 12.95,
+     "low_count": false,
+     "by_speed_pct": [
+      9.46,
+      3.4,
+      0.1,
+      0.0
+     ],
+     "mean": 10.15,
+     "median": 9.75,
+     "p90": 16.23,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1373,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 494,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 2695,
+     "freq_pct": 18.56,
+     "low_count": false,
+     "by_speed_pct": [
+      8.84,
+      9.61,
+      0.11,
+      0.0
+     ],
+     "mean": 8.63,
+     "median": 8.19,
+     "p90": 14.37,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1283,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1396,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 16,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 2049,
+     "freq_pct": 14.11,
+     "low_count": false,
+     "by_speed_pct": [
+      5.45,
+      8.57,
+      0.1,
+      0.0
+     ],
+     "mean": 8.16,
+     "median": 7.39,
+     "p90": 14.31,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 791,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 1244,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 14,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 5447,
+     "freq_pct": 37.51,
+     "low_count": false,
+     "by_speed_pct": [
+      9.19,
+      28.1,
+      0.22,
+      0.0
+     ],
+     "mean": 8.93,
+     "median": 8.73,
+     "p90": 13.92,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1335,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4080,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 32,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 1590,
+     "freq_pct": 10.95,
+     "low_count": false,
+     "by_speed_pct": [
+      4.87,
+      6.08,
+      0.0,
+      0.0
+     ],
+     "mean": 9.95,
+     "median": 9.18,
+     "p90": 16.43,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 707,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 883,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 265,
+     "freq_pct": 1.83,
+     "low_count": false,
+     "by_speed_pct": [
+      1.42,
+      0.41,
+      0.0,
+      0.0
+     ],
+     "mean": 10.41,
+     "median": 9.35,
+     "p90": 17.2,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 206,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 59,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 178,
+     "freq_pct": 1.23,
+     "low_count": false,
+     "by_speed_pct": [
+      1.18,
+      0.04,
+      0.0,
+      0.0
+     ],
+     "mean": 11.47,
+     "median": 11.3,
+     "p90": 16.52,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 172,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 410,
+     "freq_pct": 2.82,
+     "low_count": false,
+     "by_speed_pct": [
+      2.48,
+      0.34,
+      0.0,
+      0.0
+     ],
+     "mean": 11.12,
+     "median": 10.83,
+     "p90": 18.27,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 360,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 50,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 5,
+    "freq_pct": 0.03,
+    "mean": 13.37,
+    "median": 12.03,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 9.16,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 5,
+     "mean": 13.37,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 6227,
+     "mean": 10.67,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 8212,
+     "mean": 8.04,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 76,
+     "mean": 5.72,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 1881
+   },
+   "dominant_wind_sector": {
+    "name": "ĐN",
+    "freq_pct": 37.51
+   },
+   "pollutant": "so2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.0,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.03,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 2.71,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "ĐN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "wind16": {
+   "n_total": 14520,
+   "n_sectors": 16,
+   "calm_threshold": 0.5,
+   "threshold": null,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 949,
+     "freq_pct": 6.54,
+     "low_count": false,
+     "by_speed_pct": [
+      4.83,
+      1.63,
+      0.08,
+      0.0
+     ]
+    },
+    {
+     "k": 1,
+     "name": "BĐB",
+     "center_deg": 22.5,
+     "n": 1313,
+     "freq_pct": 9.04,
+     "low_count": false,
+     "by_speed_pct": [
+      5.92,
+      3.07,
+      0.06,
+      0.0
+     ]
+    },
+    {
+     "k": 2,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 1396,
+     "freq_pct": 9.61,
+     "low_count": false,
+     "by_speed_pct": [
+      4.37,
+      5.19,
+      0.06,
+      0.0
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐĐB",
+     "center_deg": 67.5,
+     "n": 1151,
+     "freq_pct": 7.93,
+     "low_count": false,
+     "by_speed_pct": [
+      2.89,
+      5.0,
+      0.04,
+      0.0
+     ]
+    },
+    {
+     "k": 4,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 921,
+     "freq_pct": 6.34,
+     "low_count": false,
+     "by_speed_pct": [
+      2.56,
+      3.74,
+      0.04,
+      0.0
+     ]
+    },
+    {
+     "k": 5,
+     "name": "ĐĐN",
+     "center_deg": 112.5,
+     "n": 1511,
+     "freq_pct": 10.41,
+     "low_count": false,
+     "by_speed_pct": [
+      3.19,
+      7.16,
+      0.06,
+      0.0
+     ]
+    },
+    {
+     "k": 6,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 3353,
+     "freq_pct": 23.09,
+     "low_count": false,
+     "by_speed_pct": [
+      5.12,
+      17.81,
+      0.17,
+      0.0
+     ]
+    },
+    {
+     "k": 7,
+     "name": "NĐN",
+     "center_deg": 157.5,
+     "n": 1965,
+     "freq_pct": 13.53,
+     "low_count": false,
+     "by_speed_pct": [
+      4.33,
+      9.18,
+      0.02,
+      0.0
+     ]
+    },
+    {
+     "k": 8,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 663,
+     "freq_pct": 4.57,
+     "low_count": false,
+     "by_speed_pct": [
+      2.32,
+      2.25,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 9,
+     "name": "NTN",
+     "center_deg": 202.5,
+     "n": 243,
+     "freq_pct": 1.67,
+     "low_count": false,
+     "by_speed_pct": [
+      1.16,
+      0.52,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 10,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 117,
+     "freq_pct": 0.81,
+     "low_count": false,
+     "by_speed_pct": [
+      0.62,
+      0.19,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 11,
+     "name": "TTN",
+     "center_deg": 247.5,
+     "n": 77,
+     "freq_pct": 0.53,
+     "low_count": false,
+     "by_speed_pct": [
+      0.5,
+      0.03,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 12,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 88,
+     "freq_pct": 0.61,
+     "low_count": false,
+     "by_speed_pct": [
+      0.59,
+      0.01,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 13,
+     "name": "TTB",
+     "center_deg": 292.5,
+     "n": 118,
+     "freq_pct": 0.81,
+     "low_count": false,
+     "by_speed_pct": [
+      0.76,
+      0.05,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 14,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 181,
+     "freq_pct": 1.25,
+     "low_count": false,
+     "by_speed_pct": [
+      1.15,
+      0.1,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 15,
+     "name": "BTB",
+     "center_deg": 337.5,
+     "n": 469,
+     "freq_pct": 3.23,
+     "low_count": false,
+     "by_speed_pct": [
+      2.58,
+      0.64,
+      0.01,
+      0.0
+     ]
+    }
+   ],
+   "calm": {
+    "n": 5,
+    "freq_pct": 0.03
+   },
+   "pollutant": null,
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.0,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.03,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 2.71,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  }
+ },
+ "mua_mua": {
+  "pm2_5": {
+   "n_total": 23174,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 50.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1514,
+     "freq_pct": 6.53,
+     "low_count": false,
+     "by_speed_pct": [
+      5.23,
+      1.29,
+      0.01,
+      0.0
+     ],
+     "mean": 21.91,
+     "median": 20.5,
+     "p90": 33.83,
+     "p_exceed": 0.0119,
+     "n_exceed": 18,
+     "cbpf": [
+      {
+       "n": 1212,
+       "p": 0.0149,
+       "low_count": false
+      },
+      {
+       "n": 300,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 1485,
+     "freq_pct": 6.41,
+     "low_count": false,
+     "by_speed_pct": [
+      4.76,
+      1.64,
+      0.01,
+      0.0
+     ],
+     "mean": 20.25,
+     "median": 18.08,
+     "p90": 31.09,
+     "p_exceed": 0.0128,
+     "n_exceed": 19,
+     "cbpf": [
+      {
+       "n": 1102,
+       "p": 0.0172,
+       "low_count": false
+      },
+      {
+       "n": 380,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 3,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 1551,
+     "freq_pct": 6.69,
+     "low_count": false,
+     "by_speed_pct": [
+      4.84,
+      1.86,
+      0.0,
+      0.0
+     ],
+     "mean": 19.99,
+     "median": 17.74,
+     "p90": 32.72,
+     "p_exceed": 0.0123,
+     "n_exceed": 19,
+     "cbpf": [
+      {
+       "n": 1121,
+       "p": 0.0169,
+       "low_count": false
+      },
+      {
+       "n": 430,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 2047,
+     "freq_pct": 8.83,
+     "low_count": false,
+     "by_speed_pct": [
+      5.77,
+      3.05,
+      0.02,
+      0.0
+     ],
+     "mean": 19.68,
+     "median": 17.53,
+     "p90": 31.26,
+     "p_exceed": 0.0127,
+     "n_exceed": 26,
+     "cbpf": [
+      {
+       "n": 1336,
+       "p": 0.0195,
+       "low_count": false
+      },
+      {
+       "n": 707,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 2221,
+     "freq_pct": 9.58,
+     "low_count": false,
+     "by_speed_pct": [
+      7.3,
+      2.26,
+      0.03,
+      0.0
+     ],
+     "mean": 23.93,
+     "median": 22.01,
+     "p90": 38.28,
+     "p_exceed": 0.0248,
+     "n_exceed": 55,
+     "cbpf": [
+      {
+       "n": 1691,
+       "p": 0.0325,
+       "low_count": false
+      },
+      {
+       "n": 524,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 7884,
+     "freq_pct": 34.02,
+     "low_count": false,
+     "by_speed_pct": [
+      14.08,
+      19.01,
+      0.94,
+      0.0
+     ],
+     "mean": 22.11,
+     "median": 19.93,
+     "p90": 35.1,
+     "p_exceed": 0.0263,
+     "n_exceed": 207,
+     "cbpf": [
+      {
+       "n": 3262,
+       "p": 0.0558,
+       "low_count": false
+      },
+      {
+       "n": 4405,
+       "p": 0.0057,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4719,
+     "freq_pct": 20.36,
+     "low_count": false,
+     "by_speed_pct": [
+      7.16,
+      11.94,
+      1.26,
+      0.0
+     ],
+     "mean": 19.86,
+     "median": 17.81,
+     "p90": 30.77,
+     "p_exceed": 0.0159,
+     "n_exceed": 75,
+     "cbpf": [
+      {
+       "n": 1660,
+       "p": 0.0373,
+       "low_count": false
+      },
+      {
+       "n": 2766,
+       "p": 0.0047,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 1702,
+     "freq_pct": 7.34,
+     "low_count": false,
+     "by_speed_pct": [
+      4.97,
+      2.32,
+      0.06,
+      0.0
+     ],
+     "mean": 22.08,
+     "median": 20.52,
+     "p90": 32.76,
+     "p_exceed": 0.01,
+     "n_exceed": 17,
+     "cbpf": [
+      {
+       "n": 1151,
+       "p": 0.0122,
+       "low_count": false
+      },
+      {
+       "n": 538,
+       "p": 0.0056,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 51,
+    "freq_pct": 0.22,
+    "mean": 23.94,
+    "median": 21.8,
+    "p_exceed": 0.0196
+   },
+   "overall_mean": 21.34,
+   "overall_p_exceed": 0.0189,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 51,
+     "mean": 23.94,
+     "p_exceed": 0.0196
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 12535,
+     "mean": 24.49,
+     "p_exceed": 0.0315
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 10050,
+     "mean": 17.8,
+     "p_exceed": 0.0041
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 538,
+     "mean": 13.85,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "TN",
+    "p_exceed": 0.0263,
+    "n": 7884
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 34.02
+   },
+   "pollutant": "pm2_5",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.22,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 7.3,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "no2": {
+   "n_total": 23174,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 100.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1514,
+     "freq_pct": 6.53,
+     "low_count": false,
+     "by_speed_pct": [
+      5.23,
+      1.29,
+      0.01,
+      0.0
+     ],
+     "mean": 19.5,
+     "median": 19.09,
+     "p90": 30.87,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1212,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 300,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 1485,
+     "freq_pct": 6.41,
+     "low_count": false,
+     "by_speed_pct": [
+      4.76,
+      1.64,
+      0.01,
+      0.0
+     ],
+     "mean": 17.17,
+     "median": 16.74,
+     "p90": 29.58,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1102,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 380,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 3,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 1551,
+     "freq_pct": 6.69,
+     "low_count": false,
+     "by_speed_pct": [
+      4.84,
+      1.86,
+      0.0,
+      0.0
+     ],
+     "mean": 17.06,
+     "median": 16.72,
+     "p90": 30.12,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1121,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 430,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 2047,
+     "freq_pct": 8.83,
+     "low_count": false,
+     "by_speed_pct": [
+      5.77,
+      3.05,
+      0.02,
+      0.0
+     ],
+     "mean": 17.74,
+     "median": 17.43,
+     "p90": 29.49,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1336,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 707,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 2221,
+     "freq_pct": 9.58,
+     "low_count": false,
+     "by_speed_pct": [
+      7.3,
+      2.26,
+      0.03,
+      0.0
+     ],
+     "mean": 20.44,
+     "median": 20.35,
+     "p90": 34.18,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1691,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 524,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 7884,
+     "freq_pct": 34.02,
+     "low_count": false,
+     "by_speed_pct": [
+      14.08,
+      19.01,
+      0.94,
+      0.0
+     ],
+     "mean": 18.93,
+     "median": 17.97,
+     "p90": 33.3,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 3262,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4405,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4719,
+     "freq_pct": 20.36,
+     "low_count": false,
+     "by_speed_pct": [
+      7.16,
+      11.94,
+      1.26,
+      0.0
+     ],
+     "mean": 15.65,
+     "median": 13.5,
+     "p90": 30.38,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1660,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2766,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 1702,
+     "freq_pct": 7.34,
+     "low_count": false,
+     "by_speed_pct": [
+      4.97,
+      2.32,
+      0.06,
+      0.0
+     ],
+     "mean": 17.99,
+     "median": 17.26,
+     "p90": 31.44,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1151,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 538,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 51,
+    "freq_pct": 0.22,
+    "mean": 20.8,
+    "median": 21.07,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 18.04,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 51,
+     "mean": 20.8,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 12535,
+     "mean": 21.71,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 10050,
+     "mean": 14.02,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 538,
+     "mean": 7.16,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 1514
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 34.02
+   },
+   "pollutant": "no2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.22,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 7.3,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "so2": {
+   "n_total": 23174,
+   "n_sectors": 8,
+   "calm_threshold": 0.5,
+   "threshold": 125.0,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 1514,
+     "freq_pct": 6.53,
+     "low_count": false,
+     "by_speed_pct": [
+      5.23,
+      1.29,
+      0.01,
+      0.0
+     ],
+     "mean": 14.03,
+     "median": 13.23,
+     "p90": 23.91,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1212,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 300,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 1,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 1485,
+     "freq_pct": 6.41,
+     "low_count": false,
+     "by_speed_pct": [
+      4.76,
+      1.64,
+      0.01,
+      0.0
+     ],
+     "mean": 12.85,
+     "median": 12.55,
+     "p90": 21.68,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1102,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 380,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 3,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 2,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 1551,
+     "freq_pct": 6.69,
+     "low_count": false,
+     "by_speed_pct": [
+      4.84,
+      1.86,
+      0.0,
+      0.0
+     ],
+     "mean": 12.0,
+     "median": 11.26,
+     "p90": 20.11,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1121,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 430,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 2047,
+     "freq_pct": 8.83,
+     "low_count": false,
+     "by_speed_pct": [
+      5.77,
+      3.05,
+      0.02,
+      0.0
+     ],
+     "mean": 11.51,
+     "median": 10.83,
+     "p90": 20.19,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1336,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 707,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 4,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 2221,
+     "freq_pct": 9.58,
+     "low_count": false,
+     "by_speed_pct": [
+      7.3,
+      2.26,
+      0.03,
+      0.0
+     ],
+     "mean": 14.92,
+     "median": 14.31,
+     "p90": 24.27,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1691,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 524,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 6,
+       "p": 0.0,
+       "low_count": true
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 5,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 7884,
+     "freq_pct": 34.02,
+     "low_count": false,
+     "by_speed_pct": [
+      14.08,
+      19.01,
+      0.94,
+      0.0
+     ],
+     "mean": 14.93,
+     "median": 14.25,
+     "p90": 23.74,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 3262,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 4405,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 217,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 6,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 4719,
+     "freq_pct": 20.36,
+     "low_count": false,
+     "by_speed_pct": [
+      7.16,
+      11.94,
+      1.26,
+      0.0
+     ],
+     "mean": 13.71,
+     "median": 12.75,
+     "p90": 22.28,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1660,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 2766,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 293,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    },
+    {
+     "k": 7,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 1702,
+     "freq_pct": 7.34,
+     "low_count": false,
+     "by_speed_pct": [
+      4.97,
+      2.32,
+      0.06,
+      0.0
+     ],
+     "mean": 14.88,
+     "median": 14.48,
+     "p90": 23.82,
+     "p_exceed": 0.0,
+     "n_exceed": 0,
+     "cbpf": [
+      {
+       "n": 1151,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 538,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 13,
+       "p": 0.0,
+       "low_count": false
+      },
+      {
+       "n": 0,
+       "p": null,
+       "low_count": true
+      }
+     ]
+    }
+   ],
+   "calm": {
+    "n": 51,
+    "freq_pct": 0.22,
+    "mean": 16.87,
+    "median": 15.96,
+    "p_exceed": 0.0
+   },
+   "overall_mean": 13.99,
+   "overall_p_exceed": 0.0,
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 51,
+     "mean": 16.87,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 12535,
+     "mean": 15.88,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 10050,
+     "mean": 11.89,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 538,
+     "mean": 8.96,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "dominant_pollution_sector": {
+    "name": "B",
+    "p_exceed": 0.0,
+    "n": 1514
+   },
+   "dominant_wind_sector": {
+    "name": "TN",
+    "freq_pct": 34.02
+   },
+   "pollutant": "so2",
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.22,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 7.3,
+     "dominant_pollution_sector": "B",
+     "dominant_wind_sector": "TN"
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  },
+  "wind16": {
+   "n_total": 23174,
+   "n_sectors": 16,
+   "calm_threshold": 0.5,
+   "threshold": null,
+   "speed_classes": [
+    "0.5-2 m/s",
+    "2-4 m/s",
+    "4-6 m/s",
+    "≥ 6 m/s"
+   ],
+   "sectors": [
+    {
+     "k": 0,
+     "name": "B",
+     "center_deg": 0.0,
+     "n": 759,
+     "freq_pct": 3.28,
+     "low_count": false,
+     "by_speed_pct": [
+      2.61,
+      0.66,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 1,
+     "name": "BĐB",
+     "center_deg": 22.5,
+     "n": 771,
+     "freq_pct": 3.33,
+     "low_count": false,
+     "by_speed_pct": [
+      2.71,
+      0.61,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 2,
+     "name": "ĐB",
+     "center_deg": 45.0,
+     "n": 774,
+     "freq_pct": 3.34,
+     "low_count": false,
+     "by_speed_pct": [
+      2.41,
+      0.91,
+      0.01,
+      0.0
+     ]
+    },
+    {
+     "k": 3,
+     "name": "ĐĐB",
+     "center_deg": 67.5,
+     "n": 695,
+     "freq_pct": 3.0,
+     "low_count": false,
+     "by_speed_pct": [
+      2.21,
+      0.79,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 4,
+     "name": "Đ",
+     "center_deg": 90.0,
+     "n": 772,
+     "freq_pct": 3.33,
+     "low_count": false,
+     "by_speed_pct": [
+      2.49,
+      0.85,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 5,
+     "name": "ĐĐN",
+     "center_deg": 112.5,
+     "n": 900,
+     "freq_pct": 3.88,
+     "low_count": false,
+     "by_speed_pct": [
+      2.49,
+      1.39,
+      0.01,
+      0.0
+     ]
+    },
+    {
+     "k": 6,
+     "name": "ĐN",
+     "center_deg": 135.0,
+     "n": 1086,
+     "freq_pct": 4.69,
+     "low_count": false,
+     "by_speed_pct": [
+      2.94,
+      1.74,
+      0.01,
+      0.0
+     ]
+    },
+    {
+     "k": 7,
+     "name": "NĐN",
+     "center_deg": 157.5,
+     "n": 998,
+     "freq_pct": 4.31,
+     "low_count": false,
+     "by_speed_pct": [
+      3.23,
+      1.07,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 8,
+     "name": "N",
+     "center_deg": 180.0,
+     "n": 1030,
+     "freq_pct": 4.44,
+     "low_count": false,
+     "by_speed_pct": [
+      3.39,
+      1.03,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 9,
+     "name": "NTN",
+     "center_deg": 202.5,
+     "n": 1745,
+     "freq_pct": 7.53,
+     "low_count": false,
+     "by_speed_pct": [
+      5.43,
+      2.1,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "k": 10,
+     "name": "TN",
+     "center_deg": 225.0,
+     "n": 4098,
+     "freq_pct": 17.68,
+     "low_count": false,
+     "by_speed_pct": [
+      7.82,
+      9.62,
+      0.24,
+      0.0
+     ]
+    },
+    {
+     "k": 11,
+     "name": "TTN",
+     "center_deg": 247.5,
+     "n": 4816,
+     "freq_pct": 20.78,
+     "low_count": false,
+     "by_speed_pct": [
+      5.45,
+      13.88,
+      1.46,
+      0.0
+     ]
+    },
+    {
+     "k": 12,
+     "name": "T",
+     "center_deg": 270.0,
+     "n": 2088,
+     "freq_pct": 9.01,
+     "low_count": false,
+     "by_speed_pct": [
+      3.49,
+      5.04,
+      0.47,
+      0.0
+     ]
+    },
+    {
+     "k": 13,
+     "name": "TTB",
+     "center_deg": 292.5,
+     "n": 1018,
+     "freq_pct": 4.39,
+     "low_count": false,
+     "by_speed_pct": [
+      2.68,
+      1.68,
+      0.03,
+      0.0
+     ]
+    },
+    {
+     "k": 14,
+     "name": "TB",
+     "center_deg": 315.0,
+     "n": 862,
+     "freq_pct": 3.72,
+     "low_count": false,
+     "by_speed_pct": [
+      2.47,
+      1.2,
+      0.05,
+      0.0
+     ]
+    },
+    {
+     "k": 15,
+     "name": "BTB",
+     "center_deg": 337.5,
+     "n": 711,
+     "freq_pct": 3.07,
+     "low_count": false,
+     "by_speed_pct": [
+      2.27,
+      0.79,
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "calm": {
+    "n": 51,
+    "freq_pct": 0.22
+   },
+   "pollutant": null,
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.22,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 7.3,
+     "dominant_pollution_sector": null,
+     "dominant_wind_sector": null
+    }
+   ],
+   "note": "P_k là xác suất vượt ngưỡng có điều kiện theo hướng gió (không phải ngưỡng QCVN trừ khi chọn); hướng có ít bản ghi được gắn cờ; hoa gió ô nhiễm chỉ mô tả quan hệ thống kê."
+  }
+ }
+}

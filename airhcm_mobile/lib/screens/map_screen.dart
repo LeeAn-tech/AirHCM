@@ -153,6 +153,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   int get _hour => _frameTime.hour;
   bool _playing = false;
   Timer? _playTimer;
+  // Tốc độ phát thanh thời gian (giống WebGIS): 1× = 1 giờ dự báo / giây; lựa chọn được nhớ trên máy
+  static const List<double> _speeds = [0.25, 0.5, 1, 2, 4];
+  static const _prefSpeed = 'timeline_speed';
+  int _speedIdx = 2;
+  double get _speed => _speeds[_speedIdx];
   Timer? _refreshTimer;
 
   // Trạm dự phòng khi chưa kết nối được máy chủ
@@ -176,6 +181,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     ApiConfig.discovering.addListener(_onSharedChanged);
     ApiConfig.serverNotifier.addListener(_onServerChanged);
     _restoreBasemap();
+    _restoreSpeed();
     _init();
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) => _loadData());
   }
@@ -446,12 +452,74 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   // ---------------------------------------------------------------------------
   void _togglePlay() {
     setState(() => _playing = !_playing);
+    _startPlayTimer();
+  }
+
+  void _startPlayTimer() {
     _playTimer?.cancel();
-    if (_playing) {
-      _playTimer = Timer.periodic(const Duration(milliseconds: 1100), (_) {
-        if (mounted) setState(() => _frame = (_frame + 1) % _frameCount); // Hết 48 giờ -> quay lại hiện tại
-      });
+    if (!_playing) return;
+    _playTimer = Timer.periodic(Duration(milliseconds: (1000 / _speed).round()), (_) {
+      if (mounted) setState(() => _frame = (_frame + 1) % _frameCount); // Hết 48 giờ -> quay lại hiện tại
+    });
+  }
+
+  /// Nút chậm hơn / nhanh hơn: đang phát thì áp dụng ngay
+  Future<void> _changeSpeed(int step) async {
+    final idx = (_speedIdx + step).clamp(0, _speeds.length - 1);
+    if (idx == _speedIdx) return;
+    setState(() => _speedIdx = idx);
+    _startPlayTimer();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_prefSpeed, _speed);
+  }
+
+  Future<void> _restoreSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    final idx = _speeds.indexOf(prefs.getDouble(_prefSpeed) ?? 1);
+    if (idx >= 0 && mounted) setState(() => _speedIdx = idx);
+  }
+
+  String get _speedLabel => '${_speed == _speed.roundToDouble() ? _speed.toInt() : _speed.toString().replaceAll('.', ',')}×';
+
+  Widget _speedControl() {
+    Widget btn(IconData icon, int step, String tip) {
+      final enabled = step < 0 ? _speedIdx > 0 : _speedIdx < _speeds.length - 1;
+      return InkWell(
+        onTap: enabled ? () => _changeSpeed(step) : null,
+        customBorder: const CircleBorder(),
+        child: Tooltip(
+          message: tip,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(icon, size: 17, color: enabled ? AppColors.text2 : AppColors.muted.withValues(alpha: 0.35)),
+          ),
+        ),
+      );
     }
+
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.15,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            btn(Icons.fast_rewind_rounded, -1, 'Phát chậm hơn'),
+            SizedBox(
+              width: 38,
+              child: Text(_speedLabel,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.brand)),
+            ),
+            btn(Icons.fast_forward_rounded, 1, 'Phát nhanh hơn'),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Bản đồ 3D (giống chế độ 3D của WebGIS): mở tại vị trí, giờ, chuẩn AQI, bản đồ nền đang xem;
@@ -1429,7 +1497,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                       color: isNow ? const Color(0xFFDCFCE7) : const Color(0xFFEDE9FE),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(isNow ? 'Hiện tại · dự báo ${_frameCount - 1} giờ' : 'Dự báo +${_frame}h',
+                    child: Text(isNow ? 'Hiện tại · ${_frameCount - 1}h' : '+${_frame}h',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1442,9 +1510,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
               if (!isNow)
                 IconButton(
                   tooltip: 'Về hiện tại',
+                  visualDensity: VisualDensity.compact,
                   onPressed: () => setState(() => _frame = 0),
                   icon: const Icon(Icons.restore, color: AppColors.brand),
                 ),
+              _speedControl(),
             ],
           ),
           SliderTheme(

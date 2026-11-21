@@ -33,7 +33,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link rel="stylesheet" href="assets/css/style.css?v=20261120i">
+    <link rel="stylesheet" href="assets/css/style.css?v=20261121a">
     <link rel="stylesheet" href="assets/css/air-forecast.css?v=20261117a">
     <link rel="stylesheet" href="assets/css/air-analysis.css?v=20261119a">
     <link rel="stylesheet" href="assets/css/map3d.css?v=20261120a">
@@ -253,7 +253,14 @@
                         </div>
                         <small id="playback-period-desc">Giờ cao điểm sáng - Ùn tắc giao thông</small>
                     </div>
-                    <span class="playback-tag"><i class="fa-solid fa-chart-line"></i> Dự báo 48 giờ</span>
+                    <div class="playback-side">
+                        <span class="playback-tag"><i class="fa-solid fa-chart-line"></i> Dự báo 48 giờ</span>
+                        <div class="speed-ctrl" id="tl-speed" role="group" aria-label="Tốc độ phát thanh thời gian">
+                        <button type="button" class="speed-btn" data-step="-1" title="Chậm hơn" aria-label="Phát chậm hơn"><i class="fa-solid fa-backward"></i></button>
+                        <span class="speed-val" aria-live="polite">1×</span>
+                        <button type="button" class="speed-btn" data-step="1" title="Nhanh hơn" aria-label="Phát nhanh hơn"><i class="fa-solid fa-forward"></i></button>
+                    </div>
+                    </div>
                 </div>
                 <div class="slider-wrapper">
                     <input type="range" id="time-slider" min="0" max="48" value="0" step="1"
@@ -280,9 +287,11 @@
                         </div>
                         <small id="m3d-day">--</small>
                     </div>
-                    <select id="m3d-speed" class="air-select an-small m3d-speed" aria-label="Tốc độ phát" title="Tốc độ phát">
-                        <option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
-                    </select>
+                    <div class="speed-ctrl m3d-speed" id="m3d-speed" role="group" aria-label="Tốc độ phát hoạt cảnh 3D">
+                        <button type="button" class="speed-btn" data-step="-1" title="Chậm hơn" aria-label="Phát chậm hơn"><i class="fa-solid fa-backward"></i></button>
+                        <span class="speed-val" aria-live="polite">1×</span>
+                        <button type="button" class="speed-btn" data-step="1" title="Nhanh hơn" aria-label="Phát nhanh hơn"><i class="fa-solid fa-forward"></i></button>
+                    </div>
                 </div>
                 <div class="slider-wrapper m3d-track">
                     <input type="range" id="m3d-slider" class="time-range-slider" min="0" max="1" step="any" value="0" aria-label="Thời điểm">
@@ -1644,10 +1653,10 @@
     </div>
 
     <script src="js/ui-effects.js?v=20261112e"></script>
-    <script src="js/app.js?v=20261120i"></script>
+    <script src="js/app.js?v=20261121a"></script>
     <script src="js/air-forecast.js?v=20261117a"></script>
     <script src="js/air-analysis.js?v=20261119a"></script>
-    <script src="js/map3d.js?v=20261120c"></script>
+    <script src="js/map3d.js?v=20261121a"></script>
     <script src="js/ai-agent.js?v=20261112e"></script>
 </body>
 

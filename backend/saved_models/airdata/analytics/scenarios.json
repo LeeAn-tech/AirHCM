@@ -1,0 +1,638 @@
+{
+ "compare": {
+  "pollutant": "pm2_5",
+  "threshold": 50.0,
+  "scenarios": [
+   {
+    "measures": [],
+    "measure_names": [],
+    "cost": 0.0,
+    "city_mean_base": 23.1,
+    "city_mean_scenario": 23.1,
+    "pwe_base": 25.47,
+    "pwe_scenario": 25.47,
+    "delta_pwe": 0.0,
+    "reduction_pct": 0.0,
+    "pop_benefit": 0,
+    "delta_threshold": 0.5,
+    "threshold": 50.0,
+    "person_hours_exceed_base": 470140574,
+    "person_hours_avoided": 0,
+    "person_hours_avoided_pct": 0.0,
+    "health": {
+     "beta": 0.0077,
+     "rr_per10": 1.08,
+     "source": "Chen & Hoek (2020), WHO AQG 2021",
+     "risk_reduction_pct_pwe": 0.0,
+     "applies_to": "Phơi nhiễm dài hạn (đường cơ sở nên là TB năm)."
+    },
+    "id": "S0",
+    "name": "S0: Không can thiệp"
+   },
+   {
+    "measures": [
+     "M4",
+     "M5"
+    ],
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp"
+    ],
+    "cost": 4.0,
+    "city_mean_base": 23.1,
+    "city_mean_scenario": 22.4,
+    "pwe_base": 25.47,
+    "pwe_scenario": 24.68,
+    "delta_pwe": 0.787,
+    "reduction_pct": 3.09,
+    "pop_benefit": 12925999,
+    "delta_threshold": 0.5,
+    "threshold": 50.0,
+    "person_hours_exceed_base": 470140574,
+    "person_hours_avoided": 62455360,
+    "person_hours_avoided_pct": 13.28,
+    "health": {
+     "beta": 0.0077,
+     "rr_per10": 1.08,
+     "source": "Chen & Hoek (2020), WHO AQG 2021",
+     "risk_reduction_pct_pwe": 0.604,
+     "applies_to": "Phơi nhiễm dài hạn (đường cơ sở nên là TB năm)."
+    },
+    "id": "S1",
+    "name": "S1: Kiểm soát bụi công trường"
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3"
+    ],
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng"
+    ],
+    "cost": 18.0,
+    "city_mean_base": 23.1,
+    "city_mean_scenario": 21.62,
+    "pwe_base": 25.47,
+    "pwe_scenario": 23.79,
+    "delta_pwe": 1.671,
+    "reduction_pct": 6.56,
+    "pop_benefit": 14136346,
+    "delta_threshold": 0.5,
+    "threshold": 50.0,
+    "person_hours_exceed_base": 470140574,
+    "person_hours_avoided": 125352233,
+    "person_hours_avoided_pct": 26.66,
+    "health": {
+     "beta": 0.0077,
+     "rr_per10": 1.08,
+     "source": "Chen & Hoek (2020), WHO AQG 2021",
+     "risk_reduction_pct_pwe": 1.277,
+     "applies_to": "Phơi nhiễm dài hạn (đường cơ sở nên là TB năm)."
+    },
+    "id": "S2",
+    "name": "S2: Giảm phát thải giao thông"
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M6"
+    ],
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi"
+    ],
+    "cost": 26.0,
+    "city_mean_base": 23.1,
+    "city_mean_scenario": 20.51,
+    "pwe_base": 25.47,
+    "pwe_scenario": 22.57,
+    "delta_pwe": 2.893,
+    "reduction_pct": 11.36,
+    "pop_benefit": 14668098,
+    "delta_threshold": 0.5,
+    "threshold": 50.0,
+    "person_hours_exceed_base": 470140574,
+    "person_hours_avoided": 196846874,
+    "person_hours_avoided_pct": 41.87,
+    "health": {
+     "beta": 0.0077,
+     "rr_per10": 1.08,
+     "source": "Chen & Hoek (2020), WHO AQG 2021",
+     "risk_reduction_pct_pwe": 2.2,
+     "applies_to": "Phơi nhiễm dài hạn (đường cơ sở nên là TB năm)."
+    },
+    "id": "S3",
+    "name": "S3: Công nghiệp + giao thông"
+   }
+  ],
+  "additivity_note": "S2: Giảm phát thải giao thông: ΔPWE khi áp dụng đồng thời = 1.671 µg/m³, tổng ΔPWE từng biện pháp riêng lẻ = 1.81 µg/m³ -> các biện pháp cùng ngành kết hợp theo tích, không cộng giản đơn. Tương tác hóa học - khí quyển giữa các ngành (thứ cấp, O3) chưa được mô hình hóa.",
+  "note": "Tỷ phần ngành, mức giảm và chi phí là GIẢ ĐỊNH THỬ NGHIỆM cho phần mềm, KHÔNG phải ước lượng đã kiểm chứng tại TP.HCM. Muốn đánh giá kịch bản thật cần mô hình nhân quả/kiểm kê phát thải hoặc mô hình khí quyển (WRF-Chem/CMAQ).",
+  "ok": true,
+  "mode": "past",
+  "days": 30,
+  "n_wards": 168,
+  "n_hours": 721
+ },
+ "optimize": {
+  "pollutant": "pm2_5",
+  "budget": 15.0,
+  "equity_min_pct": 5.0,
+  "vulnerable_definition": "phường có nồng độ TB ≥ phân vị 75%",
+  "n_combinations": 512,
+  "n_feasible": 79,
+  "best": {
+   "measures": [
+    "M2",
+    "M4",
+    "M6",
+    "M8"
+   ],
+   "cost": 15.0,
+   "objective": 328525922.9070244,
+   "vulnerable_reduction_pct": 12.05,
+   "pwe": 22.397,
+   "reduction_pct": 12.05,
+   "measure_names": [
+    "Kiểm định khí thải xe máy, ô tô",
+    "Che chắn, rửa bánh xe, tưới ẩm công trường",
+    "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+    "Ngăn đốt lộ thiên, giám sát điểm cháy"
+   ],
+   "person_hours_avoided": 203204030
+  },
+  "pareto": [
+   {
+    "measures": [],
+    "cost": 0.0,
+    "vulnerable_reduction_pct": 0.0,
+    "pwe": 25.466,
+    "reduction_pct": 0.0,
+    "measure_names": []
+   },
+   {
+    "measures": [
+     "M4"
+    ],
+    "cost": 2.0,
+    "vulnerable_reduction_pct": 2.45,
+    "pwe": 24.842,
+    "reduction_pct": 2.45,
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường"
+    ]
+   },
+   {
+    "measures": [
+     "M4",
+     "M8"
+    ],
+    "cost": 4.0,
+    "vulnerable_reduction_pct": 4.85,
+    "pwe": 24.231,
+    "reduction_pct": 4.85,
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M4",
+     "M5",
+     "M8"
+    ],
+    "cost": 6.0,
+    "vulnerable_reduction_pct": 5.59,
+    "pwe": 24.068,
+    "reduction_pct": 5.491,
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M8"
+    ],
+    "cost": 7.0,
+    "vulnerable_reduction_pct": 7.25,
+    "pwe": 23.62,
+    "reduction_pct": 7.25,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M5",
+     "M8"
+    ],
+    "cost": 9.0,
+    "vulnerable_reduction_pct": 7.99,
+    "pwe": 23.456,
+    "reduction_pct": 7.891,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M8",
+     "M9"
+    ],
+    "cost": 11.0,
+    "vulnerable_reduction_pct": 8.25,
+    "pwe": 23.365,
+    "reduction_pct": 8.25,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M4",
+     "M6",
+     "M8"
+    ],
+    "cost": 12.0,
+    "vulnerable_reduction_pct": 9.65,
+    "pwe": 23.008,
+    "reduction_pct": 9.65,
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M4",
+     "M5",
+     "M6",
+     "M8"
+    ],
+    "cost": 14.0,
+    "vulnerable_reduction_pct": 10.39,
+    "pwe": 22.845,
+    "reduction_pct": 10.291,
+    "measure_names": [
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M6",
+     "M8"
+    ],
+    "cost": 15.0,
+    "vulnerable_reduction_pct": 12.05,
+    "pwe": 22.397,
+    "reduction_pct": 12.05,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ],
+    "person_hours_avoided": 203204030
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M5",
+     "M6",
+     "M8"
+    ],
+    "cost": 17.0,
+    "vulnerable_reduction_pct": 12.79,
+    "pwe": 22.234,
+    "reduction_pct": 12.691,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M2",
+     "M4",
+     "M6",
+     "M8",
+     "M9"
+    ],
+    "cost": 19.0,
+    "vulnerable_reduction_pct": 13.05,
+    "pwe": 22.143,
+    "reduction_pct": 13.05,
+    "measure_names": [
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M6",
+     "M8"
+    ],
+    "cost": 21.0,
+    "vulnerable_reduction_pct": 14.75,
+    "pwe": 21.801,
+    "reduction_pct": 14.393,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M5",
+     "M6",
+     "M8"
+    ],
+    "cost": 23.0,
+    "vulnerable_reduction_pct": 15.48,
+    "pwe": 21.637,
+    "reduction_pct": 15.034,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M6",
+     "M8",
+     "M9"
+    ],
+    "cost": 25.0,
+    "vulnerable_reduction_pct": 15.75,
+    "pwe": 21.546,
+    "reduction_pct": 15.393,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M5",
+     "M6",
+     "M8",
+     "M9"
+    ],
+    "cost": 27.0,
+    "vulnerable_reduction_pct": 16.48,
+    "pwe": 21.383,
+    "reduction_pct": 16.034,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M5",
+     "M6",
+     "M7",
+     "M8"
+    ],
+    "cost": 30.0,
+    "vulnerable_reduction_pct": 16.68,
+    "pwe": 21.332,
+    "reduction_pct": 16.234,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Nhiên liệu ít lưu huỳnh, điện bờ tại cảng",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M4",
+     "M5",
+     "M6",
+     "M8"
+    ],
+    "cost": 32.0,
+    "vulnerable_reduction_pct": 17.28,
+    "pwe": 21.174,
+    "reduction_pct": 16.853,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M4",
+     "M5",
+     "M6",
+     "M7",
+     "M8",
+     "M9"
+    ],
+    "cost": 34.0,
+    "vulnerable_reduction_pct": 17.68,
+    "pwe": 21.077,
+    "reduction_pct": 17.234,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Nhiên liệu ít lưu huỳnh, điện bờ tại cảng",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M4",
+     "M5",
+     "M6",
+     "M8",
+     "M9"
+    ],
+    "cost": 36.0,
+    "vulnerable_reduction_pct": 18.28,
+    "pwe": 20.92,
+    "reduction_pct": 17.853,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M4",
+     "M5",
+     "M6",
+     "M7",
+     "M8"
+    ],
+    "cost": 39.0,
+    "vulnerable_reduction_pct": 18.48,
+    "pwe": 20.869,
+    "reduction_pct": 18.053,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Nhiên liệu ít lưu huỳnh, điện bờ tại cảng",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M4",
+     "M6",
+     "M7",
+     "M8",
+     "M9"
+    ],
+    "cost": 41.0,
+    "vulnerable_reduction_pct": 18.74,
+    "pwe": 20.777,
+    "reduction_pct": 18.412,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Nhiên liệu ít lưu huỳnh, điện bờ tại cảng",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   },
+   {
+    "measures": [
+     "M1",
+     "M2",
+     "M3",
+     "M4",
+     "M5",
+     "M6",
+     "M7",
+     "M8",
+     "M9"
+    ],
+    "cost": 43.0,
+    "vulnerable_reduction_pct": 19.48,
+    "pwe": 20.614,
+    "reduction_pct": 19.053,
+    "measure_names": [
+     "Điều tiết luồng xe, vùng phát thải thấp nội đô",
+     "Kiểm định khí thải xe máy, ô tô",
+     "Phát triển xe buýt/xe điện, giao thông công cộng",
+     "Che chắn, rửa bánh xe, tưới ẩm công trường",
+     "Vệ sinh, hút bụi đường phù hợp",
+     "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+     "Nhiên liệu ít lưu huỳnh, điện bờ tại cảng",
+     "Ngăn đốt lộ thiên, giám sát điểm cháy",
+     "Phối hợp liên tỉnh theo lưu vực khí"
+    ]
+   }
+  ],
+  "note": "Tỷ phần ngành, mức giảm và chi phí là GIẢ ĐỊNH THỬ NGHIỆM cho phần mềm, KHÔNG phải ước lượng đã kiểm chứng tại TP.HCM. Muốn đánh giá kịch bản thật cần mô hình nhân quả/kiểm kê phát thải hoặc mô hình khí quyển (WRF-Chem/CMAQ).",
+  "ok": true
+ }
+}

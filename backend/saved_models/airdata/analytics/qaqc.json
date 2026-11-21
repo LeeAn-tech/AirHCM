@@ -1,0 +1,416 @@
+{
+ "period": [
+  "2022-08-04 07:00:00",
+  "2026-11-21 20:00:00"
+ ],
+ "city": {
+  "pm2_5": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 229,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "pm10": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 190,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "co": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 272,
+   "flat_hours": 5,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "no2": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 169,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "so2": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 186,
+   "flat_hours": 6,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "o3": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 173,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "co2": {
+   "n_expected": 37694,
+   "n_present": 18158,
+   "completeness": 0.4817,
+   "missing_hours": 19536,
+   "longest_gap_h": 19536,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 0,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 756,
+   "valid_24h_ratio": 0.4812,
+   "pass_completeness": false
+  },
+  "temperature_2m": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 0,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "wind_speed": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 19,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "wind_dir": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 0,
+   "implausible": 0,
+   "spikes": 0,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  },
+  "precipitation": {
+   "n_expected": 37694,
+   "n_present": 37694,
+   "completeness": 1.0,
+   "missing_hours": 0,
+   "longest_gap_h": 0,
+   "negative": 443,
+   "implausible": 0,
+   "spikes": 0,
+   "flat_hours": 0,
+   "days": 1571,
+   "valid_24h_days": 1570,
+   "valid_24h_ratio": 0.9994,
+   "pass_completeness": true
+  }
+ },
+ "wards": {
+  "pm2_5": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "pm10": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "co": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "no2": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "so2": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "o3": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  },
+  "co2": {
+   "n_wards": 168,
+   "mean_completeness": 1.0,
+   "min_completeness": 1.0,
+   "wards_below_target": 0,
+   "worst": [
+    {
+     "ma_phuong_xa": "25747",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25750",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25760",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25768",
+     "completeness": 1.0
+    },
+    {
+     "ma_phuong_xa": "25771",
+     "completeness": 1.0
+    }
+   ]
+  }
+ },
+ "rules": {
+  "min_hours_24h": 18,
+  "spike": "Hampel 25h, k=6.0",
+  "flat_hours": 6,
+  "completeness_target": 0.8
+ },
+ "provenance_flags": [
+  {
+   "bit": 1,
+   "label": "CAMS nội suy thời gian",
+   "share": 0.0
+  },
+  {
+   "bit": 2,
+   "label": "Hệ số vệ tinh lấy theo ngày gần nhất/mặc định",
+   "share": 0.8346
+  },
+  {
+   "bit": 4,
+   "label": "Khí tượng Open-Meteo (đã hiệu chỉnh)",
+   "share": 0.0361
+  },
+  {
+   "bit": 8,
+   "label": "Khí tượng nội suy IDW",
+   "share": 0.0056
+  },
+  {
+   "bit": 16,
+   "label": "Giờ dự báo (tương lai)",
+   "share": 0.0014
+  }
+ ],
+ "acceptance": {
+  "criterion": "≥ 80% giờ có dữ liệu cho chuỗi đầu vào trọng yếu",
+  "series": {
+   "pm2_5": 1.0,
+   "pm10": 1.0,
+   "no2": 1.0,
+   "o3": 1.0,
+   "temperature_2m": 1.0,
+   "wind_speed": 1.0
+  },
+  "pass": true
+ }
+}

@@ -1,0 +1,2280 @@
+{
+ "generated_at": "2026-11-21T20:44:09",
+ "calibration": {
+  "pm2_5": {
+   "hourly_picp90": {
+    "0": 0.8338,
+    "1": 0.8169,
+    "2": 0.8201,
+    "3": 0.8005,
+    "4": 0.8012,
+    "5": 0.8024,
+    "6": 0.792,
+    "7": 0.8043
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.7233,
+     "width90": 8.21,
+     "brier_qcvn": 0.0161,
+     "brier_who": 0.1228,
+     "brier_skill_qcvn": -0.2797,
+     "brier_skill_who": 0.3716,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8978
+    },
+    "1": {
+     "picp90": 0.7532,
+     "width90": 10.405,
+     "brier_qcvn": 0.0162,
+     "brier_who": 0.1398,
+     "brier_skill_qcvn": -0.2836,
+     "brier_skill_who": 0.2893,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8986
+    },
+    "2": {
+     "picp90": 0.7134,
+     "width90": 10.614,
+     "brier_qcvn": 0.0168,
+     "brier_who": 0.1444,
+     "brier_skill_qcvn": -0.3153,
+     "brier_skill_who": 0.2706,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8864
+    },
+    "3": {
+     "picp90": 0.6987,
+     "width90": 11.383,
+     "brier_qcvn": 0.0181,
+     "brier_who": 0.1447,
+     "brier_skill_qcvn": -0.4145,
+     "brier_skill_who": 0.2737,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.893
+    },
+    "4": {
+     "picp90": 0.7032,
+     "width90": 11.121,
+     "brier_qcvn": 0.0173,
+     "brier_who": 0.1434,
+     "brier_skill_qcvn": -0.3413,
+     "brier_skill_who": 0.2849,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8955
+    },
+    "5": {
+     "picp90": 0.7338,
+     "width90": 11.749,
+     "brier_qcvn": 0.016,
+     "brier_who": 0.1409,
+     "brier_skill_qcvn": -0.2307,
+     "brier_skill_who": 0.3018,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8922
+    },
+    "6": {
+     "picp90": 0.7124,
+     "width90": 12.308,
+     "brier_qcvn": 0.0155,
+     "brier_who": 0.142,
+     "brier_skill_qcvn": -0.1884,
+     "brier_skill_who": 0.3011,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8906
+    },
+    "7": {
+     "picp90": 0.7566,
+     "width90": 12.723,
+     "brier_qcvn": 0.0146,
+     "brier_who": 0.1481,
+     "brier_skill_qcvn": -0.1082,
+     "brier_skill_who": 0.2756,
+     "f1_qcvn": 0.0,
+     "f1_who": 0.8864
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  },
+  "pm10": {
+   "hourly_picp90": {
+    "0": 0.8243,
+    "1": 0.7998,
+    "2": 0.8046,
+    "3": 0.7739,
+    "4": 0.7789,
+    "5": 0.7755,
+    "6": 0.7687,
+    "7": 0.768
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.7233,
+     "width90": 9.157,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0252,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.1901,
+     "f1_qcvn": null,
+     "f1_who": 0.3333
+    },
+    "1": {
+     "picp90": 0.7405,
+     "width90": 11.031,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.031,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.0103,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "2": {
+     "picp90": 0.758,
+     "width90": 12.46,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0317,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0076,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "3": {
+     "picp90": 0.7692,
+     "width90": 12.51,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0335,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0573,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "4": {
+     "picp90": 0.729,
+     "width90": 12.095,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0308,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.0348,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "5": {
+     "picp90": 0.7403,
+     "width90": 12.441,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.032,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.0037,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "6": {
+     "picp90": 0.7451,
+     "width90": 12.5,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0313,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.0308,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "7": {
+     "picp90": 0.7566,
+     "width90": 12.744,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0266,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0307,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  },
+  "co": {
+   "hourly_picp90": {
+    "0": 0.8544,
+    "1": 0.8541,
+    "2": 0.8585,
+    "3": 0.8648,
+    "4": 0.8628,
+    "5": 0.8525,
+    "6": 0.8552,
+    "7": 0.8547
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.8805,
+     "width90": 172.184,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "1": {
+     "picp90": 0.8608,
+     "width90": 205.213,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "2": {
+     "picp90": 0.879,
+     "width90": 210.953,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "3": {
+     "picp90": 0.8846,
+     "width90": 218.29,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "4": {
+     "picp90": 0.8645,
+     "width90": 220.672,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "5": {
+     "picp90": 0.8766,
+     "width90": 238.664,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "6": {
+     "picp90": 0.8497,
+     "width90": 222.103,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    },
+    "7": {
+     "picp90": 0.8355,
+     "width90": 223.645,
+     "brier_who": 0.0,
+     "brier_skill_who": null,
+     "f1_who": null
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  },
+  "no2": {
+   "hourly_picp90": {
+    "0": 0.8641,
+    "1": 0.8453,
+    "2": 0.8465,
+    "3": 0.8484,
+    "4": 0.8425,
+    "5": 0.8557,
+    "6": 0.8671,
+    "7": 0.8679
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.8805,
+     "width90": 7.328,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0625,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.1493,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "1": {
+     "picp90": 0.8481,
+     "width90": 8.249,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0559,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0221,
+     "f1_qcvn": null,
+     "f1_who": 0.1429
+    },
+    "2": {
+     "picp90": 0.8471,
+     "width90": 8.643,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0609,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.2116,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "3": {
+     "picp90": 0.9038,
+     "width90": 8.648,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0568,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.125,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "4": {
+     "picp90": 0.8258,
+     "width90": 8.659,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0505,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.006,
+     "f1_qcvn": null,
+     "f1_who": 0.1667
+    },
+    "5": {
+     "picp90": 0.8961,
+     "width90": 8.898,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0515,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0087,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    },
+    "6": {
+     "picp90": 0.8954,
+     "width90": 8.828,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.051,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": 0.0057,
+     "f1_qcvn": null,
+     "f1_who": 0.1667
+    },
+    "7": {
+     "picp90": 0.875,
+     "width90": 9.071,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0489,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": -0.0415,
+     "f1_qcvn": null,
+     "f1_who": 0.0
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  },
+  "so2": {
+   "hourly_picp90": {
+    "0": 0.9385,
+    "1": 0.9424,
+    "2": 0.9448,
+    "3": 0.932,
+    "4": 0.9316,
+    "5": 0.9401,
+    "6": 0.9364,
+    "7": 0.9434
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.9497,
+     "width90": 6.262,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "1": {
+     "picp90": 0.9494,
+     "width90": 8.05,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "2": {
+     "picp90": 0.9554,
+     "width90": 8.624,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "3": {
+     "picp90": 0.9744,
+     "width90": 9.155,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "4": {
+     "picp90": 0.9677,
+     "width90": 9.344,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "5": {
+     "picp90": 0.961,
+     "width90": 9.491,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "6": {
+     "picp90": 0.9673,
+     "width90": 9.004,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    },
+    "7": {
+     "picp90": 0.9671,
+     "width90": 10.596,
+     "brier_qcvn": 0.0,
+     "brier_who": 0.0,
+     "brier_skill_qcvn": null,
+     "brier_skill_who": null,
+     "f1_qcvn": null,
+     "f1_who": null
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  },
+  "o3": {
+   "hourly_picp90": {
+    "0": 0.7468,
+    "1": 0.7649,
+    "2": 0.7642,
+    "3": 0.7695,
+    "4": 0.7632,
+    "5": 0.7698,
+    "6": 0.7703,
+    "7": 0.7655
+   },
+   "daily": {
+    "0": {
+     "picp90": 0.6792,
+     "width90": 33.838,
+     "brier_qcvn": 0.1266,
+     "brier_who": 0.1568,
+     "brier_skill_qcvn": 0.6369,
+     "brier_skill_who": 0.446,
+     "f1_qcvn": 0.675,
+     "f1_who": 0.8394
+    },
+    "1": {
+     "picp90": 0.7152,
+     "width90": 33.758,
+     "brier_qcvn": 0.1513,
+     "brier_who": 0.167,
+     "brier_skill_qcvn": 0.568,
+     "brier_skill_who": 0.4134,
+     "f1_qcvn": 0.56,
+     "f1_who": 0.829
+    },
+    "2": {
+     "picp90": 0.7452,
+     "width90": 36.912,
+     "brier_qcvn": 0.1518,
+     "brier_who": 0.1709,
+     "brier_skill_qcvn": 0.5685,
+     "brier_skill_who": 0.4035,
+     "f1_qcvn": 0.4932,
+     "f1_who": 0.8191
+    },
+    "3": {
+     "picp90": 0.7756,
+     "width90": 37.352,
+     "brier_qcvn": 0.1549,
+     "brier_who": 0.1689,
+     "brier_skill_qcvn": 0.5617,
+     "brier_skill_who": 0.4145,
+     "f1_qcvn": 0.5676,
+     "f1_who": 0.8087
+    },
+    "4": {
+     "picp90": 0.7419,
+     "width90": 37.789,
+     "brier_qcvn": 0.1583,
+     "brier_who": 0.171,
+     "brier_skill_qcvn": 0.5542,
+     "brier_skill_who": 0.4109,
+     "f1_qcvn": 0.4706,
+     "f1_who": 0.7933
+    },
+    "5": {
+     "picp90": 0.7857,
+     "width90": 37.904,
+     "brier_qcvn": 0.1528,
+     "brier_who": 0.1692,
+     "brier_skill_qcvn": 0.5714,
+     "brier_skill_who": 0.4207,
+     "f1_qcvn": 0.5,
+     "f1_who": 0.8045
+    },
+    "6": {
+     "picp90": 0.8235,
+     "width90": 41.937,
+     "brier_qcvn": 0.1554,
+     "brier_who": 0.1695,
+     "brier_skill_qcvn": 0.5663,
+     "brier_skill_who": 0.4233,
+     "f1_qcvn": 0.4848,
+     "f1_who": 0.7657
+    },
+    "7": {
+     "picp90": 0.7961,
+     "width90": 39.157,
+     "brier_qcvn": 0.1605,
+     "brier_who": 0.1757,
+     "brier_skill_qcvn": 0.554,
+     "brier_skill_who": 0.4062,
+     "f1_qcvn": 0.4615,
+     "f1_who": 0.7816
+    }
+   },
+   "periods": [
+    [
+     "2026-01-08 01:00:00",
+     "2026-06-15 19:00:00"
+    ],
+    [
+     "2026-06-16 01:00:00",
+     "2026-11-21 19:00:00"
+    ]
+   ]
+  }
+ },
+ "season": {
+  "pm2_5": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 3.478,
+     "rmse": 4.635,
+     "bias": -0.309,
+     "r2": 0.5917
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 3.979,
+     "rmse": 5.292,
+     "bias": -0.438,
+     "r2": 0.5282
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 4.354,
+     "rmse": 5.802,
+     "bias": -0.522,
+     "r2": 0.4645
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 4.748,
+     "rmse": 6.813,
+     "bias": -0.611,
+     "r2": 0.6311
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 5.265,
+     "rmse": 7.406,
+     "bias": -0.226,
+     "r2": 0.5485
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 5.431,
+     "rmse": 7.419,
+     "bias": 0.377,
+     "r2": 0.5218
+    }
+   }
+  },
+  "pm10": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 3.731,
+     "rmse": 4.901,
+     "bias": -0.356,
+     "r2": 0.5589
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 4.285,
+     "rmse": 5.641,
+     "bias": -0.309,
+     "r2": 0.4831
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 4.615,
+     "rmse": 6.054,
+     "bias": -0.08,
+     "r2": 0.4473
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 5.227,
+     "rmse": 7.381,
+     "bias": -0.876,
+     "r2": 0.5929
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 5.846,
+     "rmse": 8.044,
+     "bias": -0.413,
+     "r2": 0.5
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 6.049,
+     "rmse": 8.142,
+     "bias": 0.307,
+     "r2": 0.4624
+    }
+   }
+  },
+  "co": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 34.773,
+     "rmse": 46.525,
+     "bias": 5.531,
+     "r2": 0.5653
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 41.54,
+     "rmse": 55.378,
+     "bias": 8.299,
+     "r2": 0.4013
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 46.391,
+     "rmse": 60.213,
+     "bias": 9.886,
+     "r2": 0.2987
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 79.253,
+     "rmse": 127.608,
+     "bias": -53.208,
+     "r2": 0.4481
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 90.785,
+     "rmse": 144.668,
+     "bias": -59.164,
+     "r2": 0.304
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 95.544,
+     "rmse": 150.165,
+     "bias": -61.068,
+     "r2": 0.272
+    }
+   }
+  },
+  "no2": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 2.256,
+     "rmse": 3.219,
+     "bias": -0.743,
+     "r2": 0.8419
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 2.468,
+     "rmse": 3.607,
+     "bias": -0.993,
+     "r2": 0.8133
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 2.733,
+     "rmse": 3.953,
+     "bias": -1.082,
+     "r2": 0.776
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 3.357,
+     "rmse": 4.727,
+     "bias": -1.475,
+     "r2": 0.8103
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 3.678,
+     "rmse": 5.207,
+     "bias": -1.604,
+     "r2": 0.7758
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 3.728,
+     "rmse": 5.251,
+     "bias": -1.236,
+     "r2": 0.7641
+    }
+   }
+  },
+  "so2": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 1.336,
+     "rmse": 1.795,
+     "bias": -0.18,
+     "r2": 0.6963
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 1.524,
+     "rmse": 2.066,
+     "bias": -0.235,
+     "r2": 0.6214
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 1.57,
+     "rmse": 2.139,
+     "bias": -0.308,
+     "r2": 0.5645
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 2.635,
+     "rmse": 3.65,
+     "bias": -1.32,
+     "r2": 0.632
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 2.866,
+     "rmse": 4.014,
+     "bias": -1.401,
+     "r2": 0.5612
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 3.071,
+     "rmse": 4.33,
+     "bias": -1.436,
+     "r2": 0.5129
+    }
+   }
+  },
+  "o3": {
+   "mua_kho": {
+    "1-24h": {
+     "n": 10804,
+     "mae": 7.474,
+     "rmse": 9.837,
+     "bias": -1.197,
+     "r2": 0.9298
+    },
+    "25-72h": {
+     "n": 7104,
+     "mae": 9.073,
+     "rmse": 11.843,
+     "bias": -2.549,
+     "r2": 0.901
+    },
+    "73-192h": {
+     "n": 8590,
+     "mae": 9.342,
+     "rmse": 12.239,
+     "bias": -3.431,
+     "r2": 0.8954
+    }
+   },
+   "mua_mua": {
+    "1-24h": {
+     "n": 19668,
+     "mae": 9.945,
+     "rmse": 13.929,
+     "bias": -4.389,
+     "r2": 0.8751
+    },
+    "25-72h": {
+     "n": 13112,
+     "mae": 11.55,
+     "rmse": 16.144,
+     "bias": -6.001,
+     "r2": 0.8352
+    },
+    "73-192h": {
+     "n": 16400,
+     "mae": 11.359,
+     "rmse": 16.097,
+     "bias": -6.104,
+     "r2": 0.8423
+    }
+   }
+  }
+ },
+ "extremes": {
+  "pm2_5": {
+   "threshold_p90": 35.76,
+   "1-24h": {
+    "n": 2844,
+    "mae": 11.018,
+    "rmse": 13.289,
+    "bias": -8.811,
+    "r2": -1.1031
+   },
+   "25-72h": {
+    "n": 2023,
+    "mae": 11.305,
+    "rmse": 13.826,
+    "bias": -9.166,
+    "r2": -1.5759
+   },
+   "73-192h": {
+    "n": 2699,
+    "mae": 10.6,
+    "rmse": 13.015,
+    "bias": -8.682,
+    "r2": -1.6929
+   }
+  },
+  "pm10": {
+   "threshold_p90": 38.6,
+   "1-24h": {
+    "n": 2844,
+    "mae": 12.114,
+    "rmse": 14.58,
+    "bias": -11.257,
+    "r2": -1.7095
+   },
+   "25-72h": {
+    "n": 2031,
+    "mae": 12.723,
+    "rmse": 15.235,
+    "bias": -11.904,
+    "r2": -2.3206
+   },
+   "73-192h": {
+    "n": 2679,
+    "mae": 12.339,
+    "rmse": 14.683,
+    "bias": -11.731,
+    "r2": -2.6406
+   }
+  },
+  "co": {
+   "threshold_p90": 557.64,
+   "1-24h": {
+    "n": 2932,
+    "mae": 247.864,
+    "rmse": 288.235,
+    "bias": -247.612,
+    "r2": -3.6504
+   },
+   "25-72h": {
+    "n": 1992,
+    "mae": 283.545,
+    "rmse": 324.806,
+    "bias": -283.346,
+    "r2": -4.8242
+   },
+   "73-192h": {
+    "n": 2640,
+    "mae": 286.409,
+    "rmse": 326.938,
+    "bias": -285.907,
+    "r2": -4.323
+   }
+  },
+  "no2": {
+   "threshold_p90": 31.86,
+   "1-24h": {
+    "n": 3080,
+    "mae": 7.165,
+    "rmse": 8.647,
+    "bias": -6.755,
+    "r2": -3.0791
+   },
+   "25-72h": {
+    "n": 2120,
+    "mae": 8.416,
+    "rmse": 9.785,
+    "bias": -8.144,
+    "r2": -4.1133
+   },
+   "73-192h": {
+    "n": 2349,
+    "mae": 8.726,
+    "rmse": 10.087,
+    "bias": -8.338,
+    "r2": -4.2493
+   }
+  },
+  "so2": {
+   "threshold_p90": 22.02,
+   "1-24h": {
+    "n": 2996,
+    "mae": 5.395,
+    "rmse": 6.532,
+    "bias": -5.211,
+    "r2": -2.5543
+   },
+   "25-72h": {
+    "n": 2000,
+    "mae": 6.045,
+    "rmse": 7.217,
+    "bias": -5.923,
+    "r2": -3.2408
+   },
+   "73-192h": {
+    "n": 2560,
+    "mae": 6.678,
+    "rmse": 7.949,
+    "bias": -6.462,
+    "r2": -3.6243
+   }
+  },
+  "o3": {
+   "threshold_p90": 133.56,
+   "1-24h": {
+    "n": 2880,
+    "mae": 17.992,
+    "rmse": 23.494,
+    "bias": -14.355,
+    "r2": -3.104
+   },
+   "25-72h": {
+    "n": 1946,
+    "mae": 21.481,
+    "rmse": 27.547,
+    "bias": -18.1,
+    "r2": -4.7793
+   },
+   "73-192h": {
+    "n": 2730,
+    "mae": 23.231,
+    "rmse": 28.999,
+    "bias": -20.364,
+    "r2": -5.1591
+   }
+  }
+ },
+ "qaqc": {
+  "city": {
+   "pm2_5": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 229,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "pm10": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 190,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "co": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 272,
+    "flat_hours": 5,
+    "valid_24h_ratio": 0.9994
+   },
+   "no2": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 169,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "so2": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 186,
+    "flat_hours": 6,
+    "valid_24h_ratio": 0.9994
+   },
+   "o3": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 173,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "co2": {
+    "completeness": 0.4817,
+    "missing_hours": 19536,
+    "longest_gap_h": 19536,
+    "negative": 0,
+    "spikes": 0,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.4812
+   },
+   "temperature_2m": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 0,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "wind_speed": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 19,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "wind_dir": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 0,
+    "spikes": 0,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   },
+   "precipitation": {
+    "completeness": 1.0,
+    "missing_hours": 0,
+    "longest_gap_h": 0,
+    "negative": 443,
+    "spikes": 0,
+    "flat_hours": 0,
+    "valid_24h_ratio": 0.9994
+   }
+  },
+  "wards_180d": {
+   "pm2_5": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "pm10": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "co": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "no2": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "so2": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "o3": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   },
+   "co2": {
+    "n_wards": 168,
+    "mean_completeness": 1.0,
+    "min_completeness": 1.0,
+    "wards_below_target": 0,
+    "worst": [
+     {
+      "ma_phuong_xa": "25747",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25750",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25760",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25768",
+      "completeness": 1.0
+     },
+     {
+      "ma_phuong_xa": "25771",
+      "completeness": 1.0
+     }
+    ]
+   }
+  },
+  "acceptance": {
+   "criterion": "≥ 80% giờ có dữ liệu cho chuỗi đầu vào trọng yếu",
+   "series": {
+    "pm2_5": 1.0,
+    "pm10": 1.0,
+    "no2": 1.0,
+    "o3": 1.0,
+    "temperature_2m": 1.0,
+    "wind_speed": 1.0
+   },
+   "pass": true
+  },
+  "provenance_flags": [
+   {
+    "bit": 1,
+    "label": "CAMS nội suy thời gian",
+    "share": 0.0
+   },
+   {
+    "bit": 2,
+    "label": "Hệ số vệ tinh lấy theo ngày gần nhất/mặc định",
+    "share": 0.8346
+   },
+   {
+    "bit": 4,
+    "label": "Khí tượng Open-Meteo (đã hiệu chỉnh)",
+    "share": 0.0361
+   },
+   {
+    "bit": 8,
+    "label": "Khí tượng nội suy IDW",
+    "share": 0.0056
+   },
+   {
+    "bit": 16,
+    "label": "Giờ dự báo (tương lai)",
+    "share": 0.0014
+   }
+  ]
+ },
+ "windrose": {
+  "toan_ky": {
+   "calm_pct": 0.15,
+   "dominant_wind": {
+    "name": "TN",
+    "freq_pct": 21.62
+   },
+   "dominant_pollution_pm25": {
+    "name": "TN",
+    "p_exceed": 0.0259,
+    "n": 8149
+   },
+   "threshold": 50.0,
+   "sectors_pm25": [
+    {
+     "name": "B",
+     "freq_pct": 9.01,
+     "mean": 22.3,
+     "p_exceed": 0.0112,
+     "n": 3395,
+     "low_count": false
+    },
+    {
+     "name": "ĐB",
+     "freq_pct": 11.09,
+     "mean": 20.1,
+     "p_exceed": 0.0069,
+     "n": 4180,
+     "low_count": false
+    },
+    {
+     "name": "Đ",
+     "freq_pct": 9.55,
+     "mean": 19.64,
+     "p_exceed": 0.0083,
+     "n": 3600,
+     "low_count": false
+    },
+    {
+     "name": "ĐN",
+     "freq_pct": 19.88,
+     "mean": 19.23,
+     "p_exceed": 0.0055,
+     "n": 7494,
+     "low_count": false
+    },
+    {
+     "name": "N",
+     "freq_pct": 10.11,
+     "mean": 23.93,
+     "p_exceed": 0.0176,
+     "n": 3811,
+     "low_count": false
+    },
+    {
+     "name": "TN",
+     "freq_pct": 21.62,
+     "mean": 22.3,
+     "p_exceed": 0.0259,
+     "n": 8149,
+     "low_count": false
+    },
+    {
+     "name": "T",
+     "freq_pct": 12.99,
+     "mean": 20.14,
+     "p_exceed": 0.0155,
+     "n": 4897,
+     "low_count": false
+    },
+    {
+     "name": "TB",
+     "freq_pct": 5.6,
+     "mean": 22.82,
+     "p_exceed": 0.0099,
+     "n": 2112,
+     "low_count": false
+    }
+   ],
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 56,
+     "mean": 24.99,
+     "p_exceed": 0.0179
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 18762,
+     "mean": 24.4,
+     "p_exceed": 0.0244
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 18262,
+     "mean": 17.97,
+     "p_exceed": 0.0031
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 614,
+     "mean": 13.79,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.15,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 5.53,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    }
+   ]
+  },
+  "mua_kho": {
+   "calm_pct": 0.03,
+   "dominant_wind": {
+    "name": "ĐN",
+    "freq_pct": 37.51
+   },
+   "dominant_pollution_pm25": {
+    "name": "TN",
+    "p_exceed": 0.0151,
+    "n": 265
+   },
+   "threshold": 50.0,
+   "sectors_pm25": [
+    {
+     "name": "B",
+     "freq_pct": 12.95,
+     "mean": 22.6,
+     "p_exceed": 0.0106,
+     "n": 1881,
+     "low_count": false
+    },
+    {
+     "name": "ĐB",
+     "freq_pct": 18.56,
+     "mean": 20.02,
+     "p_exceed": 0.0037,
+     "n": 2695,
+     "low_count": false
+    },
+    {
+     "name": "Đ",
+     "freq_pct": 14.11,
+     "mean": 19.38,
+     "p_exceed": 0.0054,
+     "n": 2049,
+     "low_count": false
+    },
+    {
+     "name": "ĐN",
+     "freq_pct": 37.51,
+     "mean": 19.06,
+     "p_exceed": 0.0028,
+     "n": 5447,
+     "low_count": false
+    },
+    {
+     "name": "N",
+     "freq_pct": 10.95,
+     "mean": 23.91,
+     "p_exceed": 0.0075,
+     "n": 1590,
+     "low_count": false
+    },
+    {
+     "name": "TN",
+     "freq_pct": 1.83,
+     "mean": 27.88,
+     "p_exceed": 0.0151,
+     "n": 265,
+     "low_count": false
+    },
+    {
+     "name": "T",
+     "freq_pct": 1.23,
+     "mean": 27.63,
+     "p_exceed": 0.0056,
+     "n": 178,
+     "low_count": false
+    },
+    {
+     "name": "TB",
+     "freq_pct": 2.82,
+     "mean": 25.92,
+     "p_exceed": 0.0098,
+     "n": 410,
+     "low_count": false
+    }
+   ],
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 5,
+     "mean": 35.76,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 6227,
+     "mean": 24.21,
+     "p_exceed": 0.01
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 8212,
+     "mean": 18.17,
+     "p_exceed": 0.0018
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 76,
+     "mean": 13.35,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.0,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.03,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 2.71,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "ĐN"
+    }
+   ]
+  },
+  "mua_mua": {
+   "calm_pct": 0.22,
+   "dominant_wind": {
+    "name": "TN",
+    "freq_pct": 34.02
+   },
+   "dominant_pollution_pm25": {
+    "name": "TN",
+    "p_exceed": 0.0263,
+    "n": 7884
+   },
+   "threshold": 50.0,
+   "sectors_pm25": [
+    {
+     "name": "B",
+     "freq_pct": 6.53,
+     "mean": 21.91,
+     "p_exceed": 0.0119,
+     "n": 1514,
+     "low_count": false
+    },
+    {
+     "name": "ĐB",
+     "freq_pct": 6.41,
+     "mean": 20.25,
+     "p_exceed": 0.0128,
+     "n": 1485,
+     "low_count": false
+    },
+    {
+     "name": "Đ",
+     "freq_pct": 6.69,
+     "mean": 19.99,
+     "p_exceed": 0.0123,
+     "n": 1551,
+     "low_count": false
+    },
+    {
+     "name": "ĐN",
+     "freq_pct": 8.83,
+     "mean": 19.68,
+     "p_exceed": 0.0127,
+     "n": 2047,
+     "low_count": false
+    },
+    {
+     "name": "N",
+     "freq_pct": 9.58,
+     "mean": 23.93,
+     "p_exceed": 0.0248,
+     "n": 2221,
+     "low_count": false
+    },
+    {
+     "name": "TN",
+     "freq_pct": 34.02,
+     "mean": 22.11,
+     "p_exceed": 0.0263,
+     "n": 7884,
+     "low_count": false
+    },
+    {
+     "name": "T",
+     "freq_pct": 20.36,
+     "mean": 19.86,
+     "p_exceed": 0.0159,
+     "n": 4719,
+     "low_count": false
+    },
+    {
+     "name": "TB",
+     "freq_pct": 7.34,
+     "mean": 22.08,
+     "p_exceed": 0.01,
+     "n": 1702,
+     "low_count": false
+    }
+   ],
+   "by_speed_class": [
+    {
+     "class": "lặng gió",
+     "n": 51,
+     "mean": 23.94,
+     "p_exceed": 0.0196
+    },
+    {
+     "class": "0.5-2 m/s",
+     "n": 12535,
+     "mean": 24.49,
+     "p_exceed": 0.0315
+    },
+    {
+     "class": "2-4 m/s",
+     "n": 10050,
+     "mean": 17.8,
+     "p_exceed": 0.0041
+    },
+    {
+     "class": "4-6 m/s",
+     "n": 538,
+     "mean": 13.85,
+     "p_exceed": 0.0
+    },
+    {
+     "class": "≥ 6 m/s",
+     "n": 0,
+     "mean": null,
+     "p_exceed": null
+    }
+   ],
+   "sensitivity": [
+    {
+     "calm_ws": 0.3,
+     "calm_pct": 0.01,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 0.5,
+     "calm_pct": 0.22,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    },
+    {
+     "calm_ws": 1.0,
+     "calm_pct": 7.3,
+     "dominant_pollution_sector": "TN",
+     "dominant_wind_sector": "TN"
+    }
+   ]
+  }
+ },
+ "trace": {
+  "events": [
+   {
+    "date": "2026-09-16",
+    "mean24": 53.9,
+    "threshold": 15.0,
+    "max1": 71.1
+   },
+   {
+    "date": "2026-09-15",
+    "mean24": 45.1,
+    "threshold": 15.0,
+    "max1": 58.6
+   },
+   {
+    "date": "2026-06-22",
+    "mean24": 45.0,
+    "threshold": 15.0,
+    "max1": 75.4
+   },
+   {
+    "date": "2026-06-13",
+    "mean24": 44.4,
+    "threshold": 15.0,
+    "max1": 75.9
+   },
+   {
+    "date": "2026-06-01",
+    "mean24": 44.0,
+    "threshold": 15.0,
+    "max1": 67.2
+   },
+   {
+    "date": "2026-05-27",
+    "mean24": 42.7,
+    "threshold": 15.0,
+    "max1": 74.2
+   },
+   {
+    "date": "2026-06-15",
+    "mean24": 41.9,
+    "threshold": 15.0,
+    "max1": 70.1
+   },
+   {
+    "date": "2026-06-14",
+    "mean24": 41.7,
+    "threshold": 15.0,
+    "max1": 62.6
+   },
+   {
+    "date": "2026-06-10",
+    "mean24": 41.5,
+    "threshold": 15.0,
+    "max1": 58.6
+   },
+   {
+    "date": "2026-06-02",
+    "mean24": 41.3,
+    "threshold": 15.0,
+    "max1": 63.6
+   }
+  ],
+  "event_date": "2026-09-16",
+  "signals": [
+   "PM2.5/PM10 trung vị = 0.90 (≥ 0,6) -> Bụi mịn chiếm ưu thế: quá trình đốt (giao thông, công nghiệp, sinh khối) hoặc bụi thứ cấp.",
+   "SO2/NO2 trung vị = 0.69 (≥ 0,5) -> Dấu hiệu đốt nhiên liệu chứa lưu huỳnh: công nghiệp, nhiệt điện, tàu biển."
+  ],
+  "ratios": {
+   "pm25_pm10": 0.904,
+   "so2_no2": 0.689,
+   "co_no2": 19.107
+  },
+  "traffic_index": {
+   "no2": {
+    "rush_over_night": 0.769,
+    "weekday_over_weekend": 1.008
+   },
+   "co": {
+    "rush_over_night": 1.001,
+    "weekday_over_weekend": 0.982
+   }
+  },
+  "regional_background": {
+   "background_p10": 46.23,
+   "city_mean": 62.07,
+   "urban_increment_share": 0.255
+  },
+  "top_suspects": [
+   {
+    "ten": "Điểm nóng SO2 vệ tinh - Bình Thạnh",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 3.9,
+    "score": 0.858,
+    "p_in_top": 1.0
+   },
+   {
+    "ten": "Điểm nóng SO2 vệ tinh - Bình Lợi Trung",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 5.04,
+    "score": 0.794,
+    "p_in_top": 0.93
+   },
+   {
+    "ten": "Điểm nóng PM2.5 vệ tinh - Gò Vấp",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 7.48,
+    "score": 0.778,
+    "p_in_top": 0.728
+   },
+   {
+    "ten": "Điểm nóng PM2.5 vệ tinh - Thông Tây Hội",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 8.75,
+    "score": 0.778,
+    "p_in_top": 0.85
+   },
+   {
+    "ten": "Điểm nóng PM2.5 vệ tinh - An Hội Đông",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 8.94,
+    "score": 0.776,
+    "p_in_top": 0.654
+   },
+   {
+    "ten": "Điểm nóng NO2 vệ tinh - Tân Bình",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 6.83,
+    "score": 0.767,
+    "p_in_top": 0.444
+   },
+   {
+    "ten": "Điểm nóng PM2.5 vệ tinh - Phú Thọ",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 5.1,
+    "score": 0.754,
+    "p_in_top": 0.284
+   },
+   {
+    "ten": "Điểm nóng PM2.5 vệ tinh - An Hội Tây",
+    "loai_label": "Điểm nóng theo vệ tinh (S5P/MAIAC)",
+    "distance_km": 10.26,
+    "score": 0.741,
+    "p_in_top": 0.082
+   }
+  ],
+  "n_candidates": 24,
+  "ladder": [
+   [
+    "A",
+    true
+   ],
+   [
+    "B",
+    true
+   ],
+   [
+    "C",
+    true
+   ],
+   [
+    "D",
+    false
+   ],
+   [
+    "E",
+    false
+   ]
+  ]
+ },
+ "risk": {
+  "qcvn": {
+   "threshold": 45.0,
+   "unit": "µg/Nm³",
+   "population_total": 14668098,
+   "city": [
+    {
+     "date": "2026-11-21",
+     "lead_day": 0,
+     "forecast_share": 0.12,
+     "area_exceed_km2": 437.94,
+     "people_exceed_q50": 6619241,
+     "people_exceed_expected": 6596853,
+     "people_exceed_q05": 5982070,
+     "people_exceed_q95": 6821818,
+     "pwe": 41.37,
+     "wards_p_over_50": 62,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-22",
+     "lead_day": 1,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 53.75,
+     "people_exceed_q50": 1484937,
+     "people_exceed_expected": 2220009,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 7332722,
+     "pwe": 34.05,
+     "wards_p_over_50": 12,
+     "max_p": 0.625
+    },
+    {
+     "date": "2026-11-23",
+     "lead_day": 2,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 132.9,
+     "people_exceed_q50": 3238613,
+     "people_exceed_expected": 3827968,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 9012059,
+     "pwe": 37.02,
+     "wards_p_over_50": 30,
+     "max_p": 0.777
+    },
+    {
+     "date": "2026-11-24",
+     "lead_day": 3,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 354.42,
+     "people_exceed_q50": 5995867,
+     "people_exceed_expected": 5342480,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 11393814,
+     "pwe": 40.03,
+     "wards_p_over_50": 55,
+     "max_p": 0.87
+    },
+    {
+     "date": "2026-11-25",
+     "lead_day": 4,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 405.34,
+     "people_exceed_q50": 7022819,
+     "people_exceed_expected": 6186946,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 11662435,
+     "pwe": 42.09,
+     "wards_p_over_50": 65,
+     "max_p": 0.915
+    },
+    {
+     "date": "2026-11-26",
+     "lead_day": 5,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 405.34,
+     "people_exceed_q50": 7022819,
+     "people_exceed_expected": 6089433,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 12237411,
+     "pwe": 42.04,
+     "wards_p_over_50": 65,
+     "max_p": 0.92
+    },
+    {
+     "date": "2026-11-27",
+     "lead_day": 6,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 262.02,
+     "people_exceed_q50": 5071300,
+     "people_exceed_expected": 4903940,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 11183952,
+     "pwe": 39.35,
+     "wards_p_over_50": 47,
+     "max_p": 0.87
+    },
+    {
+     "date": "2026-11-28",
+     "lead_day": 7,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 383.76,
+     "people_exceed_q50": 6572061,
+     "people_exceed_expected": 5665975,
+     "people_exceed_q05": 0,
+     "people_exceed_q95": 11655311,
+     "pwe": 41.1,
+     "wards_p_over_50": 61,
+     "max_p": 0.89
+    }
+   ],
+   "method": "Ensemble thực nghiệm 400 thành viên từ sai số log trên tập kiểm thử độc lập (hiệu chỉnh ['2026-01-08 01:00:00', '2026-06-15 19:00:00'], kiểm chứng ['2026-06-16 01:00:00', '2026-11-21 19:00:00'])."
+  },
+  "who": {
+   "threshold": 15.0,
+   "unit": "µg/m³",
+   "population_total": 14668098,
+   "city": [
+    {
+     "date": "2026-11-21",
+     "lead_day": 0,
+     "forecast_share": 0.12,
+     "area_exceed_km2": 5286.06,
+     "people_exceed_q50": 14099241,
+     "people_exceed_expected": 14086968,
+     "people_exceed_q05": 13990092,
+     "people_exceed_q95": 14099241,
+     "pwe": 40.94,
+     "wards_p_over_50": 151,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-22",
+     "lead_day": 1,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 4892.27,
+     "people_exceed_q50": 13732948,
+     "people_exceed_expected": 13733758,
+     "people_exceed_q05": 12982655,
+     "people_exceed_q95": 14395571,
+     "pwe": 33.65,
+     "wards_p_over_50": 143,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-23",
+     "lead_day": 2,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5298.83,
+     "people_exceed_q50": 14061273,
+     "people_exceed_expected": 13989591,
+     "people_exceed_q05": 13203519,
+     "people_exceed_q95": 14643402,
+     "pwe": 36.58,
+     "wards_p_over_50": 150,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-24",
+     "lead_day": 3,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5515.16,
+     "people_exceed_q50": 14167071,
+     "people_exceed_expected": 14147727,
+     "people_exceed_q05": 13443605,
+     "people_exceed_q95": 14668098,
+     "pwe": 39.62,
+     "wards_p_over_50": 153,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-25",
+     "lead_day": 4,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5742.76,
+     "people_exceed_q50": 14290570,
+     "people_exceed_expected": 14253875,
+     "people_exceed_q05": 13583563,
+     "people_exceed_q95": 14668098,
+     "pwe": 41.58,
+     "wards_p_over_50": 157,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-26",
+     "lead_day": 5,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5999.81,
+     "people_exceed_q50": 14395571,
+     "people_exceed_expected": 14282147,
+     "people_exceed_q05": 13583563,
+     "people_exceed_q95": 14668098,
+     "pwe": 41.99,
+     "wards_p_over_50": 160,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-27",
+     "lead_day": 6,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5515.16,
+     "people_exceed_q50": 14167071,
+     "people_exceed_expected": 14156769,
+     "people_exceed_q05": 13582501,
+     "people_exceed_q95": 14668098,
+     "pwe": 39.35,
+     "wards_p_over_50": 153,
+     "max_p": 1.0
+    },
+    {
+     "date": "2026-11-28",
+     "lead_day": 7,
+     "forecast_share": 1.0,
+     "area_exceed_km2": 5742.76,
+     "people_exceed_q50": 14290570,
+     "people_exceed_expected": 14242797,
+     "people_exceed_q05": 13581274,
+     "people_exceed_q95": 14668098,
+     "pwe": 41.1,
+     "wards_p_over_50": 157,
+     "max_p": 1.0
+    }
+   ],
+   "method": "Ensemble thực nghiệm 400 thành viên từ sai số log trên tập kiểm thử độc lập (hiệu chỉnh ['2026-01-08 01:00:00', '2026-06-15 19:00:00'], kiểm chứng ['2026-06-16 01:00:00', '2026-11-21 19:00:00'])."
+  }
+ },
+ "scenarios": {
+  "rows": [
+   {
+    "id": "S0",
+    "name": "S0: Không can thiệp",
+    "cost": 0.0,
+    "pwe_base": 25.47,
+    "pwe_scenario": 25.47,
+    "delta_pwe": 0.0,
+    "reduction_pct": 0.0,
+    "pop_benefit": 0,
+    "person_hours_avoided_pct": 0.0
+   },
+   {
+    "id": "S1",
+    "name": "S1: Kiểm soát bụi công trường",
+    "cost": 4.0,
+    "pwe_base": 25.47,
+    "pwe_scenario": 24.68,
+    "delta_pwe": 0.787,
+    "reduction_pct": 3.09,
+    "pop_benefit": 12925999,
+    "person_hours_avoided_pct": 13.28
+   },
+   {
+    "id": "S2",
+    "name": "S2: Giảm phát thải giao thông",
+    "cost": 18.0,
+    "pwe_base": 25.47,
+    "pwe_scenario": 23.79,
+    "delta_pwe": 1.671,
+    "reduction_pct": 6.56,
+    "pop_benefit": 14136346,
+    "person_hours_avoided_pct": 26.66
+   },
+   {
+    "id": "S3",
+    "name": "S3: Công nghiệp + giao thông",
+    "cost": 26.0,
+    "pwe_base": 25.47,
+    "pwe_scenario": 22.57,
+    "delta_pwe": 2.893,
+    "reduction_pct": 11.36,
+    "pop_benefit": 14668098,
+    "person_hours_avoided_pct": 41.87
+   }
+  ],
+  "additivity_note": "S2: Giảm phát thải giao thông: ΔPWE khi áp dụng đồng thời = 1.671 µg/m³, tổng ΔPWE từng biện pháp riêng lẻ = 1.81 µg/m³ -> các biện pháp cùng ngành kết hợp theo tích, không cộng giản đơn. Tương tác hóa học - khí quyển giữa các ngành (thứ cấp, O3) chưa được mô hình hóa.",
+  "optimize_best": {
+   "measures": [
+    "M2",
+    "M4",
+    "M6",
+    "M8"
+   ],
+   "cost": 15.0,
+   "objective": 328525922.9070244,
+   "vulnerable_reduction_pct": 12.05,
+   "pwe": 22.397,
+   "reduction_pct": 12.05,
+   "measure_names": [
+    "Kiểm định khí thải xe máy, ô tô",
+    "Che chắn, rửa bánh xe, tưới ẩm công trường",
+    "CEMS, lọc bụi túi/ESP, khử SO2/NOx lò hơi",
+    "Ngăn đốt lộ thiên, giám sát điểm cháy"
+   ],
+   "person_hours_avoided": 203204030
+  },
+  "n_pareto": 23
+ },
+ "acceptance": [
+  {
+   "group": "Dữ liệu",
+   "requirement": "Danh mục nguồn và giấy phép; chuẩn giờ, đơn vị; ≥ 80% giờ có dữ liệu cho chuỗi trọng yếu",
+   "status": "đạt",
+   "evidence": "Độ đầy đủ: {'pm2_5': 1.0, 'pm10': 1.0, 'no2': 1.0, 'o3': 1.0, 'temperature_2m': 1.0, 'wind_speed': 1.0}"
+  },
+  {
+   "group": "Dự báo",
+   "requirement": "So sánh ≥ 3 mô hình tham chiếu; MAE/RMSE/Bias theo chất, mùa, chân trời; test thời gian độc lập",
+   "status": "đạt",
+   "evidence": "6 chất × 3 tham chiếu (bền vững, bền vững theo ngày, khí hậu) × 3 nhóm hạn; theo mùa mưa/khô + đợt cực trị có trong evaluation_extra.json. Chưa có đánh giá theo TRẠM do chưa có số liệu mặt đất (OpenAQ là bổ sung)."
+  },
+  {
+   "group": "Xác suất",
+   "requirement": "Brier score, reliability diagram, coverage khoảng 90%; báo cáo KTC và hiệu chỉnh",
+   "status": "đạt",
+   "evidence": "PICP90 ngày thứ 2 theo chất: {'pm2_5': 0.7532, 'pm10': 0.7405, 'co': 0.8608, 'no2': 0.8481, 'so2': 0.9494, 'o3': 0.7152}; Brier/reliability/ECE + KTC block bootstrap trong uncertainty.json."
+  },
+  {
+   "group": "Truy nguồn",
+   "requirement": "≥ 3 sự kiện có xác minh thực địa/quan trắc độc lập; điểm nghi vấn không diễn giải thành %",
+   "status": "đạt một phần",
+   "evidence": "Đã xác định 10 sự kiện và chạy thang A-C; CHƯA có xác minh thực địa/quan trắc độc lập (mức D-E cần dữ liệu hóa học/CTM)."
+  },
+  {
+   "group": "Can thiệp",
+   "requirement": "Đánh giá kịch bản giả định và một ca kiểm chứng trước/sau + đối chứng",
+   "status": "đạt một phần",
+   "evidence": "Đã có S0-S3, người-giờ tránh được, NPV/BCR, tối ưu ngân sách + công bằng; ca kiểm chứng trước/sau chưa thực hiện."
+  },
+  {
+   "group": "WebGIS",
+   "requirement": "Click phường/điểm trạm, đổi thời gian/chất/kịch bản; xuất CSV và báo cáo, phân quyền",
+   "status": "đạt",
+   "evidence": "Tab Phân tích nâng cao: chọn phường, chất, chuẩn, ngày, kịch bản; xuất CSV rủi ro; phân quyền admin/user (JWT)."
+  }
+ ]
+}

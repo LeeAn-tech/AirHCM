@@ -1,0 +1,41 @@
+{
+ "generated_at": "2026-11-21T20:46:44",
+ "criteria": [
+  {
+   "group": "Dữ liệu",
+   "requirement": "Danh mục nguồn và giấy phép; chuẩn giờ, đơn vị; ≥ 80% giờ có dữ liệu cho chuỗi trọng yếu",
+   "status": "đạt",
+   "evidence": "Độ đầy đủ: {'pm2_5': 1.0, 'pm10': 1.0, 'no2': 1.0, 'o3': 1.0, 'temperature_2m': 1.0, 'wind_speed': 1.0}"
+  },
+  {
+   "group": "Dự báo",
+   "requirement": "So sánh ≥ 3 mô hình tham chiếu; MAE/RMSE/Bias theo chất, mùa, chân trời; test thời gian độc lập",
+   "status": "đạt",
+   "evidence": "6 chất × 3 tham chiếu (bền vững, bền vững theo ngày, khí hậu) × 3 nhóm hạn; theo mùa mưa/khô + đợt cực trị có trong evaluation_extra.json. Chưa có đánh giá theo TRẠM do chưa có số liệu mặt đất (OpenAQ là bổ sung)."
+  },
+  {
+   "group": "Xác suất",
+   "requirement": "Brier score, reliability diagram, coverage khoảng 90%; báo cáo KTC và hiệu chỉnh",
+   "status": "đạt",
+   "evidence": "PICP90 ngày thứ 2 theo chất: {'pm2_5': 0.7532, 'pm10': 0.7405, 'co': 0.8608, 'no2': 0.8481, 'so2': 0.9494, 'o3': 0.7152}; Brier/reliability/ECE + KTC block bootstrap trong uncertainty.json."
+  },
+  {
+   "group": "Truy nguồn",
+   "requirement": "≥ 3 sự kiện có xác minh thực địa/quan trắc độc lập; điểm nghi vấn không diễn giải thành %",
+   "status": "đạt một phần",
+   "evidence": "Đã xác định 10 sự kiện và chạy thang A-C; CHƯA có xác minh thực địa/quan trắc độc lập (mức D-E cần dữ liệu hóa học/CTM)."
+  },
+  {
+   "group": "Can thiệp",
+   "requirement": "Đánh giá kịch bản giả định và một ca kiểm chứng trước/sau + đối chứng",
+   "status": "đạt một phần",
+   "evidence": "Đã có S0-S3, người-giờ tránh được, NPV/BCR, tối ưu ngân sách + công bằng; ca kiểm chứng trước/sau chưa thực hiện."
+  },
+  {
+   "group": "WebGIS",
+   "requirement": "Click phường/điểm trạm, đổi thời gian/chất/kịch bản; xuất CSV và báo cáo, phân quyền",
+   "status": "đạt",
+   "evidence": "Tab Phân tích nâng cao: chọn phường, chất, chuẩn, ngày, kịch bản; xuất CSV rủi ro; phân quyền admin/user (JWT)."
+  }
+ ]
+}

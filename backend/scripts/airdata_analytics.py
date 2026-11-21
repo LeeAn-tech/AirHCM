@@ -196,7 +196,8 @@ def run_rose(city, summary):
                os.path.join(FIG, "pollution_rose_pm25.png"), value="p")
     for key in ("mua_kho", "mua_mua"):
         rr = out[key]["pm2_5"]
-        _rose_plot(rr, f"Hoa gió {key.replace('_', ' ')} (% số giờ)", os.path.join(FIG, f"windrose_{key}.png"))
+        label = {"mua_kho": "mùa khô (tháng 12 - 4)", "mua_mua": "mùa mưa (tháng 5 - 11)"}[key]
+        _rose_plot(rr, f"Hoa gió {label} (% số giờ)", os.path.join(FIG, f"windrose_{key}.png"))
     summary["windrose"] = {k: {"calm_pct": v["pm2_5"]["calm"]["freq_pct"] if v["pm2_5"]["calm"] else None,
                                "dominant_wind": v["pm2_5"].get("dominant_wind_sector"),
                                "dominant_pollution_pm25": v["pm2_5"].get("dominant_pollution_sector"),

@@ -1584,6 +1584,58 @@ img {
     white-space: nowrap;
 }
 
+/* Cụm nút tốc độ phát (thanh thời gian 2D và hoạt cảnh 3D) */
+.playback-side {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.speed-ctrl {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 999px;
+    background: var(--surface-2, #f1f5f9);
+    border: 1px solid var(--border, #e2e8f0);
+}
+
+.speed-btn {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    color: var(--text-2, #334155);
+    background: transparent;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+
+.speed-btn:hover:not(:disabled) {
+    background: #fff;
+    color: var(--brand, #0284c7);
+}
+
+.speed-btn:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.speed-val {
+    min-width: 38px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--brand, #0284c7);
+    font-variant-numeric: tabular-nums;
+}
+
 .slider-marks {
     display: flex;
     justify-content: space-between;
